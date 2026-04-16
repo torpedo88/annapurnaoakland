@@ -46,22 +46,20 @@ export function Header() {
 
         {/* Desktop actions */}
         <div className="hidden md:flex items-center gap-2">
-          <Button variant="ghost" size="sm" asChild>
-            <Link href="/login">Log In</Link>
+          <Button variant="ghost" size="sm" render={<Link href="/login" />}>
+            Log In
           </Button>
-          <Button size="sm" asChild>
-            <Link href="/menu">Order Now</Link>
+          <Button size="sm" render={<Link href="/menu" />}>
+            Order Now
           </Button>
         </div>
 
         {/* Mobile hamburger */}
         <div className="md:hidden">
           <Sheet open={open} onOpenChange={setOpen}>
-            <SheetTrigger asChild>
-              <Button variant="ghost" size="icon">
-                <Menu className="size-5" />
-                <span className="sr-only">Open menu</span>
-              </Button>
+            <SheetTrigger render={<Button variant="ghost" size="icon" />}>
+              <Menu className="size-5" />
+              <span className="sr-only">Open menu</span>
             </SheetTrigger>
             <SheetContent side="right">
               <SheetHeader>
@@ -81,15 +79,20 @@ export function Header() {
                   </Link>
                 ))}
                 <div className="mt-4 flex flex-col gap-2">
-                  <Button variant="outline" asChild>
-                    <Link href="/login" onClick={() => setOpen(false)}>
-                      Log In
-                    </Link>
+                  <Button
+                    variant="outline"
+                    render={
+                      <Link href="/login" onClick={() => setOpen(false)} />
+                    }
+                  >
+                    Log In
                   </Button>
-                  <Button asChild>
-                    <Link href="/menu" onClick={() => setOpen(false)}>
-                      Order Now
-                    </Link>
+                  <Button
+                    render={
+                      <Link href="/menu" onClick={() => setOpen(false)} />
+                    }
+                  >
+                    Order Now
                   </Button>
                 </div>
               </nav>

@@ -135,11 +135,11 @@ export default function AboutPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            <Button asChild>
-              <Link href="/reservations">Reserve a Table</Link>
+            <Button render={<Link href="/reservations" />}>
+              Reserve a Table
             </Button>
-            <Button variant="outline" asChild>
-              <Link href="/menu">View Menu</Link>
+            <Button variant="outline" render={<Link href="/menu" />}>
+              View Menu
             </Button>
           </div>
         </section>

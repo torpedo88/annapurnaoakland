@@ -32,8 +32,8 @@ export function StorySection() {
               Every meal is cooked fresh, with ingredients sourced locally and
               spices imported directly from the Subcontinent.
             </p>
-            <Button variant="outline" className="w-fit" asChild>
-              <Link href="/about">Read Our Story</Link>
+            <Button variant="outline" className="w-fit" render={<Link href="/about" />}>
+              Read Our Story
             </Button>
           </div>
         </div>

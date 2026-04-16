@@ -23,16 +23,16 @@ export function HeroSection() {
           specialties, and rich curries, served with heart in the heart of Oakland.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
-          <Button size="lg" asChild>
-            <Link href="/menu">Order Now</Link>
+          <Button size="lg" render={<Link href="/menu" />}>
+            Order Now
           </Button>
           <Button
             variant="outline"
             size="lg"
             className="border-primary-foreground/50 text-primary-foreground hover:bg-primary-foreground/10 hover:text-primary-foreground"
-            asChild
+            render={<Link href="/reservations" />}
           >
-            <Link href="/reservations">Reserve a Table</Link>
+            Reserve a Table
           </Button>
         </div>
       </div>
