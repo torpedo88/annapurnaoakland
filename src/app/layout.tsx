@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { Playfair_Display, Inter, DM_Mono } from "next/font/google";
 import "./globals.css";
+import { Header } from "@/components/layout/header";
+import { Footer } from "@/components/layout/footer";
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -39,7 +41,9 @@ export default function RootLayout({
       className={`${playfair.variable} ${inter.variable} ${dmMono.variable}`}
     >
       <body className="font-sans bg-background text-foreground antialiased">
-        {children}
+        <Header />
+        <main>{children}</main>
+        <Footer />
       </body>
     </html>
   );
