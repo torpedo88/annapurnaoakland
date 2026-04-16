@@ -20,15 +20,15 @@ export function StorySection() {
             </h2>
             <p className="text-base text-muted-foreground leading-relaxed">
               Named after the sacred Himalayan mountain range in Nepal, Annapurna
-              was born from a family's dream to share the rich culinary traditions
+              was born from a family&apos;s dream to share the rich culinary traditions
               of Nepal and Northern India with the Bay Area. Our recipes have been
-              passed down through generations — each dish carries the warmth,
+              passed down through generations &mdash; each dish carries the warmth,
               spice, and soul of home.
             </p>
             <p className="text-base text-muted-foreground leading-relaxed">
               Since opening our doors in Oakland, we have welcomed thousands of
-              guests to our table. Whether you're discovering momo for the first
-              time or returning for your weekly tikka masala, you're family here.
+              guests to our table. Whether you&apos;re discovering momo for the first
+              time or returning for your weekly tikka masala, you&apos;re family here.
               Every meal is cooked fresh, with ingredients sourced locally and
               spices imported directly from the Subcontinent.
             </p>
