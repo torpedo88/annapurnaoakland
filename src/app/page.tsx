@@ -1,10 +1,15 @@
-import { Button } from "@/components/ui/button";
+import { HeroSection } from "@/components/home/hero-section";
+import { FeaturedDishes } from "@/components/home/featured-dishes";
+import { StorySection } from "@/components/home/story-section";
+import { InfoSection } from "@/components/home/info-section";
 
 export default function HomePage() {
   return (
-    <main className="flex min-h-screen items-center justify-center gap-4">
-      <h1 className="font-serif text-4xl font-bold">Annapurna</h1>
-      <Button>Order Now</Button>
-    </main>
+    <>
+      <HeroSection />
+      <FeaturedDishes />
+      <StorySection />
+      <InfoSection />
+    </>
   );
 }
