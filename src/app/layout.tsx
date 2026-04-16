@@ -1,6 +1,9 @@
 import type { Metadata } from "next";
-import { Playfair_Display, Inter, DM_Mono } from "next/font/google";
+import { Playfair_Display, Inter, DM_Mono, Geist } from "next/font/google";
 import "./globals.css";
+import { cn } from "@/lib/utils";
+
+const geist = Geist({subsets:['latin'],variable:'--font-sans'});
 
 const playfair = Playfair_Display({
   subsets: ["latin"],
@@ -36,7 +39,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${playfair.variable} ${inter.variable} ${dmMono.variable}`}
+      className={cn(playfair.variable, inter.variable, dmMono.variable, "font-sans", geist.variable)}
     >
       <body className="font-sans bg-background text-foreground antialiased">
         {children}
