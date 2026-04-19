@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 import { Separator } from "@/components/ui/separator";
 
 const quickLinks = [
@@ -10,6 +13,9 @@ const quickLinks = [
 ];
 
 export function Footer() {
+  const pathname = usePathname();
+  if (pathname?.startsWith("/preview")) return null;
+
   return (
     <footer className="bg-primary-dark text-primary-foreground">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12">

@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -22,6 +23,8 @@ const navLinks = [
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const pathname = usePathname();
+  if (pathname?.startsWith("/preview")) return null;
 
   return (
     <header className="sticky top-0 z-50 w-full bg-background/95 backdrop-blur border-b border-border/40">
