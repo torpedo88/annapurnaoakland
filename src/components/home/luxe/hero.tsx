@@ -1,9 +1,41 @@
 "use client";
 
 import Image from "next/image";
+import { useEffect, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { luxe } from "@/lib/theme";
 import { OrderCTA } from "./order-cta";
+
+// Live open/closed status in the restaurant's timezone (Oakland, daily 11:00–21:30).
+// Mount-gated so SSR and first client render agree (no hydration mismatch).
+function OpenIndicator() {
+  const [open, setOpen] = useState<boolean | null>(null);
+  useEffect(() => {
+    const parts = new Intl.DateTimeFormat("en-US", {
+      timeZone: "America/Los_Angeles",
+      hour: "numeric",
+      minute: "numeric",
+      hourCycle: "h23",
+    }).formatToParts(new Date());
+    const h = Number(parts.find((p) => p.type === "hour")?.value ?? "0");
+    const m = Number(parts.find((p) => p.type === "minute")?.value ?? "0");
+    const mins = h * 60 + m;
+    setOpen(mins >= 660 && mins < 1290); // 11:00–21:30
+  }, []);
+
+  if (open === null) {
+    return <span>Daily · 11:00–21:30</span>;
+  }
+  return (
+    <span className="inline-flex items-center gap-2">
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: open ? "#7C9A6B" : luxe.muted }}
+      />
+      {open ? "Open · til 21:30" : "Closed · opens 11:00"}
+    </span>
+  );
+}
 
 export function LuxeHero() {
   const reduce = useReducedMotion();
@@ -42,13 +74,7 @@ export function LuxeHero() {
           style={{ color: luxe.muted }}
         >
           <span className="hidden sm:inline">Oakland · Est. 2010</span>
-          <span className="inline-flex items-center gap-2">
-            <span
-              className="h-1.5 w-1.5 rounded-full"
-              style={{ backgroundColor: "#7C9A6B" }}
-            />
-            Open · til 21:30
-          </span>
+          <OpenIndicator />
           <span className="hidden sm:inline">948 Clay St</span>
         </div>
       </div>

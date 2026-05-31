@@ -21,8 +21,8 @@ function Col({
           <li key={l.label}>
             <Link
               href={l.href}
-              className="text-[13px] transition hover:opacity-100"
-              style={{ color: luxe.muted }}
+              className="text-[13px] opacity-80 transition hover:opacity-100"
+              style={{ color: luxe.ink }}
             >
               {l.label}
             </Link>
