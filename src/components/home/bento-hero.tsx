@@ -1,8 +1,8 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowRight } from "lucide-react";
 import { menu } from "@/data/menu";
+import { luxe } from "@/lib/theme";
+import { OrderCTA } from "@/components/home/luxe/order-cta";
 import InteractiveBentoGallery, {
   type MediaItemType,
 } from "@/components/ui/interactive-bento-gallery";
@@ -67,38 +67,27 @@ const mediaItems: MediaItemType[] = ordered
 
 export function BentoHero() {
   return (
-    <section className="relative overflow-hidden bg-[#FDF4E4] pt-28 pb-12 lg:pt-32">
-      {/* Eyebrow, in brand script */}
+    <section
+      className="relative overflow-hidden pt-28 pb-14 lg:pt-32"
+      style={{ backgroundColor: luxe.bg }}
+    >
+      {/* Eyebrow */}
       <p
-        className="text-center text-2xl lg:text-3xl"
-        style={{ color: "#F2A545", fontFamily: "var(--font-caveat), cursive" }}
+        className="text-center text-[10px] uppercase tracking-[0.34em]"
+        style={{ color: luxe.gold }}
       >
-        a Himalayan kitchen in Oakland.
+        A Himalayan Kitchen · Oakland
       </p>
 
       <InteractiveBentoGallery
         mediaItems={mediaItems}
-        title="Warm food. Served by family."
-        description="Momos, live tandoor, and slow-cooked biryani — by the family that's run the kitchen since 2010. Drag a dish, tap to plate it."
+        title="Annapurna"
+        description="Momo, live tandoor, and slow-cooked biryani — by the family that has run the kitchen since 2010. Drag a dish, tap to plate it."
       />
 
-      {/* Order CTA — preserved from the old hero so conversion isn't lost */}
-      <div className="mt-2 flex flex-wrap items-center justify-center gap-4 px-6">
-        <Link
-          href="/menu"
-          className="group inline-flex items-center gap-3 rounded-full bg-[#2B1E16] text-[#FDF4E4] pl-7 pr-2 py-2 text-base font-semibold shadow-2xl shadow-[#2B1E16]/30 hover:bg-[#C85A3C] transition"
-        >
-          Start an order
-          <span className="grid h-9 w-9 place-items-center rounded-full bg-[#FDF4E4] text-[#2B1E16] transition group-hover:translate-x-0.5">
-            <ArrowRight className="h-4 w-4" />
-          </span>
-        </Link>
-        <Link
-          href="/menu"
-          className="text-sm font-semibold uppercase tracking-[0.2em] text-[#2B1E16]/70 hover:text-[#C85A3C] transition"
-        >
-          View the full menu
-        </Link>
+      {/* Order CTA */}
+      <div className="mt-2 px-6">
+        <OrderCTA align="center" />
       </div>
     </section>
   );

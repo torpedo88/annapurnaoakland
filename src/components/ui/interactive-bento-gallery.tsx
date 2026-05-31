@@ -194,7 +194,7 @@ const GalleryModal = ({
       >
         {/* Main Content */}
         <div className="h-full flex flex-col">
-          <div className="flex-1 p-2 sm:p-3 md:p-4 flex items-center justify-center bg-[#FDF4E4]/80">
+          <div className="flex-1 p-2 sm:p-3 md:p-4 flex items-center justify-center bg-[#14100D]/92">
             <AnimatePresence mode="wait">
               <motion.div
                 key={selectedItem.id}
@@ -244,9 +244,9 @@ const GalleryModal = ({
         <motion.button
           aria-label="Close gallery"
           className="absolute top-3 right-3 grid h-11 w-11 place-items-center rounded-full
-                    bg-[#FDF4E4]/90 text-[#2B1E16] hover:bg-[#C85A3C] hover:text-[#FDF4E4]
-                    backdrop-blur-sm shadow-md shadow-[#2B1E16]/20
-                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C85A3C] focus-visible:ring-offset-2"
+                    bg-[#C9A24B] text-[#14100D] hover:bg-[#F3E9D6]
+                    backdrop-blur-sm shadow-md shadow-black/30
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14100D]"
           onClick={onClose}
           whileHover={reduce ? undefined : { scale: 1.1 }}
           whileTap={reduce ? undefined : { scale: 0.9 }}
@@ -271,8 +271,8 @@ const GalleryModal = ({
         className="fixed z-50 left-1/2 bottom-4 -translate-x-1/2 touch-none"
       >
         <motion.div
-          className="relative rounded-xl bg-[#2B1E16]/20 backdrop-blur-xl
-                     border border-[#C85A3C]/30 shadow-lg shadow-[#2B1E16]/30
+          className="relative rounded-xl bg-[#1C1712]/70 backdrop-blur-xl
+                     border border-[#C9A24B]/30 shadow-lg shadow-black/40
                      cursor-grab active:cursor-grabbing"
         >
           <div className="flex items-center -space-x-2 px-3 py-2">
@@ -302,11 +302,11 @@ const GalleryModal = ({
                     w-11 h-11 flex-shrink-0
                     rounded-lg overflow-hidden
                     cursor-pointer hover:z-20
-                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#F2A545] focus-visible:z-20
+                    focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B] focus-visible:z-20
                     ${
                       selectedItem.id === item.id
-                        ? "ring-2 ring-[#F2A545] shadow-lg"
-                        : "hover:ring-2 hover:ring-[#C85A3C]/50"
+                        ? "ring-2 ring-[#C9A24B] shadow-lg"
+                        : "hover:ring-2 hover:ring-[#C9A24B]/50"
                     }
                 `}
                 initial={reduce ? false : { rotate: index % 2 === 0 ? -15 : 15 }}
@@ -381,8 +381,13 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
     <div className="container mx-auto px-4 py-8 max-w-4xl">
       <div className="mb-8 text-center">
         <motion.h1
-          className="text-4xl sm:text-5xl md:text-6xl leading-[0.95] tracking-tight text-[#2B1E16]"
-          style={{ fontFamily: "var(--font-instrument), serif" }}
+          className="uppercase leading-[0.95] text-[2.75rem] sm:text-6xl md:text-7xl"
+          style={{
+            color: "#F3E9D6",
+            fontFamily: "var(--font-display)",
+            fontWeight: 200,
+            letterSpacing: "0.14em",
+          }}
           initial={reduce ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
@@ -390,7 +395,7 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
           {title}
         </motion.h1>
         <motion.p
-          className="mx-auto mt-3 max-w-xl text-sm sm:text-base text-[#2B1E16]/70"
+          className="mx-auto mt-3 max-w-xl text-sm sm:text-base text-[#8A8276]"
           initial={reduce ? false : { opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
@@ -430,7 +435,7 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
                 aria-label={`${item.title} — ${item.desc}`}
                 className={`group relative overflow-hidden rounded-xl ${
                   reduce ? "cursor-pointer" : "cursor-move"
-                } focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C85A3C] focus-visible:ring-offset-2 focus-visible:ring-offset-[#FDF4E4] ${item.span}`}
+                } focus:outline-none focus-visible:ring-2 focus-visible:ring-[#C9A24B] focus-visible:ring-offset-2 focus-visible:ring-offset-[#14100D] ${item.span}`}
                 onClick={() => !isDragging && setSelectedItem(item)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" || e.key === " ") {
