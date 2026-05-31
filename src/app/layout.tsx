@@ -1,33 +1,29 @@
 import type { Metadata } from "next";
-import { Instrument_Serif, Manrope, Caveat } from "next/font/google";
+import { Jost, Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/preview-cart";
 import { TerracottaShell } from "@/components/preview/terracotta/shell";
 
-const display = Instrument_Serif({
-  weight: "400",
+const display = Jost({
   subsets: ["latin"],
-  variable: "--font-instrument",
+  weight: ["200", "300", "400", "500", "600"],
+  variable: "--font-display",
   display: "swap",
 });
-const body = Manrope({
+const body = Inter({
   subsets: ["latin"],
-  variable: "--font-manrope",
-  display: "swap",
-});
-const hand = Caveat({
-  subsets: ["latin"],
-  variable: "--font-caveat",
+  weight: ["300", "400", "500"],
+  variable: "--font-body",
   display: "swap",
 });
 
 export const metadata: Metadata = {
-  title: "Annapurna Oakland — Warm food. Served by family.",
+  title: "Annapurna — A tasting of the Himalayas · Oakland",
   description:
-    "Family-run Nepali & North Indian restaurant at 948 Clay Street, Oakland. Order online for pickup or delivery. Open daily 11:00–21:30.",
+    "Family-run Himalayan kitchen at 948 Clay Street, Oakland, since 2010. Order pickup or delivery. Open daily 11:00–21:30.",
   keywords: [
     "Nepali food Oakland",
-    "Indian restaurant Oakland",
+    "Himalayan restaurant Oakland",
     "Annapurna",
     "momos",
     "butter chicken",
@@ -44,13 +40,13 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} ${hand.variable}`}
+      className={`${display.variable} ${body.variable}`}
     >
       <body
         style={{
-          backgroundColor: "#FDF4E4",
-          color: "#2B1E16",
-          fontFamily: "var(--font-manrope), sans-serif",
+          backgroundColor: "#14100D",
+          color: "#F3E9D6",
+          fontFamily: "var(--font-body), sans-serif",
         }}
         className="antialiased min-h-screen"
       >
