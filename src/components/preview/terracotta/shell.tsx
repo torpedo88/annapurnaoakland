@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, X, Plus, Minus } from "lucide-react";
+import { ShoppingBag, X, Plus, Minus, Check } from "lucide-react";
 import { useCart } from "@/lib/preview-cart";
 import { useEffect, useState } from "react";
 
@@ -19,37 +19,37 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <header className="sticky top-0 z-30 bg-[#FDF4E4]/85 backdrop-blur-md border-b border-[#2B1E16]/8">
+      <header
+        className="sticky top-0 z-30 backdrop-blur-md"
+        style={{ backgroundColor: "rgba(20,16,13,0.85)", borderBottom: "1px solid rgba(201,162,75,0.15)" }}
+      >
         <div className="mx-auto max-w-7xl px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
-          <a href="tel:+15102509696"
-            className="hidden sm:inline text-[11px] uppercase tracking-[0.25em] font-medium text-[#2B1E16]/60 hover:text-[#C85A3C] transition"
+          <a
+            href="tel:+15102509696"
+            className="hidden sm:inline text-[10px] uppercase tracking-[0.25em]"
+            style={{ color: "#8A8276" }}
           >
             (510) 250-9696
           </a>
 
-          <Link href="/" className="flex items-center gap-2.5">
-            <svg width="28" height="28" viewBox="0 0 28 28" aria-hidden>
-              <circle cx="14" cy="14" r="12" fill="#C85A3C" />
-              <circle cx="14" cy="14" r="6" fill="#F2A545" />
-            </svg>
+          <Link href="/" className="flex items-center">
             <span
-              className="text-2xl font-medium tracking-tight"
-              style={{ color: "#C85A3C", fontFamily: "var(--font-instrument), serif" }}
+              className="uppercase tracking-[0.16em] text-xl"
+              style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
             >
               Annapurna
             </span>
           </Link>
 
-          <nav className="hidden md:flex items-center gap-7 text-sm font-medium">
+          <nav className="hidden md:flex items-center gap-7 text-[12px] uppercase tracking-[0.14em]">
             {nav.map((n) => {
               const active = pathname === n.href;
               return (
                 <Link
                   key={n.href}
                   href={n.href}
-                  className={`transition ${
-                    active ? "text-[#C85A3C]" : "text-[#2B1E16]/75 hover:text-[#C85A3C]"
-                  }`}
+                  className="transition"
+                  style={{ color: active ? "#C9A24B" : "#8A8276" }}
                 >
                   {n.label}
                 </Link>
@@ -61,7 +61,8 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             {!isHome && (
               <Link
                 href="/menu"
-                className="hidden sm:inline-flex rounded-full bg-[#2B1E16] text-[#FDF4E4] px-4 py-2 text-xs font-semibold hover:bg-[#C85A3C] transition"
+                className="hidden sm:inline-flex rounded-[2px] px-4 py-2 text-[11px] uppercase tracking-[0.16em] font-medium transition"
+                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
               >
                 Order
               </Link>
@@ -69,11 +70,15 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             <button
               onClick={() => setOpen(true)}
               aria-label="Open cart"
-              className="relative rounded-full bg-[#C85A3C] text-[#FDF4E4] h-10 w-10 flex items-center justify-center hover:bg-[#2B1E16] transition"
+              className="relative rounded-full h-10 w-10 flex items-center justify-center transition"
+              style={{ border: "1px solid rgba(201,162,75,0.4)", color: "#C9A24B" }}
             >
               <ShoppingBag className="h-4 w-4" />
               {count > 0 && (
-                <span className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full bg-[#2B1E16] text-[#F2A545] text-[10px] font-bold flex items-center justify-center ring-2 ring-[#FDF4E4]">
+                <span
+                  className="absolute -top-1 -right-1 min-w-[20px] h-5 px-1 rounded-full text-[10px] font-bold flex items-center justify-center"
+                  style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+                >
                   {count}
                 </span>
               )}
@@ -120,32 +125,38 @@ function CartDrawer() {
       <button
         aria-label="Close cart"
         onClick={() => setOpen(false)}
-        className={`absolute inset-0 bg-[#2B1E16]/50 transition-opacity duration-300 ${
+        className={`absolute inset-0 transition-opacity duration-300 ${
           isOpen ? "opacity-100" : "opacity-0"
         }`}
+        style={{ backgroundColor: "rgba(0,0,0,0.6)" }}
       />
       {/* Panel */}
       <aside
         role="dialog"
         aria-label="Shopping cart"
-        className={`absolute right-0 top-0 h-full w-full sm:w-[460px] bg-[#FDF4E4] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
+        className={`absolute right-0 top-0 h-full w-full sm:w-[460px] shadow-2xl flex flex-col transition-transform duration-300 ease-out ${
           isOpen ? "translate-x-0" : "translate-x-full"
         }`}
+        style={{ backgroundColor: "#1C1712", color: "#F3E9D6" }}
       >
-        <div className="flex items-center justify-between px-6 h-16 border-b border-[#2B1E16]/10">
+        <div
+          className="flex items-center justify-between px-6 h-16"
+          style={{ borderBottom: "1px solid rgba(201,162,75,0.15)" }}
+        >
           <h2
             className="text-2xl"
-            style={{ fontFamily: "var(--font-instrument), serif", color: "#2B1E16" }}
+            style={{ fontFamily: "var(--font-display)", color: "#F3E9D6" }}
           >
             Your bag
             {count > 0 && (
-              <span className="ml-2 text-base text-[#C85A3C]">({count})</span>
+              <span className="ml-2 text-base" style={{ color: "#C9A24B" }}>({count})</span>
             )}
           </h2>
           <button
             onClick={() => setOpen(false)}
             aria-label="Close"
-            className="rounded-full h-9 w-9 flex items-center justify-center bg-[#2B1E16]/5 hover:bg-[#2B1E16] hover:text-[#FDF4E4] transition"
+            className="rounded-full h-9 w-9 flex items-center justify-center transition"
+            style={{ backgroundColor: "rgba(201,162,75,0.1)", color: "#F3E9D6" }}
           >
             <X className="h-4 w-4" />
           </button>
@@ -153,22 +164,26 @@ function CartDrawer() {
 
         {lines.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center gap-4 px-8 text-center">
-            <div className="h-20 w-20 rounded-full bg-[#F2A545]/20 flex items-center justify-center">
-              <ShoppingBag className="h-8 w-8 text-[#C85A3C]" />
+            <div
+              className="h-20 w-20 rounded-full flex items-center justify-center"
+              style={{ backgroundColor: "rgba(201,162,75,0.15)" }}
+            >
+              <ShoppingBag className="h-8 w-8" style={{ color: "#C9A24B" }} />
             </div>
             <p
               className="text-2xl"
-              style={{ fontFamily: "var(--font-instrument), serif", color: "#2B1E16" }}
+              style={{ fontFamily: "var(--font-display)", color: "#F3E9D6" }}
             >
               Your bag is empty.
             </p>
-            <p className="text-sm text-[#2B1E16]/60 max-w-xs">
+            <p className="text-sm max-w-xs" style={{ color: "#8A8276" }}>
               Warm dumplings and butter chicken are one click away.
             </p>
             <Link
               href="/menu"
               onClick={() => setOpen(false)}
-              className="mt-4 rounded-full bg-[#C85A3C] text-[#FDF4E4] px-7 py-3 font-semibold hover:bg-[#2B1E16] transition"
+              className="mt-4 rounded-full px-7 py-3 font-semibold transition"
+              style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
             >
               Browse menu
             </Link>
@@ -179,7 +194,8 @@ function CartDrawer() {
               {lines.map((l) => (
                 <div
                   key={l.id}
-                  className="flex gap-4 pb-4 border-b border-[#2B1E16]/10 last:border-b-0"
+                  className="flex gap-4 pb-4 last:border-b-0"
+                  style={{ borderBottom: "1px solid rgba(201,162,75,0.15)" }}
                 >
                   {l.image && (
                     <img
@@ -190,34 +206,40 @@ function CartDrawer() {
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between gap-3">
-                      <h3 className="font-semibold text-[#2B1E16] truncate">{l.name}</h3>
+                      <h3 className="font-semibold truncate" style={{ color: "#F3E9D6" }}>{l.name}</h3>
                       <button
                         onClick={() => remove(l.id)}
-                        className="text-xs text-[#2B1E16]/50 hover:text-[#C85A3C] transition shrink-0"
+                        className="text-xs transition shrink-0"
+                        style={{ color: "#8A8276" }}
                       >
                         Remove
                       </button>
                     </div>
-                    <p className="text-sm text-[#2B1E16]/60">${l.price.toFixed(2)} each</p>
+                    <p className="text-sm" style={{ color: "#8A8276" }}>${l.price.toFixed(2)} each</p>
                     <div className="mt-2 flex items-center justify-between">
-                      <div className="inline-flex items-center bg-[#2B1E16]/5 rounded-full">
+                      <div
+                        className="inline-flex items-center rounded-full"
+                        style={{ backgroundColor: "rgba(201,162,75,0.1)" }}
+                      >
                         <button
                           onClick={() => decrement(l.id)}
-                          className="h-8 w-8 flex items-center justify-center hover:text-[#C85A3C]"
+                          className="h-8 w-8 flex items-center justify-center hover:text-[#C9A24B] transition"
+                          style={{ color: "#F3E9D6" }}
                           aria-label="Decrease"
                         >
                           <Minus className="h-3.5 w-3.5" />
                         </button>
-                        <span className="w-7 text-center text-sm font-semibold">{l.qty}</span>
+                        <span className="w-7 text-center text-sm font-semibold" style={{ color: "#F3E9D6" }}>{l.qty}</span>
                         <button
                           onClick={() => increment(l.id)}
-                          className="h-8 w-8 flex items-center justify-center hover:text-[#C85A3C]"
+                          className="h-8 w-8 flex items-center justify-center hover:text-[#C9A24B] transition"
+                          style={{ color: "#F3E9D6" }}
                           aria-label="Increase"
                         >
                           <Plus className="h-3.5 w-3.5" />
                         </button>
                       </div>
-                      <span className="font-bold text-[#2B1E16]">
+                      <span className="font-bold" style={{ color: "#F3E9D6" }}>
                         ${(l.price * l.qty).toFixed(2)}
                       </span>
                     </div>
@@ -226,20 +248,26 @@ function CartDrawer() {
               ))}
             </div>
 
-            <div className="border-t border-[#2B1E16]/10 px-6 py-5 space-y-3 bg-[#FDF4E4]">
-              <div className="flex justify-between text-sm text-[#2B1E16]/70">
+            <div
+              className="px-6 py-5 space-y-3"
+              style={{ borderTop: "1px solid rgba(201,162,75,0.15)", backgroundColor: "#1C1712" }}
+            >
+              <div className="flex justify-between text-sm" style={{ color: "#8A8276" }}>
                 <span>Subtotal</span>
                 <span>${subtotal.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between text-sm text-[#2B1E16]/70">
+              <div className="flex justify-between text-sm" style={{ color: "#8A8276" }}>
                 <span>Est. tax (9.25%)</span>
                 <span>${tax.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between items-baseline pt-2 border-t border-[#2B1E16]/10">
-                <span className="font-bold text-[#2B1E16]">Total</span>
+              <div
+                className="flex justify-between items-baseline pt-2"
+                style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
+              >
+                <span className="font-bold" style={{ color: "#F3E9D6" }}>Total</span>
                 <span
                   className="text-2xl font-bold"
-                  style={{ color: "#C85A3C", fontFamily: "var(--font-instrument), serif" }}
+                  style={{ color: "#C9A24B", fontFamily: "var(--font-display)" }}
                 >
                   ${(subtotal + tax).toFixed(2)}
                 </span>
@@ -247,12 +275,16 @@ function CartDrawer() {
               <Link
                 href="/checkout"
                 onClick={() => setOpen(false)}
-                className="mt-2 w-full inline-flex justify-center items-center gap-2 rounded-full bg-[#C85A3C] text-[#FDF4E4] py-4 font-bold hover:bg-[#2B1E16] transition"
+                className="mt-2 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold transition"
+                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
               >
                 Checkout · ${(subtotal + tax).toFixed(2)}
                 <span>→</span>
               </Link>
-              <p className="text-center text-[10px] uppercase tracking-widest text-[#2B1E16]/50">
+              <p
+                className="text-center text-[10px] uppercase tracking-widest"
+                style={{ color: "#8A8276" }}
+              >
                 Demo mode · no real charge
               </p>
             </div>
@@ -282,14 +314,21 @@ function AddedToast() {
         visible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-3 pointer-events-none"
       }`}
     >
-      <div className="flex items-center gap-3 bg-[#2B1E16] text-[#FDF4E4] rounded-full pl-4 pr-2 py-2 shadow-xl">
-        <span className="inline-flex items-center justify-center h-6 w-6 rounded-full bg-[#F2A545] text-[#2B1E16]">
-          ✓
+      <div
+        className="flex items-center gap-3 rounded-full pl-4 pr-2 py-2 shadow-xl"
+        style={{ backgroundColor: "#1C1712", color: "#F3E9D6", border: "1px solid rgba(201,162,75,0.3)" }}
+      >
+        <span
+          className="inline-flex items-center justify-center h-6 w-6 rounded-full"
+          style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+        >
+          <Check className="h-4 w-4" aria-hidden="true" />
         </span>
         <span className="text-sm font-medium">Added to your bag</span>
         <button
           onClick={() => setOpen(true)}
-          className="rounded-full bg-[#C85A3C] text-[#FDF4E4] px-4 py-1.5 text-xs font-bold hover:bg-[#F2A545] hover:text-[#2B1E16] transition"
+          className="rounded-full px-4 py-1.5 text-xs font-bold transition"
+          style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
         >
           View bag
         </button>

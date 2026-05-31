@@ -61,7 +61,7 @@ export function updateOrderStatus(id: string, status: OrderStatus) {
   const orders = loadOrders();
   const idx = orders.findIndex((o) => o.id === id);
   if (idx === -1) return;
-  orders[idx] = { ...orders[idx], status };
+  orders[idx] = { ...orders[idx], status } as Order;
   saveOrders(orders);
 }
 
