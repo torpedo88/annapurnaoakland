@@ -199,3 +199,19 @@ export const restaurantSettings = pgTable("restaurant_settings", {
   value: jsonb("value"),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
 });
+
+// ─── Deliveries ───────────────────────────────────────────────────────────────
+export const deliveries = pgTable("deliveries", {
+  id: uuid("id").primaryKey().default(genUuid()),
+  orderId: uuid("order_id").notNull().references(() => orders.id, { onDelete: "cascade" }),
+  externalDeliveryId: text("external_delivery_id").notNull().unique(),
+  provider: text("provider").default("doordash_drive"),
+  status: text("status").default("created"),
+  feeCents: integer("fee_cents"),
+  currency: text("currency").default("USD"),
+  trackingUrl: text("tracking_url"),
+  dropoffAddress: text("dropoff_address"),
+  raw: jsonb("raw"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
+});
