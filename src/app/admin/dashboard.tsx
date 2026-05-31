@@ -12,6 +12,7 @@ import {
   Filter,
   Bell,
   LogOut,
+  AlertTriangle,
 } from "lucide-react";
 import { signOut } from "./actions";
 import {
@@ -72,45 +73,51 @@ export function AdminDashboard() {
   return (
     <section className="min-h-screen pb-24">
       {/* Admin sub-header */}
-      <div className="bg-[#2B1E16] text-[#FDF4E4]">
+      <div style={{ backgroundColor: "#1C1712", borderBottom: "1px solid rgba(201,162,75,0.15)" }}>
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-8">
           <div className="flex flex-wrap items-start justify-between gap-6">
             <div>
               <p
                 className="text-sm uppercase tracking-[0.3em] mb-2"
-                style={{ color: "#F2A545" }}
+                style={{ color: "#C9A24B" }}
               >
                 Kitchen Display
               </p>
               <h1
                 className="text-4xl lg:text-6xl leading-[0.95] tracking-tight"
-                style={{ fontFamily: "var(--font-instrument), serif" }}
+                style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
               >
-                Tonight&apos;s <em style={{ color: "#F2A545" }}>board.</em>
+                Tonight&apos;s board.
               </h1>
             </div>
             <div className="flex items-center gap-3">
               <button
-                className="relative rounded-full bg-[#C85A3C] h-12 w-12 flex items-center justify-center hover:bg-[#F2A545] hover:text-[#2B1E16] transition"
+                className="relative rounded-full h-12 w-12 flex items-center justify-center transition"
+                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
                 title="New orders"
               >
                 <Bell className="h-5 w-5" />
                 {newCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full bg-[#FDF4E4] text-[#2B1E16] text-xs font-bold flex items-center justify-center ring-2 ring-[#2B1E16]">
+                  <span
+                    className="absolute -top-1 -right-1 min-w-[22px] h-[22px] px-1.5 rounded-full text-xs font-bold flex items-center justify-center ring-2 ring-[#1C1712]"
+                    style={{ backgroundColor: "#F3E9D6", color: "#14100D" }}
+                  >
                     {newCount}
                   </span>
                 )}
               </button>
               <Link
                 href="/menu"
-                className="rounded-full bg-[#FDF4E4] text-[#C85A3C] px-5 py-2.5 font-bold text-sm hover:bg-[#F2A545] hover:text-[#2B1E16] transition"
+                className="rounded-full px-5 py-2.5 font-bold text-sm transition"
+                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
               >
                 Add test order →
               </Link>
               <form action={signOut}>
                 <button
                   type="submit"
-                  className="inline-flex items-center gap-1.5 rounded-full border border-[#FDF4E4]/30 text-[#FDF4E4]/75 px-4 py-2.5 text-xs font-semibold hover:bg-[#FDF4E4]/10 hover:text-[#FDF4E4] transition"
+                  className="inline-flex items-center gap-1.5 rounded-full px-4 py-2.5 text-xs font-semibold transition"
+                  style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#8A8276" }}
                   title="Sign out"
                 >
                   <LogOut className="h-3.5 w-3.5" />
@@ -122,13 +129,13 @@ export function AdminDashboard() {
 
           {/* Stat tiles */}
           <div className="mt-8 grid grid-cols-2 md:grid-cols-4 gap-3 lg:gap-4">
-            <Stat label="Active" value={counts.active.toString()} accent="#F2A545" />
+            <Stat label="Active" value={counts.active.toString()} accent="#C9A24B" />
             <Stat label="Completed today" value={counts.completed.toString()} accent="#4A6B4A" />
-            <Stat label="Revenue today" value={`$${counts.todayRevenue.toFixed(0)}`} accent="#C85A3C" />
+            <Stat label="Revenue today" value={`$${counts.todayRevenue.toFixed(0)}`} accent="#C9A24B" />
             <Stat
               label="Avg ticket"
               value={`$${counts.avgTicket.toFixed(2)}`}
-              accent="#FDF4E4"
+              accent="#F3E9D6"
             />
           </div>
         </div>
@@ -147,18 +154,22 @@ export function AdminDashboard() {
             <button
               key={t.id}
               onClick={() => setLane(t.id)}
-              className={`inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+              className="inline-flex items-center gap-2 rounded-full px-5 py-2.5 text-sm font-semibold transition"
+              style={
                 lane === t.id
-                  ? "bg-[#2B1E16] text-[#FDF4E4]"
-                  : "bg-white border border-[#2B1E16]/10 hover:border-[#2B1E16]"
-              }`}
+                  ? { backgroundColor: "#C9A24B", color: "#14100D" }
+                  : { backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.15)", color: "#8A8276" }
+              }
             >
               <Filter className="h-3.5 w-3.5" />
               {t.label}
               <span
-                className={`ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs rounded-full ${
-                  lane === t.id ? "bg-[#F2A545] text-[#2B1E16]" : "bg-[#2B1E16]/10 text-[#2B1E16]/70"
-                }`}
+                className="ml-1 inline-flex items-center justify-center h-5 min-w-5 px-1.5 text-xs rounded-full"
+                style={
+                  lane === t.id
+                    ? { backgroundColor: "rgba(20,16,13,0.25)", color: "#14100D" }
+                    : { backgroundColor: "rgba(201,162,75,0.1)", color: "#8A8276" }
+                }
               >
                 {t.count}
               </span>
@@ -168,8 +179,14 @@ export function AdminDashboard() {
 
         {/* Order cards */}
         {filtered.length === 0 ? (
-          <div className="mt-14 text-center py-20 rounded-[1.75rem] bg-white border border-dashed border-[#2B1E16]/15">
-            <p className="text-3xl" style={{ fontFamily: "var(--font-instrument), serif" }}>
+          <div
+            className="mt-14 text-center py-20 rounded-[1.75rem]"
+            style={{ backgroundColor: "#1C1712", border: "1px dashed rgba(201,162,75,0.15)" }}
+          >
+            <p
+              className="text-3xl"
+              style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
+            >
               {lane === "active"
                 ? "No active orders. Kitchen's quiet."
                 : lane === "completed"
@@ -177,9 +194,12 @@ export function AdminDashboard() {
                   : "No cancelled orders."}
             </p>
             {lane === "active" && (
-              <p className="mt-3 text-[#2B1E16]/60 max-w-md mx-auto text-sm">
-                Place an order from the <Link href="/menu" className="underline font-bold">menu</Link> and
-                it&apos;ll appear here in real time.
+              <p className="mt-3 max-w-md mx-auto text-sm" style={{ color: "#8A8276" }}>
+                Place an order from the{" "}
+                <Link href="/menu" className="underline font-bold" style={{ color: "#C9A24B" }}>
+                  menu
+                </Link>{" "}
+                and it&apos;ll appear here in real time.
               </p>
             )}
           </div>
@@ -192,7 +212,10 @@ export function AdminDashboard() {
         )}
       </div>
 
-      <p className="mt-14 text-center text-[11px] uppercase tracking-widest text-[#2B1E16]/40">
+      <p
+        className="mt-14 text-center text-[11px] uppercase tracking-widest"
+        style={{ color: "#8A8276" }}
+      >
         Demo kitchen · orders persist in localStorage · polls for storage events
       </p>
     </section>
@@ -207,19 +230,27 @@ function OrderCard({ order }: { order: Order }) {
 
   return (
     <article
-      className={`rounded-[1.5rem] bg-white border p-5 shadow-sm transition ${
-        urgent ? "border-[#C85A3C] ring-2 ring-[#C85A3C]/20" : "border-[#2B1E16]/8"
-      }`}
+      className="rounded-[1.5rem] p-5 transition"
+      style={{
+        backgroundColor: "#1C1712",
+        border: urgent
+          ? "1px solid #C9A24B"
+          : "1px solid rgba(201,162,75,0.15)",
+        boxShadow: urgent ? "0 0 0 2px rgba(201,162,75,0.2)" : undefined,
+      }}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div>
-          <p className="text-[10px] uppercase tracking-widest text-[#2B1E16]/50 font-bold">
+          <p
+            className="text-[10px] uppercase tracking-widest font-bold"
+            style={{ color: "#8A8276" }}
+          >
             {order.fulfillment === "pickup" ? "Pickup" : "Delivery"} ·{" "}
             <span className="font-mono">{order.code}</span>
           </p>
           <h3
             className="text-xl font-bold mt-0.5"
-            style={{ fontFamily: "var(--font-instrument), serif" }}
+            style={{ fontFamily: "var(--font-display)", color: "#F3E9D6" }}
           >
             {order.customer.name}
           </h3>
@@ -233,7 +264,7 @@ function OrderCard({ order }: { order: Order }) {
         </span>
       </div>
 
-      <div className="flex items-center gap-4 text-xs text-[#2B1E16]/60 mb-3">
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs mb-3" style={{ color: "#8A8276" }}>
         <span className="inline-flex items-center gap-1">
           <Clock className="h-3.5 w-3.5" />
           {minsAgo === 0 ? "just now" : `${minsAgo} min ago`}
@@ -243,40 +274,50 @@ function OrderCard({ order }: { order: Order }) {
           {order.customer.phone}
         </span>
         {urgent && (
-          <span className="inline-flex items-center gap-1 font-bold text-[#C85A3C]">
-            ⚠ Over 15 min
+          <span className="inline-flex items-center gap-1 font-bold" style={{ color: "#C9A24B" }}>
+            <AlertTriangle className="h-3.5 w-3.5" aria-hidden="true" /> Over 15 min
           </span>
         )}
       </div>
 
-      <ul className="space-y-1.5 mb-4 bg-[#F2A545]/10 rounded-2xl p-3 max-h-40 overflow-y-auto">
+      <ul
+        className="space-y-1.5 mb-4 rounded-2xl p-3 max-h-40 overflow-y-auto"
+        style={{ backgroundColor: "rgba(201,162,75,0.07)" }}
+      >
         {order.items.map((it) => (
-          <li key={it.id} className="flex justify-between text-sm">
-            <span>
-              <span className="font-bold text-[#C85A3C]">{it.qty}×</span> {it.name}
+          <li key={it.id} className="flex justify-between gap-3 text-sm">
+            <span className="min-w-0">
+              <span className="font-bold" style={{ color: "#C9A24B" }}>{it.qty}×</span>{" "}
+              <span style={{ color: "#F3E9D6" }}>{it.name}</span>
             </span>
-            <span className="text-[#2B1E16]/60">${(it.qty * it.price).toFixed(2)}</span>
+            <span className="shrink-0" style={{ color: "#8A8276" }}>${(it.qty * it.price).toFixed(2)}</span>
           </li>
         ))}
       </ul>
 
       {order.notes && (
-        <div className="rounded-2xl bg-[#2B1E16] text-[#F2A545] px-4 py-3 text-xs mb-4">
+        <div
+          className="rounded-2xl px-4 py-3 text-xs mb-4"
+          style={{ backgroundColor: "#14100D", border: "1px solid rgba(201,162,75,0.15)", color: "#C9A24B" }}
+        >
           <p className="uppercase tracking-widest text-[10px] opacity-60 mb-1">Note</p>
           {order.notes}
         </div>
       )}
 
       {order.fulfillment === "delivery" && order.address && (
-        <p className="text-xs text-[#2B1E16]/65 mb-4">
-          <span className="font-bold">Deliver to:</span> {order.address}
+        <p className="text-xs mb-4" style={{ color: "#8A8276" }}>
+          <span className="font-bold" style={{ color: "#F3E9D6" }}>Deliver to:</span> {order.address}
         </p>
       )}
 
-      <div className="flex items-center justify-between pt-3 border-t border-[#2B1E16]/10">
+      <div
+        className="flex items-center justify-between pt-3"
+        style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
+      >
         <span
           className="text-xl font-bold"
-          style={{ color: "#C85A3C", fontFamily: "var(--font-instrument), serif" }}
+          style={{ color: "#C9A24B", fontFamily: "var(--font-display)" }}
         >
           ${order.total.toFixed(2)}
         </span>
@@ -284,7 +325,8 @@ function OrderCard({ order }: { order: Order }) {
           {next && (
             <button
               onClick={() => updateOrderStatus(order.id, next.to)}
-              className="inline-flex items-center gap-1.5 rounded-full bg-[#2B1E16] text-[#FDF4E4] px-4 py-2 text-xs font-bold hover:bg-[#C85A3C] transition"
+              className="inline-flex items-center gap-1.5 rounded-full px-4 py-2 text-xs font-bold transition"
+              style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
             >
               <next.icon className="h-3.5 w-3.5" />
               {next.label}
@@ -295,7 +337,8 @@ function OrderCard({ order }: { order: Order }) {
               onClick={() => {
                 if (confirm("Cancel this order?")) updateOrderStatus(order.id, "cancelled");
               }}
-              className="inline-flex items-center rounded-full border border-[#2B1E16]/15 text-[#2B1E16]/60 p-2 hover:bg-red-50 hover:border-red-300 hover:text-red-600 transition"
+              className="inline-flex items-center rounded-full p-2 transition hover:bg-red-900/40 hover:border-red-500 hover:text-red-400"
+              style={{ border: "1px solid rgba(201,162,75,0.15)", color: "#8A8276" }}
               aria-label="Cancel"
               title="Cancel order"
             >
@@ -310,11 +353,14 @@ function OrderCard({ order }: { order: Order }) {
 
 function Stat({ label, value, accent }: { label: string; value: string; accent: string }) {
   return (
-    <div className="rounded-2xl bg-[#FDF4E4]/8 border border-[#FDF4E4]/15 px-5 py-4">
-      <p className="text-[10px] uppercase tracking-widest opacity-60 mb-1">{label}</p>
+    <div
+      className="rounded-2xl px-5 py-4"
+      style={{ backgroundColor: "rgba(201,162,75,0.05)", border: "1px solid rgba(201,162,75,0.15)" }}
+    >
+      <p className="text-[10px] uppercase tracking-widest opacity-60 mb-1" style={{ color: "#8A8276" }}>{label}</p>
       <p
         className="text-3xl lg:text-4xl font-bold"
-        style={{ color: accent, fontFamily: "var(--font-instrument), serif" }}
+        style={{ color: accent, fontFamily: "var(--font-display)" }}
       >
         {value}
       </p>

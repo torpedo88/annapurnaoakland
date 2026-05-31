@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { Zap } from "lucide-react";
 import { useCart } from "@/lib/preview-cart";
 import { appendOrder, generateOrderCode, type Order } from "@/lib/preview-order";
 
@@ -41,14 +42,15 @@ export default function CheckoutPage() {
         <div className="text-center px-6">
           <p
             className="text-4xl mb-3"
-            style={{ fontFamily: "var(--font-instrument), serif" }}
+            style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
           >
             Your bag is empty.
           </p>
-          <p className="text-[#2B1E16]/60 mb-6">Add a dish before checking out.</p>
+          <p className="mb-6" style={{ color: "#8A8276" }}>Add a dish before checking out.</p>
           <Link
             href="/menu"
-            className="inline-flex rounded-full bg-[#C85A3C] text-[#FDF4E4] px-7 py-3.5 font-bold hover:bg-[#2B1E16] transition"
+            className="inline-flex rounded-full px-7 py-3.5 font-bold transition"
+            style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
           >
             Browse menu
           </Link>
@@ -100,16 +102,16 @@ export default function CheckoutPage() {
       <div className="mx-auto max-w-6xl px-6 lg:px-10">
         <div className="mb-10">
           <p
-            className="text-2xl mb-1"
-            style={{ color: "#C85A3C", fontFamily: "var(--font-caveat), cursive" }}
+            className="text-[10px] uppercase tracking-[0.34em] mb-3"
+            style={{ color: "#C9A24B" }}
           >
-            almost there
+            Almost there
           </p>
           <h1
             className="text-5xl lg:text-6xl leading-[0.95] tracking-tight"
-            style={{ fontFamily: "var(--font-instrument), serif" }}
+            style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
           >
-            <em style={{ color: "#C85A3C" }}>Checkout.</em>
+            Checkout.
           </h1>
         </div>
 
@@ -117,7 +119,7 @@ export default function CheckoutPage() {
           <div className="space-y-10">
             {/* Fulfillment */}
             <div>
-              <h2 className="text-lg font-bold text-[#2B1E16] mb-3">How should we get this to you?</h2>
+              <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>How should we get this to you?</h2>
               <div className="grid sm:grid-cols-2 gap-3">
                 {([
                   { id: "pickup", title: "Pickup", eta: "Ready in ~20 min", sub: "948 Clay St, Oakland" },
@@ -127,24 +129,23 @@ export default function CheckoutPage() {
                     type="button"
                     key={opt.id}
                     onClick={() => setFulfillment(opt.id)}
-                    className={`text-left rounded-2xl p-5 border-2 transition ${
+                    className="text-left rounded-2xl p-5 transition"
+                    style={
                       fulfillment === opt.id
-                        ? "bg-[#C85A3C] text-[#FDF4E4] border-[#C85A3C]"
-                        : "bg-white border-[#2B1E16]/10 hover:border-[#C85A3C]"
-                    }`}
+                        ? { backgroundColor: "#C9A24B", color: "#14100D", border: "2px solid #C9A24B" }
+                        : { backgroundColor: "#1C1712", border: "2px solid rgba(201,162,75,0.15)", color: "#F3E9D6" }
+                    }
                   >
                     <p className="font-bold text-lg">{opt.title}</p>
                     <p
-                      className={`text-sm mt-0.5 ${
-                        fulfillment === opt.id ? "text-[#FDF4E4]/80" : "text-[#2B1E16]/60"
-                      }`}
+                      className="text-sm mt-0.5"
+                      style={{ color: fulfillment === opt.id ? "rgba(20,16,13,0.75)" : "#8A8276" }}
                     >
                       {opt.eta}
                     </p>
                     <p
-                      className={`text-xs mt-0.5 ${
-                        fulfillment === opt.id ? "text-[#FDF4E4]/60" : "text-[#2B1E16]/50"
-                      }`}
+                      className="text-xs mt-0.5"
+                      style={{ color: fulfillment === opt.id ? "rgba(20,16,13,0.6)" : "#8A8276" }}
                     >
                       {opt.sub}
                     </p>
@@ -155,7 +156,7 @@ export default function CheckoutPage() {
 
             {/* Contact */}
             <div>
-              <h2 className="text-lg font-bold text-[#2B1E16] mb-3">Who&apos;s this for?</h2>
+              <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>Who&apos;s this for?</h2>
               <div className="grid sm:grid-cols-2 gap-3">
                 <Field label="Full name *" value={name} onChange={setName} placeholder="Your name" />
                 <Field label="Phone *" value={phone} onChange={setPhone} placeholder="(510) 555-0199" type="tel" />
@@ -164,7 +165,7 @@ export default function CheckoutPage() {
                   <Field label="Delivery address *" value={address} onChange={setAddress} placeholder="Street, Apt, City" full />
                 )}
                 <div className="sm:col-span-2">
-                  <label className="block text-xs font-semibold uppercase tracking-wider text-[#2B1E16]/60 mb-1.5">
+                  <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "#8A8276" }}>
                     Notes for the kitchen (optional)
                   </label>
                   <textarea
@@ -172,7 +173,12 @@ export default function CheckoutPage() {
                     onChange={(e) => setNotes(e.target.value)}
                     rows={3}
                     placeholder="Allergies, spice level, door code…"
-                    className="w-full rounded-2xl bg-white border border-[#2B1E16]/10 p-4 text-sm resize-none focus:outline-none focus:border-[#C85A3C] focus:ring-2 focus:ring-[#C85A3C]/20"
+                    className="w-full rounded-2xl p-4 text-sm resize-none focus:outline-none transition"
+                    style={{
+                      backgroundColor: "#1C1712",
+                      border: "1px solid rgba(201,162,75,0.2)",
+                      color: "#F3E9D6",
+                    }}
                   />
                 </div>
               </div>
@@ -180,8 +186,11 @@ export default function CheckoutPage() {
 
             {/* Tip */}
             <div>
-              <h2 className="text-lg font-bold text-[#2B1E16] mb-3">
-                Add a tip <span className="font-normal text-sm text-[#2B1E16]/60">(100% goes to the kitchen &amp; FOH team)</span>
+              <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>
+                Add a tip{" "}
+                <span className="font-normal text-sm" style={{ color: "#8A8276" }}>
+                  (100% goes to the kitchen &amp; FOH team)
+                </span>
               </h2>
               <div className="flex flex-wrap gap-2">
                 {TIP_PRESETS.map((p) => (
@@ -192,17 +201,21 @@ export default function CheckoutPage() {
                       setTipPct(p);
                       setCustomTip("");
                     }}
-                    className={`rounded-full px-5 py-2.5 text-sm font-semibold transition ${
+                    className="rounded-full px-5 py-2.5 text-sm font-semibold transition"
+                    style={
                       tipPct === p && !customTip
-                        ? "bg-[#2B1E16] text-[#FDF4E4]"
-                        : "bg-white border border-[#2B1E16]/10 hover:border-[#2B1E16]"
-                    }`}
+                        ? { backgroundColor: "#C9A24B", color: "#14100D" }
+                        : { backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.15)", color: "#8A8276" }
+                    }
                   >
                     {Math.round(p * 100)}% · ${(subtotal * p).toFixed(2)}
                   </button>
                 ))}
-                <div className="inline-flex items-center gap-2 rounded-full bg-white border border-[#2B1E16]/10 px-4">
-                  <span className="text-sm text-[#2B1E16]/50">$</span>
+                <div
+                  className="inline-flex items-center gap-2 rounded-full px-4"
+                  style={{ backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.15)" }}
+                >
+                  <span className="text-sm" style={{ color: "#8A8276" }}>$</span>
                   <input
                     type="text"
                     inputMode="decimal"
@@ -210,6 +223,7 @@ export default function CheckoutPage() {
                     onChange={(e) => setCustomTip(e.target.value)}
                     placeholder="Custom"
                     className="w-20 py-2.5 text-sm focus:outline-none bg-transparent"
+                    style={{ color: "#F3E9D6" }}
                   />
                 </div>
               </div>
@@ -217,15 +231,24 @@ export default function CheckoutPage() {
 
             {/* Payment (dummy) */}
             <div>
-              <h2 className="text-lg font-bold text-[#2B1E16] mb-3">Payment</h2>
-              <div className="rounded-2xl bg-white border-2 border-dashed border-[#2B1E16]/20 p-5">
+              <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>Payment</h2>
+              <div
+                className="rounded-2xl p-5"
+                style={{
+                  backgroundColor: "#1C1712",
+                  border: "2px dashed rgba(201,162,75,0.2)",
+                }}
+              >
                 <div className="flex items-center gap-3">
-                  <div className="h-10 w-10 rounded-full bg-[#F2A545]/30 flex items-center justify-center text-[#C85A3C] font-bold">
-                    ⚡
+                  <div
+                    className="h-10 w-10 rounded-full flex items-center justify-center font-bold"
+                    style={{ backgroundColor: "rgba(201,162,75,0.15)", color: "#C9A24B" }}
+                  >
+                    <Zap className="h-5 w-5" aria-hidden="true" />
                   </div>
                   <div>
-                    <p className="font-bold">Demo mode — no card required</p>
-                    <p className="text-sm text-[#2B1E16]/60">
+                    <p className="font-bold" style={{ color: "#F3E9D6" }}>Demo mode — no card required</p>
+                    <p className="text-sm" style={{ color: "#8A8276" }}>
                       Real build wires Toast Order Pay or Stripe here. This one skips straight to
                       confirmation.
                     </p>
@@ -243,10 +266,13 @@ export default function CheckoutPage() {
 
           {/* Summary sidebar */}
           <aside className="lg:sticky lg:top-24 h-fit">
-            <div className="rounded-[1.75rem] bg-white border border-[#2B1E16]/6 p-6 shadow-sm">
+            <div
+              className="rounded-[1.75rem] p-6"
+              style={{ backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.15)" }}
+            >
               <h3
                 className="text-2xl mb-4"
-                style={{ fontFamily: "var(--font-instrument), serif" }}
+                style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
               >
                 Order summary
               </h3>
@@ -254,27 +280,33 @@ export default function CheckoutPage() {
                 {lines.map((l) => (
                   <li key={l.id} className="flex justify-between gap-4 text-sm">
                     <div>
-                      <p className="font-semibold text-[#2B1E16]">{l.name}</p>
-                      <p className="text-[#2B1E16]/55">
+                      <p className="font-semibold" style={{ color: "#F3E9D6" }}>{l.name}</p>
+                      <p style={{ color: "#8A8276" }}>
                         {l.qty} × ${l.price.toFixed(2)}
                       </p>
                     </div>
-                    <span className="font-bold whitespace-nowrap">
+                    <span className="font-bold whitespace-nowrap" style={{ color: "#F3E9D6" }}>
                       ${(l.qty * l.price).toFixed(2)}
                     </span>
                   </li>
                 ))}
               </ul>
-              <dl className="space-y-2 text-sm border-t border-[#2B1E16]/10 pt-4">
+              <dl
+                className="space-y-2 text-sm pt-4"
+                style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
+              >
                 <Row label="Subtotal" value={`$${subtotal.toFixed(2)}`} />
                 <Row label="Tax" value={`$${tax.toFixed(2)}`} />
                 {deliveryFee > 0 && <Row label="Delivery" value={`$${deliveryFee.toFixed(2)}`} />}
                 <Row label="Tip" value={`$${tip.toFixed(2)}`} />
-                <div className="pt-2 mt-2 border-t border-[#2B1E16]/10 flex justify-between items-baseline">
-                  <dt className="font-bold">Total</dt>
+                <div
+                  className="pt-2 mt-2 flex justify-between items-baseline"
+                  style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
+                >
+                  <dt className="font-bold" style={{ color: "#F3E9D6" }}>Total</dt>
                   <dd
                     className="text-3xl font-bold"
-                    style={{ color: "#C85A3C", fontFamily: "var(--font-instrument), serif" }}
+                    style={{ color: "#C9A24B", fontFamily: "var(--font-display)" }}
                   >
                     ${total.toFixed(2)}
                   </dd>
@@ -283,11 +315,15 @@ export default function CheckoutPage() {
               <button
                 type="submit"
                 disabled={submitting}
-                className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full bg-[#C85A3C] text-[#FDF4E4] py-4 font-bold text-base hover:bg-[#2B1E16] transition disabled:opacity-60 disabled:cursor-wait"
+                className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold text-base transition disabled:opacity-60 disabled:cursor-wait"
+                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
               >
                 {submitting ? "Sending to kitchen…" : `Place order · $${total.toFixed(2)}`}
               </button>
-              <p className="mt-3 text-center text-[11px] uppercase tracking-widest text-[#2B1E16]/50">
+              <p
+                className="mt-3 text-center text-[11px] uppercase tracking-widest"
+                style={{ color: "#8A8276" }}
+              >
                 Demo · orders live in localStorage
               </p>
             </div>
@@ -315,7 +351,7 @@ function Field({
 }) {
   return (
     <div className={full ? "sm:col-span-2" : ""}>
-      <label className="block text-xs font-semibold uppercase tracking-wider text-[#2B1E16]/60 mb-1.5">
+      <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "#8A8276" }}>
         {label}
       </label>
       <input
@@ -323,7 +359,12 @@ function Field({
         onChange={(e) => onChange(e.target.value)}
         type={type}
         placeholder={placeholder}
-        className="w-full rounded-full bg-white border border-[#2B1E16]/10 px-5 py-3 text-sm focus:outline-none focus:border-[#C85A3C] focus:ring-2 focus:ring-[#C85A3C]/20"
+        className="w-full rounded-full px-5 py-3 text-sm focus:outline-none transition"
+        style={{
+          backgroundColor: "#1C1712",
+          border: "1px solid rgba(201,162,75,0.2)",
+          color: "#F3E9D6",
+        }}
       />
     </div>
   );
@@ -331,7 +372,7 @@ function Field({
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between text-[#2B1E16]/75">
+    <div className="flex justify-between" style={{ color: "#8A8276" }}>
       <dt>{label}</dt>
       <dd>{value}</dd>
     </div>
