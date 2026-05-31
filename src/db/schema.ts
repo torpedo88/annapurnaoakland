@@ -81,7 +81,9 @@ export const orders = pgTable("orders", {
   customerEmail: text("customer_email"),
   customerPhone: text("customer_phone"),
   orderType: text("order_type"),
-  status: text("status").default("confirmed"),
+  status: text("status").default("received"),
+  // High-entropy per-order token required to read the order (guards IDOR / PII).
+  accessToken: text("access_token").notNull().default(sql`gen_random_uuid()::text`),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }),
   tax: decimal("tax", { precision: 10, scale: 2 }),
   tip: decimal("tip", { precision: 10, scale: 2 }).default("0"),
@@ -211,6 +213,7 @@ export const deliveries = pgTable("deliveries", {
   currency: text("currency").default("USD"),
   trackingUrl: text("tracking_url"),
   dropoffAddress: text("dropoff_address"),
+  lastEventId: text("last_event_id"), // webhook idempotency / replay guard
   raw: jsonb("raw"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),

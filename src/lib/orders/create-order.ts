@@ -1,39 +1,71 @@
+import { randomUUID } from "node:crypto";
 import { db } from "@/db";
 import { orders, orderItems } from "@/db/schema";
+import { toDollars } from "@/lib/orders/money";
+import {
+  priceOrder,
+  validateContact,
+  cleanString,
+  type RawLine,
+} from "@/lib/orders/pricing";
 
 export interface NewOrderInput {
-  name: string; phone: string; email: string;
+  name: unknown;
+  phone: unknown;
+  email: unknown;
   fulfillment: "pickup" | "delivery";
-  address?: string;
-  items: { id: string; name: string; price: number; qty: number }[];
-  subtotal: number; tax: number; tip: number; deliveryFee: number;
+  address?: unknown;
+  items: RawLine[];
+  tipCents?: number;
+  deliveryFeeCents?: number;
 }
 
-export async function createOrder(input: NewOrderInput): Promise<{ orderId: string }> {
-  const total = input.subtotal + input.tax + input.tip + input.deliveryFee;
+/**
+ * Persists an order. ALL money is recomputed server-side from the menu catalog
+ * (client price/total fields are never trusted). Returns a high-entropy
+ * accessToken the client needs to read the order back (guards IDOR).
+ * Status is "received" — there is no payment step yet, so it is NOT "confirmed".
+ */
+export async function createOrder(
+  input: NewOrderInput,
+): Promise<{ orderId: string; accessToken: string }> {
+  const contact = validateContact(input);
+  const totals = priceOrder(input.items, {
+    tipCents: input.tipCents,
+    deliveryFeeCents: input.deliveryFeeCents,
+  });
+  const address =
+    input.fulfillment === "delivery" ? cleanString(input.address, 200) : "";
+  const accessToken = randomUUID();
+
   return db.transaction(async (tx) => {
-    const [order] = await tx.insert(orders).values({
-      customerName: input.name,
-      customerEmail: input.email,
-      customerPhone: input.phone,
-      orderType: input.fulfillment,
-      status: "confirmed",
-      subtotal: input.subtotal.toFixed(2),
-      tax: input.tax.toFixed(2),
-      tip: input.tip.toFixed(2),
-      deliveryFee: input.deliveryFee.toFixed(2),
-      total: total.toFixed(2),
-      deliveryAddress: input.address ?? null,
-    }).returning({ id: orders.id });
+    const [order] = await tx
+      .insert(orders)
+      .values({
+        customerName: contact.name,
+        customerEmail: contact.email || null,
+        customerPhone: contact.phone,
+        orderType: input.fulfillment,
+        status: "received",
+        accessToken,
+        subtotal: toDollars(totals.subtotalCents),
+        tax: toDollars(totals.taxCents),
+        tip: toDollars(totals.tipCents),
+        deliveryFee: toDollars(totals.deliveryFeeCents),
+        total: toDollars(totals.totalCents),
+        deliveryAddress: address || null,
+      })
+      .returning({ id: orders.id });
     if (!order) throw new Error("Order insert failed");
+
     await tx.insert(orderItems).values(
-      input.items.map((it) => ({
+      totals.lines.map((l) => ({
         orderId: order.id,
-        itemName: it.name,
-        itemPrice: it.price.toFixed(2),
-        quantity: it.qty,
+        itemName: l.name, // resolved from catalog, not the client payload
+        itemPrice: toDollars(l.priceCents),
+        quantity: l.qty,
       })),
     );
-    return { orderId: order.id };
+    return { orderId: order.id, accessToken };
   });
 }

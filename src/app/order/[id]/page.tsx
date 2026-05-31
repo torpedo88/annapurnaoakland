@@ -99,7 +99,8 @@ export default function OrderStatusPage({ params }: { params: Promise<{ id: stri
 
   const fetchOrder = useCallback(async () => {
     try {
-      const res = await fetch(`/api/orders/${id}`);
+      const token = new URLSearchParams(window.location.search).get("t") ?? "";
+      const res = await fetch(`/api/orders/${id}?t=${encodeURIComponent(token)}`);
       if (res.status === 404) { setNotFound(true); return; }
       if (!res.ok) return;
       const json = await res.json() as OrderPayload;

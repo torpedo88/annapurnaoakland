@@ -46,7 +46,7 @@ export async function quoteDelivery(input: QuoteInput): Promise<QuoteResult> {
 }
 
 export async function acceptQuote(externalDeliveryId: string): Promise<AcceptResult> {
-  const r = await driveFetch(`/drive/v2/quotes/${externalDeliveryId}/accept`, {
+  const r = await driveFetch(`/drive/v2/quotes/${encodeURIComponent(externalDeliveryId)}/accept`, {
     method: "POST",
     body: JSON.stringify({}),
   });
@@ -59,5 +59,5 @@ export async function acceptQuote(externalDeliveryId: string): Promise<AcceptRes
 }
 
 export async function getDelivery(externalDeliveryId: string) {
-  return driveFetch(`/drive/v2/deliveries/${externalDeliveryId}`, { method: "GET" });
+  return driveFetch(`/drive/v2/deliveries/${encodeURIComponent(externalDeliveryId)}`, { method: "GET" });
 }

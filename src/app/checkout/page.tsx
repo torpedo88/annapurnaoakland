@@ -63,7 +63,11 @@ export default function CheckoutPage() {
         const res = await fetch("/api/delivery/quote", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ address: address.trim(), phone: phone.trim(), subtotal }),
+          body: JSON.stringify({
+            address: address.trim(),
+            phone: phone.trim(),
+            items: lines.map((l) => ({ id: l.id, qty: l.qty })),
+          }),
         });
         const json = await res.json() as {
           externalDeliveryId?: string;
@@ -90,7 +94,7 @@ export default function CheckoutPage() {
     return () => {
       if (debounceRef.current) clearTimeout(debounceRef.current);
     };
-  }, [fulfillment, address, phone, subtotal]);
+  }, [fulfillment, address, phone, lines]);
 
   // ─── Fee calculation ───────────────────────────────────────────────────────
   // Use live feeCents from quote; fall back to 0 while no quote yet
@@ -176,29 +180,27 @@ export default function CheckoutPage() {
           fulfillment,
           address: fulfillment === "delivery" ? address.trim() : undefined,
           notes: notes.trim() || undefined,
-          items: lines.map((l) => ({ id: l.id, name: l.name, price: l.price, qty: l.qty })),
-          subtotal: +subtotal.toFixed(2),
-          tax: +tax.toFixed(2),
+          // Only ids + quantities — the server recomputes all prices from the catalog.
+          items: lines.map((l) => ({ id: l.id, qty: l.qty })),
           tip,
-          deliveryFee,
           externalDeliveryId: quote.externalDeliveryId ?? undefined,
         }),
       });
 
-      const json = await res.json() as { orderId?: string; error?: string; deliveryError?: string };
+      const json = (await res.json()) as {
+        orderId?: string;
+        accessToken?: string;
+        error?: string;
+      };
 
-      if (!res.ok || !json.orderId) {
+      if (!res.ok || !json.orderId || !json.accessToken) {
         setError(json.error ?? "Could not place order. Please try again.");
         setSubmitting(false);
         return;
       }
 
-      if (json.deliveryError) {
-        setDeliveryNotice(json.deliveryError);
-      }
-
       clear();
-      router.push(`/order/${json.orderId}`);
+      router.push(`/order/${json.orderId}?t=${encodeURIComponent(json.accessToken)}`);
     } catch {
       setError("Network error. Please check your connection and try again.");
       setSubmitting(false);
