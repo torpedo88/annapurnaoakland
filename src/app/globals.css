@@ -5,26 +5,26 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-primary: #D4731A;
-  --color-primary-dark: #8B4513;
-  --color-secondary: #8B1A1A;
-  --color-background: #FAF7F2;
-  --color-surface: #F5F0E8;
-  --color-foreground: #2D2A26;
-  --color-muted: #6B6560;
-  --color-accent: #4A7C59;
-  --color-gold: #C5963A;
-  --color-primary-foreground: #FFFFFF;
-  --color-secondary-foreground: #FFFFFF;
-  --color-accent-foreground: #FFFFFF;
+  --color-primary: #C9A24B;
+  --color-primary-dark: #B9742F;
+  --color-secondary: #C9A24B;
+  --color-background: #14100D;
+  --color-surface: #1C1712;
+  --color-foreground: #F3E9D6;
+  --color-muted: #8A8276;
+  --color-accent: #C9A24B;
+  --color-gold: #C9A24B;
+  --color-primary-foreground: #14100D;
+  --color-secondary-foreground: #14100D;
+  --color-accent-foreground: #14100D;
 
-  --font-sans: var(--font-inter);
-  --font-serif: var(--font-playfair);
-  --font-mono: var(--font-dm-mono);
+  --font-sans: var(--font-body);
+  --font-serif: var(--font-display);
+  --font-mono: var(--font-body);
 
-  --radius-lg: 0.75rem;
-  --radius-md: 0.5rem;
-  --radius-sm: 0.25rem;
+  --radius-lg: 0.5rem;
+  --radius-md: 0.25rem;
+  --radius-sm: 0.125rem;
 }
 
 @theme inline {
@@ -78,7 +78,7 @@
   --card-foreground: #2D2A26;
   --popover: #FAF7F2;
   --popover-foreground: #2D2A26;
-  --primary: #D4731A;
+  --primary: #B85D14;
   --primary-foreground: #FFFFFF;
   --secondary: #8B1A1A;
   --secondary-foreground: #FFFFFF;
@@ -149,5 +149,15 @@
   }
   html {
     @apply font-sans;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+      scroll-behavior: auto !important;
+    }
   }
 }
