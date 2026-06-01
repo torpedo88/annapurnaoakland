@@ -3,6 +3,8 @@ import { desc, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { orders, orderItems, deliveries } from "@/db/schema";
 import { requireRole, AuthError } from "@/lib/auth/session";
+import { toCents } from "@/lib/orders/money";
+import { placeOrder, OrderError } from "@/lib/orders/place-order";
 
 export const runtime = "nodejs";
 
@@ -44,4 +46,44 @@ export async function GET(req: Request) {
   }));
 
   return NextResponse.json({ orders: result });
+}
+
+export async function POST(req: Request) {
+  try {
+    await requireRole(["owner", "manager", "staff"]);
+  } catch (e) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: e instanceof AuthError ? 401 : 500 });
+  }
+
+  let body: Record<string, unknown>;
+  try {
+    body = await req.json();
+  } catch {
+    return NextResponse.json({ error: "Invalid request" }, { status: 400 });
+  }
+
+  const fulfillment = body?.fulfillment === "delivery" ? "delivery" : "pickup";
+  const payMethodRaw = body?.payment_method;
+  const paymentMethod =
+    payMethodRaw === "cash" || payMethodRaw === "card" || payMethodRaw === "online" ? payMethodRaw : null;
+  const paymentStatus: "paid" | "unpaid" = body?.payment_status === "paid" ? "paid" : "unpaid";
+
+  try {
+    const { orderId } = await placeOrder({
+      name: body.name, phone: body.phone, email: body.email,
+      fulfillment,
+      address: body.address,
+      items: (body?.items as { id: unknown; qty: unknown }[]) ?? [],
+      tipCents: toCents(Number(body?.tip) || 0),
+      externalDeliveryId: body.externalDeliveryId,
+      source: "phone",
+      paymentStatus,
+      paymentMethod,
+    });
+    return NextResponse.json({ orderId });
+  } catch (e) {
+    if (e instanceof OrderError) return NextResponse.json({ error: e.message }, { status: e.status });
+    console.error("[admin orders] unexpected:", e);
+    return NextResponse.json({ error: "Could not place order" }, { status: 500 });
+  }
 }
