@@ -82,6 +82,9 @@ export const orders = pgTable("orders", {
   customerPhone: text("customer_phone"),
   orderType: text("order_type"),
   status: text("status").default("received"),
+  paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid | paid | refunded
+  paymentMethod: text("payment_method"), // cash | card | online
+  source: text("source").notNull().default("online"), // online | phone
   // High-entropy per-order token required to read the order (guards IDOR / PII).
   accessToken: text("access_token").notNull().default(sql`gen_random_uuid()::text`),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }),
