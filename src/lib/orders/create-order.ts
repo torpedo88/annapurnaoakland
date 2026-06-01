@@ -8,6 +8,7 @@ import {
   cleanString,
   type RawLine,
 } from "@/lib/orders/pricing";
+import { getSettings } from "@/lib/settings";
 
 export interface NewOrderInput {
   name: unknown;
@@ -30,9 +31,11 @@ export async function createOrder(
   input: NewOrderInput,
 ): Promise<{ orderId: string; accessToken: string }> {
   const contact = validateContact(input);
+  const settings = await getSettings();
   const totals = priceOrder(input.items, {
     tipCents: input.tipCents,
     deliveryFeeCents: input.deliveryFeeCents,
+    taxRate: settings.tax_rate,
   });
   const address =
     input.fulfillment === "delivery" ? cleanString(input.address, 200) : "";

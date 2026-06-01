@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { quoteDelivery } from "@/lib/doordash/client";
 import { priceOrder, cleanString, PricingError } from "@/lib/orders/pricing";
+import { getSettings } from "@/lib/settings";
+import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
 
 export const runtime = "nodejs";
 
@@ -28,6 +30,22 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: msg }, { status: 400 });
   }
 
+  const settings = await getSettings();
+  if (settings.ordering_paused || !settings.delivery_enabled) {
+    return NextResponse.json({ error: "Delivery is currently unavailable." }, { status: 503 });
+  }
+  try {
+    assertDeliverable({ subtotalCents: orderValueCents }, settings.delivery);
+  } catch (e) {
+    if (e instanceof MinOrderError) {
+      return NextResponse.json(
+        { error: `Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.` },
+        { status: 400 },
+      );
+    }
+    throw e;
+  }
+
   const externalDeliveryId = `anp-${randomUUID()}`;
   try {
     const q = await quoteDelivery({
@@ -36,9 +54,14 @@ export async function POST(req: Request) {
       dropoffPhone: phone,
       orderValueCents,
     });
+    const { feeCents, freeApplied } = computeDeliveryFee(
+      { doordashFeeCents: q.feeCents, subtotalCents: orderValueCents },
+      settings.delivery,
+    );
     return NextResponse.json({
       externalDeliveryId,
-      feeCents: q.feeCents,
+      feeCents,
+      freeApplied,
       durationSeconds: q.durationSeconds,
     });
   } catch (e) {

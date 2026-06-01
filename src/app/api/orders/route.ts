@@ -12,6 +12,8 @@ import {
   httpsUrlOrNull,
   PricingError,
 } from "@/lib/orders/pricing";
+import { getSettings } from "@/lib/settings";
+import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
 
 export const runtime = "nodejs";
 
@@ -26,6 +28,17 @@ export async function POST(req: Request) {
   const fulfillment = body?.fulfillment === "delivery" ? "delivery" : "pickup";
   const items = (body?.items as unknown[]) ?? [];
   const tipCents = toCents(Number(body?.tip) || 0);
+
+  const settings = await getSettings();
+  if (settings.ordering_paused) {
+    return NextResponse.json({ error: "Online ordering is paused. Please call the restaurant." }, { status: 503 });
+  }
+  if (fulfillment === "delivery" && !settings.delivery_enabled) {
+    return NextResponse.json({ error: "Delivery is currently unavailable." }, { status: 503 });
+  }
+  if (fulfillment === "pickup" && !settings.pickup_enabled) {
+    return NextResponse.json({ error: "Pickup is currently unavailable." }, { status: 503 });
+  }
 
   // 1) Validate contact + items BEFORE any external dispatch (no driver for a bad order).
   try {
@@ -48,7 +61,22 @@ export async function POST(req: Request) {
     }
     try {
       accepted = await acceptQuote(body.externalDeliveryId as string);
-      deliveryFeeCents = accepted.feeCents ?? 0;
+      const subtotalCents = priceOrder(items as { id: unknown; qty: unknown }[]).subtotalCents;
+      try {
+        assertDeliverable({ subtotalCents }, settings.delivery);
+      } catch (e) {
+        if (e instanceof MinOrderError) {
+          return NextResponse.json(
+            { error: `Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.` },
+            { status: 400 },
+          );
+        }
+        throw e;
+      }
+      deliveryFeeCents = computeDeliveryFee(
+        { doordashFeeCents: accepted.feeCents ?? 0, subtotalCents },
+        settings.delivery,
+      ).feeCents;
     } catch (e) {
       console.error("[orders] Drive acceptQuote failed:", e);
       return NextResponse.json(
