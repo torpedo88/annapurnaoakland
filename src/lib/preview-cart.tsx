@@ -11,7 +11,7 @@ import {
 import type { MenuItem } from "@/data/menu";
 
 const CART_KEY = "annapurna:cart";
-const TAX_RATE = 0.0925; // Oakland sales tax ~9.25%
+const DEFAULT_TAX_RATE = 0.0925; // display fallback; server is authoritative
 
 export type CartLine = {
   id: string;
@@ -43,6 +43,18 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const [isOpen, setOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [justAdded, setJustAdded] = useState<{ id: string; ts: number } | null>(null);
+  const [taxRate, setTaxRate] = useState(DEFAULT_TAX_RATE);
+
+  useEffect(() => {
+    let alive = true;
+    fetch("/api/settings/public")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (alive && d && typeof d.tax_rate === "number") setTaxRate(d.tax_rate);
+      })
+      .catch(() => { /* keep default; server is authoritative */ });
+    return () => { alive = false; };
+  }, []);
 
   // Hydrate from localStorage
   useEffect(() => {
@@ -94,7 +106,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   const clear = useCallback(() => setLines([]), []);
 
   const subtotal = useMemo(() => lines.reduce((s, l) => s + l.price * l.qty, 0), [lines]);
-  const tax = useMemo(() => +(subtotal * TAX_RATE).toFixed(2), [subtotal]);
+  const tax = useMemo(() => +(subtotal * taxRate).toFixed(2), [subtotal, taxRate]);
   const count = useMemo(() => lines.reduce((s, l) => s + l.qty, 0), [lines]);
 
   const value = useMemo<CartContextShape>(
@@ -124,4 +136,4 @@ export function useCart() {
   return ctx;
 }
 
-export { TAX_RATE };
+export { DEFAULT_TAX_RATE };
