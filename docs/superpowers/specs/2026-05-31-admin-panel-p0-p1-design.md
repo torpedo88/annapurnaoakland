@@ -75,11 +75,14 @@ The admin area today is minimal and disconnected from the live system:
 - Cookie `annapurna_staff`: httpOnly, `sameSite: lax`, `secure` in production, path `/`, 8h TTL. Value = signed token (replaces the old static `"ok"`).
 - Helpers: `getSession()` (reads + verifies cookie → `{sid, role}` | null), `requireSession()`, `requireRole(roles[])`.
 
-### 4.4 Middleware enforcement
+### 4.4 Proxy (route protection)
 
-- **New `src/middleware.ts`** (first in project). `matcher`: `/admin/:path*`, `/api/admin/:path*` (excluding `/admin/login` and its action).
-- Verifies cookie signature + expiry. Invalid/absent → redirect `/admin/login` (for pages) or `401 JSON` (for `/api/admin/*`).
-- Middleware does coarse gate (authenticated or not). Fine-grained role checks happen in handlers via `requireRole`.
+> **Next 16 fact:** the `middleware` file convention is renamed to **`proxy`** (`src/proxy.ts`, exported `proxy` fn, Node.js runtime by default). The Next 16 docs explicitly warn that server functions are POST requests to their route and a proxy matcher can silently skip them — so auth/authz **must also be enforced inside each handler/server action**, not by proxy alone.
+
+- **New `src/proxy.ts`** (first in project). `config.matcher`: `['/admin/:path*', '/api/admin/:path*']`. The proxy short-circuits `/admin/login` to avoid a redirect loop.
+- Verifies cookie signature + expiry (Web Crypto HMAC, runtime-agnostic). Invalid/absent → redirect `/admin/login` (pages) or `401 JSON` (`/api/admin/*`).
+- Proxy does the coarse gate (authenticated or not). **Fine-grained role checks happen in handlers/server actions** via `requireRole` (defense-in-depth per the Next 16 warning).
+- The session module reads `STAFF_SESSION_SECRET` from `process.env` directly (NOT via `src/lib/env.ts`, which is `server-only` and cannot be imported into proxy).
 
 ### 4.5 Role matrix
 
@@ -213,7 +216,7 @@ Built in later, separately-specced phases:
 
 ## 10. Risks / notes
 
-- Making `priceOrder` async ripples to all callers — must update every call site in the same change.
-- Middleware is new to this project; verify Next 16 middleware semantics against `node_modules/next/dist/docs/` before implementing (per AGENTS.md, this Next build may differ from training data).
+- `priceOrder` stays **synchronous**; the DB tax rate is injected as a `taxRate` option by the (already-async) `createOrder` caller. This avoids an async ripple across every call site and keeps `priceOrder` unit-testable without DB mocking. Validation-only `priceOrder` calls (which don't persist tax) use the default fallback rate.
+- Proxy (`src/proxy.ts`) is new to this project and uses the Next 16 `proxy` convention (not `middleware`). Verified against `node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/proxy.md`.
 - `restaurant_settings` already seeded with some keys (`tax_rate`, `delivery_provider`, etc.); the settings service must treat seeded values as overrides and not clobber them on read.
 - Client `preview-cart` tax is display-only; server stays authoritative, so a stale client value is cosmetic, not a pricing risk.
