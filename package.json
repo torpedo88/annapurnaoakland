@@ -8,6 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:seed": "npx tsx --env-file=.env.local src/db/seed.ts",
+    "db:seed:staff": "npx tsx --env-file=.env.local src/db/seed-staff.ts",
     "db:generate": "npx drizzle-kit generate",
     "db:push": "npx drizzle-kit push",
     "test": "vitest run",
