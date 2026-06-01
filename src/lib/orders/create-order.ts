@@ -19,6 +19,9 @@ export interface NewOrderInput {
   items: RawLine[];
   tipCents?: number;
   deliveryFeeCents?: number;
+  source?: "online" | "phone";
+  paymentStatus?: "unpaid" | "paid" | "refunded";
+  paymentMethod?: "cash" | "card" | "online" | null;
 }
 
 /**
@@ -50,6 +53,9 @@ export async function createOrder(
         customerPhone: contact.phone,
         orderType: input.fulfillment,
         status: "received",
+        source: input.source ?? "online",
+        paymentStatus: input.paymentStatus ?? "unpaid",
+        paymentMethod: input.paymentMethod ?? null,
         accessToken,
         subtotal: toDollars(totals.subtotalCents),
         tax: toDollars(totals.taxCents),
