@@ -218,3 +218,15 @@ export const deliveries = pgTable("deliveries", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
 });
+
+// ─── Staff (admin users) ─────────────────────────────────────────────────────
+export const staff = pgTable("staff", {
+  id: uuid("id").primaryKey().default(genUuid()),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("staff"), // 'owner' | 'manager' | 'staff'
+  isActive: boolean("is_active").notNull().default(true),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
+});
