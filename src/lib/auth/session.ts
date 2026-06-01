@@ -17,7 +17,7 @@ function b64url(bytes: ArrayBuffer | Uint8Array): string {
   for (const b of arr) s += String.fromCharCode(b);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
-function fromB64url(s: string): Uint8Array {
+function fromB64url(s: string): Uint8Array<ArrayBuffer> {
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   const norm = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
   const bin = atob(norm);
