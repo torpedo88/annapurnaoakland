@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OrderCard, type AdminOrder } from "./order-card";
+import { ManualOrderForm } from "./manual-order-form";
 
 type Lane = "active" | "completed" | "cancelled";
 const SOUND_KEY = "annapurna:admin:sound";
@@ -27,6 +28,7 @@ export function OrdersBoard() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [soundOn, setSoundOn] = useState(false);
+  const [showForm, setShowForm] = useState(false);
   const seenRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
 
@@ -92,11 +94,18 @@ export function OrdersBoard() {
     <div className="max-w-3xl">
       <div className="flex items-center justify-between mb-4">
         <div className="flex gap-2">{tab("active", "Active")}{tab("completed", "Completed")}{tab("cancelled", "Cancelled")}</div>
-        <button onClick={toggleSound} className="text-xs px-3 py-1.5 rounded-full"
-          style={{ border: "1px solid rgba(201,162,75,0.3)", color: soundOn ? "#C9A24B" : "#8A8276" }}>
-          {soundOn ? "🔔 Sound on" : "🔕 Sound off"}
-        </button>
+        <div className="flex gap-2">
+          <button onClick={toggleSound} className="text-xs px-3 py-1.5 rounded-full"
+            style={{ border: "1px solid rgba(201,162,75,0.3)", color: soundOn ? "#C9A24B" : "#8A8276" }}>
+            {soundOn ? "🔔 Sound on" : "🔕 Sound off"}
+          </button>
+          <button onClick={() => setShowForm((s) => !s)} className="text-xs px-3 py-1.5 rounded-full font-semibold"
+            style={{ backgroundColor: "#C9A24B", color: "#14100D" }}>+ New order</button>
+        </div>
       </div>
+      {showForm && (
+        <ManualOrderForm onCreated={() => load(lane)} onClose={() => setShowForm(false)} />
+      )}
       {orders.length === 0 && <p style={{ color: "#8A8276" }}>No orders in this lane.</p>}
       {orders.map((o) => (
         <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} />
