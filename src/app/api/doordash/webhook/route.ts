@@ -1,12 +1,9 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { deliveries, orders } from "@/db/schema";
-import { and, eq, notInArray } from "drizzle-orm";
-import {
-  verifyWebhookSignature,
-  parseEvent,
-  TERMINAL_STATUS,
-} from "@/lib/doordash/webhook";
+import { eq } from "drizzle-orm";
+import { verifyWebhookSignature, parseEvent, mapDeliveryStatus } from "@/lib/doordash/webhook";
+import { canTransition } from "@/lib/orders/status";
 
 export const runtime = "nodejs";
 
@@ -32,9 +29,11 @@ export async function POST(req: Request) {
     .select({
       orderId: deliveries.orderId,
       lastEventId: deliveries.lastEventId,
-      status: deliveries.status,
+      orderStatus: orders.status,
+      orderType: orders.orderType,
     })
     .from(deliveries)
+    .innerJoin(orders, eq(orders.id, deliveries.orderId))
     .where(eq(deliveries.externalDeliveryId, evt.externalDeliveryId))
     .limit(1);
 
@@ -52,16 +51,16 @@ export async function POST(req: Request) {
     })
     .where(eq(deliveries.externalDeliveryId, evt.externalDeliveryId));
 
-  const orderStatus = evt.status ? TERMINAL_STATUS[evt.status] : undefined;
-  if (orderStatus) {
-    // Only advance from a non-terminal state — prevents replay from resurrecting
-    // or flipping an already-finished order.
+  const mapped = mapDeliveryStatus(evt.status);
+  if (
+    mapped &&
+    existing.orderType === "delivery" &&
+    canTransition("delivery", existing.orderStatus ?? "received", mapped, "webhook")
+  ) {
     await db
       .update(orders)
-      .set({ status: orderStatus, updatedAt: new Date() })
-      .where(
-        and(eq(orders.id, existing.orderId), notInArray(orders.status, ["completed", "cancelled"])),
-      );
+      .set({ status: mapped, updatedAt: new Date() })
+      .where(eq(orders.id, existing.orderId));
   }
 
   return ack();

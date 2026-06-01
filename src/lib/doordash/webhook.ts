@@ -52,8 +52,19 @@ export function parseEvent(body: unknown): DriveEvent {
   };
 }
 
-// Maps a terminal Drive status to the order status it should set.
-export const TERMINAL_STATUS: Record<string, "completed" | "cancelled"> = {
-  delivered: "completed",
+// Maps a DoorDash delivery_status to the order status it should drive (delivery flow).
+// Early statuses (created/confirmed) intentionally map to null (no order-status change).
+const DELIVERY_TO_ORDER: Record<string, string> = {
+  enroute_to_pickup: "courier_picked_up",
+  arrived_at_pickup: "courier_picked_up",
+  picked_up: "courier_picked_up",
+  enroute_to_dropoff: "en_route",
+  arrived_at_dropoff: "en_route",
+  delivered: "delivered",
   cancelled: "cancelled",
 };
+
+export function mapDeliveryStatus(deliveryStatus: string | null): string | null {
+  if (!deliveryStatus) return null;
+  return DELIVERY_TO_ORDER[deliveryStatus] ?? null;
+}
