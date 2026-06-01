@@ -232,9 +232,11 @@ export async function hashPassword(plain: string): Promise<string> {
 
 export async function verifyPassword(plain: string, stored: string): Promise<boolean> {
   const parts = stored.split("$");
-  if (parts.length !== 3 || parts[0] !== SCHEME) return false;
-  const salt = Buffer.from(parts[1], "hex");
-  const expected = Buffer.from(parts[2], "hex");
+  if (parts.length !== 3) return false;
+  const [scheme, saltHex, hashHex] = parts; // noUncheckedIndexedAccess: destructure + guard
+  if (scheme !== SCHEME || !saltHex || !hashHex) return false;
+  const salt = Buffer.from(saltHex, "hex");
+  const expected = Buffer.from(hashHex, "hex");
   if (salt.length === 0 || expected.length !== KEYLEN) return false;
   const derived = (await scryptAsync(plain, salt, KEYLEN)) as Buffer;
   return derived.length === expected.length && timingSafeEqual(derived, expected);
@@ -319,7 +321,7 @@ function b64url(bytes: ArrayBuffer | Uint8Array): string {
   for (const b of arr) s += String.fromCharCode(b);
   return btoa(s).replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
 }
-function fromB64url(s: string): Uint8Array {
+function fromB64url(s: string): Uint8Array<ArrayBuffer> {
   const pad = s.length % 4 === 0 ? "" : "=".repeat(4 - (s.length % 4));
   const norm = s.replace(/-/g, "+").replace(/_/g, "/") + pad;
   const bin = atob(norm);
