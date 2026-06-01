@@ -284,7 +284,9 @@ describe("session token", () => {
 
   it("rejects a tampered token", async () => {
     const token = await signSessionToken(base, 3600);
-    const tampered = token.slice(0, -2) + (token.endsWith("a") ? "bb" : "aa");
+    // Corrupt the first payload char — deterministically changes signed content.
+    const first = token[0] === "a" ? "b" : "a";
+    const tampered = first + token.slice(1);
     expect(await verifySessionToken(tampered)).toBeNull();
   });
 
