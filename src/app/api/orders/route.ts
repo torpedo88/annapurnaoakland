@@ -1,17 +1,6 @@
 import { NextResponse } from "next/server";
-import { db } from "@/db";
-import { deliveries } from "@/db/schema";
-import { createOrder } from "@/lib/orders/create-order";
-import { acceptQuote } from "@/lib/doordash/client";
 import { toCents } from "@/lib/orders/money";
-import {
-  priceOrder,
-  validateContact,
-  cleanString,
-  isValidExternalDeliveryId,
-  httpsUrlOrNull,
-  PricingError,
-} from "@/lib/orders/pricing";
+import { placeOrder, OrderError } from "@/lib/orders/place-order";
 
 export const runtime = "nodejs";
 
@@ -24,82 +13,20 @@ export async function POST(req: Request) {
   }
 
   const fulfillment = body?.fulfillment === "delivery" ? "delivery" : "pickup";
-  const items = (body?.items as unknown[]) ?? [];
-  const tipCents = toCents(Number(body?.tip) || 0);
-
-  // 1) Validate contact + items BEFORE any external dispatch (no driver for a bad order).
   try {
-    validateContact(body as { name: unknown; phone: unknown; email: unknown });
-    priceOrder(items as { id: unknown; qty: unknown }[], { tipCents });
-    if (fulfillment === "delivery" && !cleanString(body?.address, 200)) {
-      return NextResponse.json({ error: "Delivery address is required" }, { status: 400 });
-    }
-  } catch (e) {
-    const msg = e instanceof PricingError ? e.message : "Invalid order";
-    return NextResponse.json({ error: msg }, { status: 400 });
-  }
-
-  // 2) For delivery, accept the server-issued quote to get the authoritative fee.
-  let accepted: Awaited<ReturnType<typeof acceptQuote>> | null = null;
-  let deliveryFeeCents = 0;
-  if (fulfillment === "delivery") {
-    if (!isValidExternalDeliveryId(body?.externalDeliveryId)) {
-      return NextResponse.json({ error: "Invalid delivery reference" }, { status: 400 });
-    }
-    try {
-      accepted = await acceptQuote(body.externalDeliveryId as string);
-      deliveryFeeCents = accepted.feeCents ?? 0;
-    } catch (e) {
-      console.error("[orders] Drive acceptQuote failed:", e);
-      return NextResponse.json(
-        { error: "Could not arrange delivery right now. Please try again." },
-        { status: 502 },
-      );
-    }
-  }
-
-  // 3) Persist the order (money recomputed server-side again, incl. the real fee).
-  let result: { orderId: string; accessToken: string };
-  try {
-    result = await createOrder({
-      name: body.name,
-      phone: body.phone,
-      email: body.email,
+    const { orderId, accessToken } = await placeOrder({
+      name: body.name, phone: body.phone, email: body.email,
       fulfillment,
       address: body.address,
-      items: items as { id: unknown; qty: unknown }[],
-      tipCents,
-      deliveryFeeCents,
+      items: (body?.items as { id: unknown; qty: unknown }[]) ?? [],
+      tipCents: toCents(Number(body?.tip) || 0),
+      externalDeliveryId: body.externalDeliveryId,
+      source: "online",
     });
+    return NextResponse.json({ orderId, accessToken });
   } catch (e) {
-    // A driver may have been dispatched in step 2 — surface for manual cancel.
-    if (accepted)
-      console.error(
-        "[orders] persist failed AFTER dispatch; orphaned delivery:",
-        accepted.externalDeliveryId,
-        e,
-      );
-    else console.error("[orders] persist failed:", e);
-    const msg = e instanceof PricingError ? e.message : "Could not place order";
-    return NextResponse.json({ error: msg }, { status: 400 });
+    if (e instanceof OrderError) return NextResponse.json({ error: e.message }, { status: e.status });
+    console.error("[orders] unexpected:", e);
+    return NextResponse.json({ error: "Could not place order" }, { status: 500 });
   }
-
-  // 4) Record the delivery row.
-  if (accepted) {
-    try {
-      await db.insert(deliveries).values({
-        orderId: result.orderId,
-        externalDeliveryId: accepted.externalDeliveryId,
-        status: accepted.status,
-        feeCents: accepted.feeCents,
-        trackingUrl: httpsUrlOrNull(accepted.trackingUrl),
-        dropoffAddress: cleanString(body.address, 200),
-      });
-    } catch (e) {
-      console.error("[orders] delivery row insert failed for order", result.orderId, e);
-      // Order is saved; tracking will populate via webhook. Don't fail the request.
-    }
-  }
-
-  return NextResponse.json({ orderId: result.orderId, accessToken: result.accessToken });
 }

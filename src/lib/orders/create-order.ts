@@ -8,6 +8,7 @@ import {
   cleanString,
   type RawLine,
 } from "@/lib/orders/pricing";
+import { getSettings } from "@/lib/settings";
 
 export interface NewOrderInput {
   name: unknown;
@@ -18,6 +19,9 @@ export interface NewOrderInput {
   items: RawLine[];
   tipCents?: number;
   deliveryFeeCents?: number;
+  source?: "online" | "phone";
+  paymentStatus?: "unpaid" | "paid" | "refunded";
+  paymentMethod?: "cash" | "card" | "online" | null;
 }
 
 /**
@@ -30,9 +34,11 @@ export async function createOrder(
   input: NewOrderInput,
 ): Promise<{ orderId: string; accessToken: string }> {
   const contact = validateContact(input);
+  const settings = await getSettings();
   const totals = priceOrder(input.items, {
     tipCents: input.tipCents,
     deliveryFeeCents: input.deliveryFeeCents,
+    taxRate: settings.tax_rate,
   });
   const address =
     input.fulfillment === "delivery" ? cleanString(input.address, 200) : "";
@@ -47,6 +53,9 @@ export async function createOrder(
         customerPhone: contact.phone,
         orderType: input.fulfillment,
         status: "received",
+        source: input.source ?? "online",
+        paymentStatus: input.paymentStatus ?? "unpaid",
+        paymentMethod: input.paymentMethod ?? null,
         accessToken,
         subtotal: toDollars(totals.subtotalCents),
         tax: toDollars(totals.taxCents),

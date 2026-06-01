@@ -82,6 +82,9 @@ export const orders = pgTable("orders", {
   customerPhone: text("customer_phone"),
   orderType: text("order_type"),
   status: text("status").default("received"),
+  paymentStatus: text("payment_status").notNull().default("unpaid"), // unpaid | paid | refunded
+  paymentMethod: text("payment_method"), // cash | card | online
+  source: text("source").notNull().default("online"), // online | phone
   // High-entropy per-order token required to read the order (guards IDOR / PII).
   accessToken: text("access_token").notNull().default(sql`gen_random_uuid()::text`),
   subtotal: decimal("subtotal", { precision: 10, scale: 2 }),
@@ -215,6 +218,18 @@ export const deliveries = pgTable("deliveries", {
   dropoffAddress: text("dropoff_address"),
   lastEventId: text("last_event_id"), // webhook idempotency / replay guard
   raw: jsonb("raw"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
+});
+
+// ─── Staff (admin users) ─────────────────────────────────────────────────────
+export const staff = pgTable("staff", {
+  id: uuid("id").primaryKey().default(genUuid()),
+  name: text("name").notNull(),
+  email: text("email").notNull().unique(),
+  passwordHash: text("password_hash").notNull(),
+  role: text("role").notNull().default("staff"), // 'owner' | 'manager' | 'staff'
+  isActive: boolean("is_active").notNull().default(true),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
 });
