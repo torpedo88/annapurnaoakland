@@ -1,41 +1,32 @@
 "use server";
 
-import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
-
-const COOKIE = "annapurna_staff";
-const MAX_AGE = 60 * 60 * 8; // 8 hours
-
-function getExpectedPin(): string {
-  // Default for local/dev only. Set STAFF_PIN in production.
-  return process.env.STAFF_PIN ?? "1234";
-}
+import { eq } from "drizzle-orm";
+import { db } from "@/db";
+import { staff } from "@/db/schema";
+import { verifyPassword } from "@/lib/auth/password";
+import { setSessionCookie, clearSessionCookie, getSession, type Role } from "@/lib/auth/session";
 
 export async function signIn(_prev: { error?: string } | null, formData: FormData) {
-  const pin = (formData.get("pin") as string | null)?.trim() ?? "";
-  if (!pin) return { error: "Enter your PIN." };
-  if (pin !== getExpectedPin()) return { error: "Wrong PIN. Try again." };
+  const email = (formData.get("email") as string | null)?.trim().toLowerCase() ?? "";
+  const password = (formData.get("password") as string | null) ?? "";
+  if (!email || !password) return { error: "Enter your email and password." };
 
-  const store = await cookies();
-  store.set({
-    name: COOKIE,
-    value: "ok",
-    httpOnly: true,
-    sameSite: "lax",
-    secure: process.env.NODE_ENV === "production",
-    path: "/admin",
-    maxAge: MAX_AGE,
-  });
+  const [user] = await db.select().from(staff).where(eq(staff.email, email)).limit(1);
+  // Always run a verify to reduce timing oracle even when the user is absent.
+  const ok = user && user.isActive && (await verifyPassword(password, user.passwordHash));
+  if (!ok) return { error: "Invalid credentials." };
+
+  await setSessionCookie({ sid: user.id, role: user.role as Role });
   redirect("/admin");
 }
 
 export async function signOut() {
-  const store = await cookies();
-  store.delete(COOKIE);
-  redirect("/admin");
+  await clearSessionCookie();
+  redirect("/admin/login");
 }
 
-export async function hasStaffSession(): Promise<boolean> {
-  const store = await cookies();
-  return store.get(COOKIE)?.value === "ok";
+/** Convenience for server components that need the current staff session. */
+export async function currentStaff() {
+  return getSession();
 }
