@@ -1,4 +1,4 @@
-import { AdminDashboard } from "./dashboard";
+import { AdminDashboard } from "../dashboard";
 
 export const dynamic = "force-dynamic";
 

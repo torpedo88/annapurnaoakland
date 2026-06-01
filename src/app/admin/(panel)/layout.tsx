@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { getSession, type Role } from "@/lib/auth/session";
-import { signOut } from "./actions";
+import { signOut } from "../actions";
 
 type Tab = { href: string; label: string; roles: Role[] };
 
