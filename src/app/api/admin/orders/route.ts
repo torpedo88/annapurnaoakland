@@ -39,11 +39,17 @@ export async function GET(req: Request) {
     ? await db.select().from(deliveries).where(inArray(deliveries.orderId, ids))
     : [];
 
-  const result = rows.map((o) => ({
-    ...o,
-    items: items.filter((i) => i.orderId === o.id),
-    delivery: dels.find((d) => d.orderId === o.id) ?? null,
-  }));
+  // Strip accessToken — it's the per-order IDOR capability token for public
+  // order tracking and must never leave the server, even to authed staff.
+  const result = rows.map((row) => {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { accessToken, ...o } = row;
+    return {
+      ...o,
+      items: items.filter((i) => i.orderId === o.id),
+      delivery: dels.find((d) => d.orderId === o.id) ?? null,
+    };
+  });
 
   return NextResponse.json({ orders: result });
 }
