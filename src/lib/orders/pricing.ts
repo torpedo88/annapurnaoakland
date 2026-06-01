@@ -4,7 +4,7 @@ import { toCents } from "@/lib/orders/money";
 // Server-authoritative pricing. The client payload is untrusted: we accept only
 // item ids + quantities and recompute every figure from the menu catalog.
 
-export const TAX_RATE = 0.0925; // Oakland sales tax (matches preview-cart)
+export const DEFAULT_TAX_RATE = 0.0925; // fallback only; authoritative rate comes from settings
 
 const MENU_BY_ID = new Map(menu.map((m) => [m.id, m]));
 
@@ -50,7 +50,7 @@ function clampMoney(cents: number, maxCents: number): number {
  */
 export function priceOrder(
   rawItems: RawLine[],
-  opts: { tipCents?: number; deliveryFeeCents?: number } = {},
+  opts: { tipCents?: number; deliveryFeeCents?: number; taxRate?: number } = {},
 ): OrderTotals {
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     throw new PricingError("Cart is empty");
@@ -65,7 +65,8 @@ export function priceOrder(
   });
 
   const subtotalCents = lines.reduce((s, l) => s + l.priceCents * l.qty, 0);
-  const taxCents = Math.round(subtotalCents * TAX_RATE);
+  const taxRate = typeof opts.taxRate === "number" && opts.taxRate >= 0 ? opts.taxRate : DEFAULT_TAX_RATE;
+  const taxCents = Math.round(subtotalCents * taxRate);
 
   const deliveryFeeCents = clampMoney(opts.deliveryFeeCents ?? 0, subtotalCents * 5);
   // Tip is user-chosen but clamped to a sane ceiling of the recomputed subtotal.
