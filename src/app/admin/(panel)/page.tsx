@@ -1,7 +1,7 @@
-import { AdminDashboard } from "../dashboard";
+import { OrdersBoard } from "@/components/admin/orders-board";
 
 export const dynamic = "force-dynamic";
 
-export default function AdminPage() {
-  return <AdminDashboard />;
+export default function AdminOrdersPage() {
+  return <OrdersBoard />;
 }
