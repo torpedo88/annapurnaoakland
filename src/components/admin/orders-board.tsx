@@ -34,6 +34,10 @@ export function OrdersBoard() {
 
   useEffect(() => {
     setSoundOn(localStorage.getItem(SOUND_KEY) === "on");
+    if (new URLSearchParams(window.location.search).get("new") === "1") {
+      setShowForm(true);
+      window.history.replaceState(null, "", "/admin");
+    }
   }, []);
 
   const load = useCallback(async (l: Lane) => {
