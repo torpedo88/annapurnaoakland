@@ -12,6 +12,22 @@ export function verifyWebhookSignature(rawBody: string, signature: string | null
   return a.length === b.length && timingSafeEqual(a, b);
 }
 
+/**
+ * DoorDash Drive's webhook portal authenticates by sending a static
+ * Authorization header (the token configured there), not an HMAC body
+ * signature. We configure that token = DOORDASH_WEBHOOK_SECRET and compare it
+ * here (constant-time). Tolerates an optional "Bearer " prefix.
+ */
+export function verifyWebhookAuth(authHeader: string | null): boolean {
+  if (!authHeader) return false;
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  const expected = env.doordash().webhookSecret;
+  if (!token || !expected) return false;
+  const a = Buffer.from(token);
+  const b = Buffer.from(expected);
+  return a.length === b.length && timingSafeEqual(a, b);
+}
+
 // Only known DoorDash Drive delivery_status values are honored. Unknown values
 // (or event_category strings) are ignored rather than written to the status column.
 const KNOWN_STATUSES = new Set([
