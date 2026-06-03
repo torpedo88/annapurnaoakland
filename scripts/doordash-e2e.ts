@@ -17,8 +17,8 @@ const sleep = (ms: number) => new Promise((r) => setTimeout(r, ms));
 
 (async () => {
   const externalDeliveryId = `anp-${randomUUID()}`;
-  const address = "1 Frank H Ogawa Plaza, Oakland, CA 94612";
-  const phone = "+15105550123";
+  const address = process.env.DROPOFF_ADDRESS ?? "1 Frank H Ogawa Plaza, Oakland, CA 94612";
+  const phone = process.env.DROPOFF_PHONE ?? "+15105550123";
   const items = [{ id: "chicken-dish-chicken-curry", qty: 2 }];
 
   console.log("→ quoting…");

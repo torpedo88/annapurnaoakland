@@ -9,8 +9,8 @@ import { quoteDelivery, acceptQuote, getDelivery } from "@/lib/doordash/client";
 (async () => {
   const doAccept = process.argv.includes("--accept");
   const externalDeliveryId = `anp-smoke-${randomUUID()}`;
-  const dropoffAddress = "1 Frank H Ogawa Plaza, Oakland, CA 94612";
-  const dropoffPhone = "+15105550123";
+  const dropoffAddress = process.env.DROPOFF_ADDRESS ?? "1 Frank H Ogawa Plaza, Oakland, CA 94612";
+  const dropoffPhone = process.env.DROPOFF_PHONE ?? "+15105550123";
   const orderValueCents = 2500;
 
   console.log("→ quoting delivery…", { externalDeliveryId });
