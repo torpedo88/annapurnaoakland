@@ -1,5 +1,6 @@
+import { inArray } from "drizzle-orm";
 import { db } from "@/db";
-import { deliveries } from "@/db/schema";
+import { deliveries, menuItems } from "@/db/schema";
 import { createOrder } from "@/lib/orders/create-order";
 import { acceptQuote } from "@/lib/doordash/client";
 import {
@@ -57,6 +58,25 @@ export async function placeOrder(
   } catch (e) {
     if (e instanceof OrderError) throw e;
     throw new OrderError(e instanceof PricingError ? e.message : "Invalid order", 400);
+  }
+
+  // 1b) Reject items an admin has marked unavailable ("86"). Availability is
+  // DB-managed (menuItems.slug === the menu item id used in order lines), so it
+  // must be enforced here regardless of what the client UI allowed.
+  const itemIds = input.items.map((i) => String(i.id)).filter(Boolean);
+  if (itemIds.length) {
+    const rows = await db
+      .select({ name: menuItems.name, isAvailable: menuItems.isAvailable })
+      .from(menuItems)
+      .where(inArray(menuItems.slug, itemIds));
+    const eightySixed = rows.filter((r) => r.isAvailable === false);
+    if (eightySixed.length) {
+      const names = eightySixed.map((r) => r.name).join(", ");
+      throw new OrderError(
+        `${names} ${eightySixed.length > 1 ? "are" : "is"} currently unavailable. Please remove ${eightySixed.length > 1 ? "them" : "it"} and try again.`,
+        409,
+      );
+    }
   }
 
   // 2) Delivery: accept the server-issued quote -> authoritative fee + admin config.

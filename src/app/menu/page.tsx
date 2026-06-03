@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
 import { menu, categories, type MenuItem } from "@/data/menu";
@@ -13,6 +13,17 @@ export default function MenuPage() {
   const [q, setQ] = useState("");
   const [vegOnly, setVegOnly] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  // Item availability ("86"/unavailable) is managed in the admin panel and
+  // lives in the DB; the static menu has no availability, so overlay it here.
+  const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
+  useEffect(() => {
+    let on = true;
+    fetch("/api/menu/availability", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { unavailable: [] }))
+      .then((d) => { if (on) setUnavailable(new Set<string>(d.unavailable ?? [])); })
+      .catch(() => { /* keep everything available on failure */ });
+    return () => { on = false; };
+  }, []);
 
   const visibleCategories = useMemo(
     () => categories.filter((c) => c.isCatering === (mode === "catering")),
@@ -216,7 +227,7 @@ export default function MenuPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {g.items.map((item) => (
-                    <MenuCard key={item.id} item={item} />
+                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} />
                   ))}
                 </div>
               </div>
@@ -230,7 +241,7 @@ export default function MenuPage() {
   );
 }
 
-function MenuCard({ item }: { item: MenuItem }) {
+function MenuCard({ item, unavailable }: { item: MenuItem; unavailable: boolean }) {
   const { add, lines, increment, decrement } = useCart();
   const inCart = lines.find((l) => l.id === item.id);
 
@@ -247,7 +258,18 @@ function MenuCard({ item }: { item: MenuItem }) {
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
+          style={unavailable ? { filter: "grayscale(0.7) brightness(0.6)" } : undefined}
         />
+        {unavailable && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="rounded-full text-xs font-bold uppercase tracking-widest px-4 py-1.5"
+              style={{ backgroundColor: "#7A2E2E", color: "#F3E9D6", border: "1px solid rgba(243,233,214,0.25)" }}
+            >
+              86 · Sold Out
+            </span>
+          </div>
+        )}
         {item.tags.includes("vegetarian") && (
           <span
             className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full text-[10px] font-bold uppercase tracking-wider px-2.5 py-1"
@@ -287,7 +309,15 @@ function MenuCard({ item }: { item: MenuItem }) {
           className="mt-4 pt-4"
           style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
         >
-          {inCart ? (
+          {unavailable ? (
+            <button
+              disabled
+              className="w-full inline-flex justify-center items-center rounded-full py-2.5 font-semibold text-sm cursor-not-allowed"
+              style={{ backgroundColor: "rgba(122,46,46,0.15)", color: "#A38A7A", border: "1px solid rgba(201,162,75,0.15)" }}
+            >
+              Unavailable today
+            </button>
+          ) : inCart ? (
             <div className="flex items-center justify-between">
               <div
                 className="inline-flex items-center rounded-full"
