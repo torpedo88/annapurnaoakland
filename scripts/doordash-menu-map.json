@@ -1,0 +1,43 @@
+{
+  "count": 18,
+  "names": [
+    "Aloo Matar",
+    "Butter Chicken",
+    "Chicken Momo",
+    "Chicken Tikka Masala",
+    "Garlic Naan",
+    "Lamb Momo",
+    "Malai Kofta",
+    "Mango Lassi",
+    "Matar Paneer",
+    "Mixed Momo",
+    "Palak Paneer",
+    "Plain Naan",
+    "Salmon Curry",
+    "Salmon Tikka Masala",
+    "Salmon Vindaloo",
+    "Shrimp Korma",
+    "Shrimp Tikka Masala",
+    "Veg Samosa"
+  ],
+  "map": {
+    "Chicken Tikka Masala": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/ef24b922-7552-48ba-b118-5c1821ae90ff-retina-large.jpeg",
+    "Garlic Naan": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/2d3fe81a-05d2-4ee7-93d7-bf7335261d1f-retina-large.jpeg",
+    "Butter Chicken": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photos/57c1699b-66b9-487f-bd52-c7f65a364af5-retina-large-jpeg",
+    "Palak Paneer": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/152cb0b4-1e1d-4520-be4b-4f90236d8705-retina-large.jpeg",
+    "Veg Samosa": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/d4bbe4c0-aafe-4d93-ac77-0f08d2f8e034-d0736145-0592-4b5e-ac5b-782787a0a0c3-retina-large.jpg",
+    "Plain Naan": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photos/40112018-190e-4697-b632-b5eedc6ac977-retina-large-jpeg",
+    "Chicken Momo": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/95e6febb-95cd-4bc3-b1cf-3ed8c26a1e76-retina-large.png",
+    "Mango Lassi": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/ba51d510-9ddd-445f-9602-4f749904ef25-898ba3b7-34ef-4852-839e-304845ea5771-retina-large.jpg",
+    "Mixed Momo": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/71adec5d-c71a-4943-82f4-6ab80f9a4443-retina-large.png",
+    "Lamb Momo": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/b84b2e28-333c-469e-8794-a74d7b012ca3-retina-large.png",
+    "Salmon Tikka Masala": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/8300d43a-0983-453e-8237-a95f04db534b-retina-large.png",
+    "Shrimp Tikka Masala": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/ebce54cb-dca9-4eee-b445-8e68888b41a3-retina-large.png",
+    "Shrimp Korma": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/7db85c84-4bb2-47ba-ab4e-9721ba5044f9-retina-large.png",
+    "Salmon Curry": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photos/c930986c-06ed-4dbb-bd36-9a1ad9728fa0-retina-large.jpg",
+    "Salmon Vindaloo": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/14db424d-ee1b-4a5a-8ff4-f00e30b12517-retina-large.png",
+    "Aloo Matar": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/899a3a25-0f36-4b2c-8310-560221527209-retina-large.png",
+    "Matar Paneer": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photosV2/82d167f0-7fc0-4c2f-bc0a-2486c7f2eca0-retina-large.png",
+    "Malai Kofta": "https://img.cdn4dd.com/p/fit=cover,width=1200,height=1200,format=auto,quality=90/media/photos/87cd02c0-4844-43dd-ac95-cc3a2f3c3e50-retina-large-jpeg"
+  }
+}

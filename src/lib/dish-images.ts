@@ -19,6 +19,8 @@ type Match = { test: (name: string) => boolean; key: string };
 const IMG = {
   // Nepali / appetizers
   momo: img("momo"),
+  chickenMomo: img("chickenMomo"),
+  lambMomo: img("lambMomo"),
   jholMomo: img("jholMomo"),
   mixedMomo: img("mixedMomo"),
   samosa: img("samosa"),
@@ -64,10 +66,13 @@ const IMG = {
   lambKorma: img("lambKorma"),
   goatCurry: img("goatCurry"),
 
-  // Seafood (salmon + shrimp anchors; tandoor variants separate)
+  // Seafood (DoorDash supplies distinct salmon/shrimp variants; tandoor separate)
   salmonCurry: img("salmonCurry"),
+  salmonTikkaMasala: img("salmonTikkaMasala"),
+  salmonVindaloo: img("salmonVindaloo"),
   salmonTandoor: img("salmonTandoor"),
   shrimpKorma: img("shrimpKorma"),
+  shrimpTikkaMasala: img("shrimpTikkaMasala"),
   shrimpTandoor: img("shrimpTandoor"),
 
   // Tandoori
@@ -144,6 +149,8 @@ const MATCHERS: Match[] = [
   // Momos (specific before generic)
   { test: (n) => /jhol/.test(n) && /momo/.test(n), key: "jholMomo" },
   { test: (n) => /mixed?\s*momo/.test(n), key: "mixedMomo" },
+  { test: (n) => /chicken\s*momo/.test(n), key: "chickenMomo" },
+  { test: (n) => /lamb\s*momo/.test(n), key: "lambMomo" },
   { test: (n) => /momo/.test(n), key: "momo" },
 
   // Other appetizers
@@ -156,7 +163,10 @@ const MATCHERS: Match[] = [
   // Seafood — match by protein BEFORE generic curry/masala/vindaloo rules
   { test: (n) => /(salmon|fish)\s*tandoor/.test(n) || /tandoor.*salmon/.test(n), key: "salmonTandoor" },
   { test: (n) => /(shrimp|prawn)\s*tandoor/.test(n) || /tandoor.*(shrimp|prawn)/.test(n), key: "shrimpTandoor" },
+  { test: (n) => /(salmon|fish).*tikka\s*masala/.test(n), key: "salmonTikkaMasala" },
+  { test: (n) => /(salmon|fish).*vindaloo/.test(n), key: "salmonVindaloo" },
   { test: (n) => /salmon|fish/.test(n), key: "salmonCurry" },
+  { test: (n) => /(shrimp|prawn).*tikka\s*masala/.test(n), key: "shrimpTikkaMasala" },
   { test: (n) => /shrimp|prawn/.test(n), key: "shrimpKorma" },
 
   // Paneer / vegetarian
