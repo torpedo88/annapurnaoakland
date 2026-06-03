@@ -275,8 +275,22 @@ export default function OrderStatusPage({ params }: { params: Promise<{ id: stri
                 className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-sm transition"
                 style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
               >
-                Open tracking <ExternalLink className="h-4 w-4" />
+                Open fullscreen <ExternalLink className="h-4 w-4" />
               </a>
+            </div>
+            {/* Embedded live DoorDash tracking map (frame-ancestors * allows iframing). */}
+            <div
+              className="mt-4 overflow-hidden rounded-[1.25rem]"
+              style={{ border: "1px solid rgba(201,162,75,0.2)" }}
+            >
+              <iframe
+                src={delivery.trackingUrl}
+                title="Live delivery tracking"
+                className="w-full block"
+                style={{ height: 480, border: 0, backgroundColor: "#14100D" }}
+                loading="lazy"
+                referrerPolicy="no-referrer-when-downgrade"
+              />
             </div>
           </div>
         )}
