@@ -234,7 +234,7 @@ export default function MenuPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {g.items.map((item) => (
-                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} imageSrc={imageOverrides[item.id] ?? item.image} />
+                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} imageSrc={imageOverrides[item.id] || "/images/annapurna-logo.png"} />
                   ))}
                 </div>
               </div>
@@ -266,7 +266,7 @@ function MenuCard({ item, unavailable, imageSrc }: { item: MenuItem; unavailable
           alt={item.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className={`${src.endsWith("annapurna-logo.png") ? "object-contain p-8 opacity-90" : "object-cover"} transition-transform duration-700 group-hover:scale-105`}
           loading="lazy"
           style={unavailable ? { filter: "grayscale(0.7) brightness(0.6)" } : undefined}
           onError={() => setSrc((s) => s.endsWith("annapurna-logo.png") ? s : "/images/annapurna-logo.png")}

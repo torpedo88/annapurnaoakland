@@ -58,7 +58,7 @@ export function Popular() {
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {items.map((item) => {
-            const resolvedSrc = imageOverrides[item.id] ?? (item.image || LOGO);
+            const resolvedSrc = imageOverrides[item.id] || LOGO;
             return (
               <PopularCard
                 key={item.id}
@@ -109,7 +109,7 @@ function PopularCard({
         <img
           src={src}
           alt={name}
-          className="w-full h-44 object-cover"
+          className={`w-full h-44 ${src.endsWith(LOGO) ? "object-contain p-6 opacity-90" : "object-cover"}`}
           onError={(e) => {
             if (!e.currentTarget.src.endsWith(LOGO)) {
               e.currentTarget.src = LOGO;
