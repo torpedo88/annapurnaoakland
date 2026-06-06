@@ -7,6 +7,11 @@ export const DELIVERY_FLOW = [
 ] as const;
 export const TERMINAL = new Set<string>(["completed", "delivered", "cancelled"]);
 
+// Pre-state for online orders awaiting Stripe payment. Not part of the staff
+// flow; excluded from the active orders board. Advanced to "received" by the
+// payment webhook, or "cancelled" if abandoned.
+export const PENDING_PAYMENT = "pending_payment";
+
 // Highest flow index a staff member may advance to (delivery's courier+ states are webhook-only).
 const STAFF_MAX_INDEX: Record<Fulfillment, number> = { pickup: 3, delivery: 2 };
 
@@ -32,6 +37,9 @@ export function canTransition(f: Fulfillment, from: string, to: string, actor: A
   if (from === to) return false;
   if (TERMINAL.has(from)) return false;
   if (to === "cancelled") return true; // either actor may cancel a non-terminal order
+  // Payment confirmation: webhook moves a pending order into the kitchen flow.
+  if (from === PENDING_PAYMENT) return to === "received" && actor === "webhook";
+  if (to === PENDING_PAYMENT) return false;
   const fl = flow(f);
   const fi = fl.indexOf(from);
   const ti = fl.indexOf(to);
