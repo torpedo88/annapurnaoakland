@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Zap } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "@/lib/preview-cart";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 type Fulfillment = "pickup" | "delivery";
 const TIP_PRESETS = [0.15, 0.18, 0.2];
@@ -26,8 +28,7 @@ const INITIAL_QUOTE: QuoteState = {
 };
 
 export default function CheckoutPage() {
-  const router = useRouter();
-  const { lines, subtotal, tax, clear } = useCart();
+  const { lines, subtotal, tax } = useCart();
 
   const [fulfillment, setFulfillment] = useState<Fulfillment>("pickup");
   const [name, setName] = useState("");
@@ -41,6 +42,7 @@ export default function CheckoutPage() {
   const [error, setError] = useState<string | null>(null);
   const [deliveryNotice, setDeliveryNotice] = useState<string | null>(null);
   const [quote, setQuote] = useState<QuoteState>(INITIAL_QUOTE);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -170,7 +172,7 @@ export default function CheckoutPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -179,28 +181,19 @@ export default function CheckoutPage() {
           email: email.trim(),
           fulfillment,
           address: fulfillment === "delivery" ? address.trim() : undefined,
-          notes: notes.trim() || undefined,
-          // Only ids + quantities — the server recomputes all prices from the catalog.
           items: lines.map((l) => ({ id: l.id, qty: l.qty })),
           tip,
           externalDeliveryId: quote.externalDeliveryId ?? undefined,
         }),
       });
-
-      const json = (await res.json()) as {
-        orderId?: string;
-        accessToken?: string;
-        error?: string;
-      };
-
-      if (!res.ok || !json.orderId || !json.accessToken) {
-        setError(json.error ?? "Could not place order. Please try again.");
+      const json = (await res.json()) as { clientSecret?: string; error?: string };
+      if (!res.ok || !json.clientSecret) {
+        setError(json.error ?? "Could not start checkout. Please try again.");
         setSubmitting(false);
         return;
       }
-
-      clear();
-      router.push(`/order/${json.orderId}?t=${encodeURIComponent(json.accessToken)}`);
+      setClientSecret(json.clientSecret);
+      setSubmitting(false);
     } catch {
       setError("Network error. Please check your connection and try again.");
       setSubmitting(false);
@@ -348,31 +341,22 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment (demo notice) */}
+            {/* Payment */}
             <div>
               <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>Payment</h2>
-              <div
-                className="rounded-2xl p-5"
-                style={{
-                  backgroundColor: "#1C1712",
-                  border: "2px dashed rgba(201,162,75,0.2)",
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="h-10 w-10 rounded-full flex items-center justify-center font-bold"
-                    style={{ backgroundColor: "rgba(201,162,75,0.15)", color: "#C9A24B" }}
-                  >
-                    <Zap className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="font-bold" style={{ color: "#F3E9D6" }}>Demo mode — no card required</p>
-                    <p className="text-sm" style={{ color: "#8A8276" }}>
-                      Real build wires Toast Order Pay or Stripe here. This one skips straight to confirmation.
-                    </p>
-                  </div>
+              {clientSecret ? (
+                <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff" }}>
+                  <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-2xl p-5" style={{ backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.2)" }}>
+                  <p className="text-sm" style={{ color: "#8A8276" }}>
+                    Review your order, then continue to secure card payment (Apple Pay &amp; Google Pay supported).
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -441,14 +425,16 @@ export default function CheckoutPage() {
                   </dd>
                 </div>
               </dl>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold text-base transition disabled:opacity-60 disabled:cursor-wait"
-                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
-              >
-                {submitting ? "Placing order…" : `Place order · $${total.toFixed(2)}`}
-              </button>
+              {!clientSecret && (
+                <button
+                  type="submit"
+                  disabled={submitting || (fulfillment === "delivery" && quote.loading)}
+                  className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold text-base transition disabled:opacity-60 disabled:cursor-wait"
+                  style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+                >
+                  {submitting ? "Starting checkout…" : `Continue to payment · $${total.toFixed(2)}`}
+                </button>
+              )}
               <p
                 className="mt-3 text-center text-[11px] uppercase tracking-widest"
                 style={{ color: "#8A8276" }}
