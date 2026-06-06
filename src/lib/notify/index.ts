@@ -30,6 +30,17 @@ function fmt(dollars: string | null | undefined): string {
   return `$${Number(dollars ?? 0).toFixed(2)}`;
 }
 
+// Escape user-sourced values before interpolating into email HTML (prevents
+// HTML/email injection from customer name, address, item names, etc.).
+function esc(s: string | null | undefined): string {
+  return String(s ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
+
 interface OrderRow {
   id: string;
   orderNumber: number;
@@ -104,10 +115,10 @@ function buildCustomerHtml(
     .map((it) => {
       const qty = it.quantity ?? 1;
       const name = it.itemName ?? "Item";
-      const spice = it.spiceLevel ? ` <span style="color:#888">· ${it.spiceLevel}</span>` : "";
+      const spice = it.spiceLevel ? ` <span style="color:#888">· ${esc(it.spiceLevel)}</span>` : "";
       const price = `$${(Number(it.itemPrice ?? 0) * qty).toFixed(2)}`;
       return `<tr>
-        <td style="padding:4px 8px 4px 0">${qty}× ${name}${spice}</td>
+        <td style="padding:4px 8px 4px 0">${qty}× ${esc(name)}${spice}</td>
         <td style="padding:4px 0;text-align:right">${price}</td>
       </tr>`;
     })
@@ -137,7 +148,7 @@ function buildCustomerHtml(
       <h2 style="font-size:18px;font-weight:normal;margin-top:0;color:#444">
         Order #${order.orderNumber} confirmed
       </h2>
-      <p style="margin:8px 0"><strong>${fulfillment}</strong></p>
+      <p style="margin:8px 0"><strong>${esc(fulfillment)}</strong></p>
       <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border-top:1px solid #ddd">
         ${itemRows}
       </table>
@@ -171,13 +182,13 @@ function buildRestaurantHtml(
 <html lang="en">
 <head><meta charset="utf-8"><title>New Order</title></head>
 <body style="font-family:sans-serif;color:#111;background:#fff;margin:0;padding:16px">
-  <h2>New Order #${order.orderNumber} — ${fulfillment}</h2>
-  <p><strong>Customer:</strong> ${order.customerName ?? "—"}</p>
-  <p><strong>Phone:</strong> ${order.customerPhone ?? "—"}</p>
-  ${order.customerEmail ? `<p><strong>Email:</strong> ${order.customerEmail}</p>` : ""}
-  ${order.orderType === "delivery" && order.deliveryAddress ? `<p><strong>Delivery address:</strong> ${order.deliveryAddress}</p>` : ""}
+  <h2>New Order #${order.orderNumber} — ${esc(fulfillment)}</h2>
+  <p><strong>Customer:</strong> ${esc(order.customerName ?? "—")}</p>
+  <p><strong>Phone:</strong> ${esc(order.customerPhone ?? "—")}</p>
+  ${order.customerEmail ? `<p><strong>Email:</strong> ${esc(order.customerEmail)}</p>` : ""}
+  ${order.orderType === "delivery" && order.deliveryAddress ? `<p><strong>Delivery address:</strong> ${esc(order.deliveryAddress)}</p>` : ""}
   <hr>
-  <pre style="font-family:monospace;white-space:pre-wrap">${buildItemLines(items)}</pre>
+  <pre style="font-family:monospace;white-space:pre-wrap">${esc(buildItemLines(items))}</pre>
   <hr>
   <p>${totals}</p>
 </body>
