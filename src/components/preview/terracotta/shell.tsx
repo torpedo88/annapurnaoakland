@@ -24,30 +24,7 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
         style={{ backgroundColor: "rgba(20,16,13,0.85)", borderBottom: "1px solid rgba(201,162,75,0.15)" }}
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
-          <a
-            href="tel:+15102509696"
-            className="hidden sm:inline text-[10px] uppercase tracking-[0.25em]"
-            style={{ color: "#8A8276" }}
-          >
-            (510) 250-9696
-          </a>
-
-          <Link href="/" className="flex items-center gap-2.5">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/annapurna.jpg"
-              alt="Annapurna Restaurant & Bar"
-              className="h-12 w-12 rounded-full object-cover shrink-0"
-              style={{ border: "1px solid rgba(201,162,75,0.35)" }}
-            />
-            <span
-              className="uppercase tracking-[0.16em] text-xl"
-              style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
-            >
-              Annapurna
-            </span>
-          </Link>
-
+          {/* Left: nav */}
           <nav className="hidden md:flex items-center gap-7 text-[12px] uppercase tracking-[0.14em]">
             {nav.map((n) => {
               const active = pathname === n.href;
@@ -64,7 +41,8 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
+          {/* Right: order, cart, then brand (far right) */}
+          <div className="flex items-center gap-3 ml-auto">
             {!isHome && (
               <Link
                 href="/menu"
@@ -90,6 +68,22 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
                 </span>
               )}
             </button>
+
+            <Link href="/" className="flex items-center gap-2.5">
+              <span
+                className="hidden sm:inline uppercase tracking-[0.16em] text-xl"
+                style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
+              >
+                Annapurna
+              </span>
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/annapurna.jpg"
+                alt="Annapurna Restaurant & Bar"
+                className="h-12 w-12 rounded-full object-cover shrink-0"
+                style={{ border: "1px solid rgba(201,162,75,0.35)" }}
+              />
+            </Link>
           </div>
         </div>
       </header>

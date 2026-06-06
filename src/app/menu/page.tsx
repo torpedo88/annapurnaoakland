@@ -17,11 +17,17 @@ export default function MenuPage() {
   // Item availability ("86"/unavailable) is managed in the admin panel and
   // lives in the DB; the static menu has no availability, so overlay it here.
   const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
+  // Admin-uploaded photos (menu_items.imageUrl) override the static catalog image.
+  const [imageOverrides, setImageOverrides] = useState<Record<string, string>>({});
   useEffect(() => {
     let on = true;
     fetch("/api/menu/availability", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { unavailable: [] }))
-      .then((d) => { if (on) setUnavailable(new Set<string>(d.unavailable ?? [])); })
+      .then((r) => (r.ok ? r.json() : { unavailable: [], images: {} }))
+      .then((d) => {
+        if (!on) return;
+        setUnavailable(new Set<string>(d.unavailable ?? []));
+        setImageOverrides((d.images ?? {}) as Record<string, string>);
+      })
       .catch(() => { /* keep everything available on failure */ });
     return () => { on = false; };
   }, []);
@@ -228,7 +234,7 @@ export default function MenuPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {g.items.map((item) => (
-                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} />
+                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} imageSrc={imageOverrides[item.id] ?? item.image} />
                   ))}
                 </div>
               </div>
@@ -242,7 +248,7 @@ export default function MenuPage() {
   );
 }
 
-function MenuCard({ item, unavailable }: { item: MenuItem; unavailable: boolean }) {
+function MenuCard({ item, unavailable, imageSrc }: { item: MenuItem; unavailable: boolean; imageSrc: string }) {
   const { add, lines, increment, decrement } = useCart();
   const inCart = lines.find((l) => l.id === item.id);
   const showSpice = hasSpiceOptions(item.category);
@@ -255,7 +261,7 @@ function MenuCard({ item, unavailable }: { item: MenuItem; unavailable: boolean 
     >
       <div className="relative aspect-[5/3] overflow-hidden" style={{ backgroundColor: "#14100D" }}>
         <Image
-          src={item.image}
+          src={imageSrc}
           alt={item.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
