@@ -61,3 +61,12 @@ export async function acceptQuote(externalDeliveryId: string): Promise<AcceptRes
 export async function getDelivery(externalDeliveryId: string) {
   return driveFetch(`/drive/v2/deliveries/${encodeURIComponent(externalDeliveryId)}`, { method: "GET" });
 }
+
+/** Cancels a delivery. Safe to call only before pickup; DoorDash 4xx after. */
+export async function cancelDelivery(externalDeliveryId: string): Promise<{ status: string }> {
+  const r = await driveFetch(`/drive/v2/deliveries/${encodeURIComponent(externalDeliveryId)}/cancel`, {
+    method: "PUT",
+    body: JSON.stringify({}),
+  });
+  return { status: r.delivery_status ?? "cancelled" };
+}
