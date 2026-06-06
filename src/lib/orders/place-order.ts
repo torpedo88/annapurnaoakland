@@ -8,7 +8,7 @@ import {
   isValidExternalDeliveryId, httpsUrlOrNull, PricingError,
 } from "@/lib/orders/pricing";
 import { validatePromo, redeemPromo } from "@/lib/orders/promo";
-import { getSettings } from "@/lib/settings";
+import { getSettings, type Settings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
 
 export class OrderError extends Error {
@@ -31,11 +31,33 @@ export interface PlaceOrderInput {
   promoCode?: unknown;
 }
 
-async function resolveDiscount(input: PlaceOrderInput): Promise<{ discountCents: number; promoCode: string | null }> {
-  if (!input.promoCode) return { discountCents: 0, promoCode: null };
-  const subtotalCents = priceOrder(input.items).subtotalCents;
-  const r = await validatePromo(input.promoCode, subtotalCents);
-  return r.ok ? { discountCents: r.discountCents, promoCode: r.code } : { discountCents: 0, promoCode: null };
+async function resolveDiscount(
+  input: PlaceOrderInput,
+  settings: Settings,
+): Promise<{ discountCents: number; promoCode: string | null }> {
+  const totals = priceOrder(input.items);
+  let discountCents = 0;
+  let promoCode: string | null = null;
+
+  // Promo code (validated server-side against the recomputed subtotal).
+  if (input.promoCode) {
+    const r = await validatePromo(input.promoCode, totals.subtotalCents);
+    if (r.ok) {
+      discountCents += r.discountCents;
+      promoCode = r.code;
+    }
+  }
+
+  // Dish of the Day: % off that featured item's line, so the price advertised on
+  // the homepage is actually honored. Stacks with a promo code.
+  const dod = settings.dish_of_day;
+  if (dod?.itemId && dod.discountPercent > 0) {
+    const line = totals.lines.find((l) => l.id === dod.itemId);
+    if (line) discountCents += Math.round((line.priceCents * line.qty * dod.discountPercent) / 100);
+  }
+
+  discountCents = Math.min(discountCents, totals.subtotalCents);
+  return { discountCents, promoCode };
 }
 
 /**
@@ -117,7 +139,7 @@ export async function placeOrder(
   }
 
   // 3) Resolve promo discount (server-authoritative; client amount never trusted).
-  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input);
+  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings);
 
   // 4) Persist (createOrder recomputes money server-side incl. DB tax).
   let result: { orderId: string; accessToken: string };
@@ -221,7 +243,7 @@ export async function createPendingOrder(
   }
 
   // Resolve promo discount server-side (client-supplied amount is never trusted).
-  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input);
+  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings);
 
   const { orderId, accessToken } = await createOrder({
     name: input.name, phone: input.phone, email: input.email,

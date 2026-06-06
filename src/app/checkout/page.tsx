@@ -47,8 +47,23 @@ export default function CheckoutPage() {
   const [deliveryNotice, setDeliveryNotice] = useState<string | null>(null);
   const [quote, setQuote] = useState<QuoteState>(INITIAL_QUOTE);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Dish of the Day discount auto-applies when the featured item is in the cart.
+  const [dishOfDay, setDishOfDay] = useState<{ id: string; discountPercent: number } | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let on = true;
+    fetch("/api/settings/public")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (on && d?.dish_of_day?.id && d.dish_of_day.discountPercent > 0) {
+          setDishOfDay({ id: d.dish_of_day.id, discountPercent: d.dish_of_day.discountPercent });
+        }
+      })
+      .catch(() => { /* no special */ });
+    return () => { on = false; };
+  }, []);
 
   // ─── Live delivery quote (debounced) ───────────────────────────────────────
   useEffect(() => {
@@ -119,7 +134,15 @@ export default function CheckoutPage() {
   }, [customTip, tipPct, subtotal]);
 
   const total = +(subtotal + tax + tip + deliveryFee).toFixed(2);
-  const displayTotal = +Math.max(0, total - (appliedPromo ? appliedPromo.discountCents / 100 : 0)).toFixed(2);
+  // Dish-of-the-day discount: % off the featured item's line when it's in the cart.
+  const dishDiscount = useMemo(() => {
+    if (!dishOfDay) return 0;
+    const line = lines.find((l) => l.id === dishOfDay.id);
+    if (!line) return 0;
+    return +(line.price * line.qty * (dishOfDay.discountPercent / 100)).toFixed(2);
+  }, [dishOfDay, lines]);
+  const promoDiscount = appliedPromo ? appliedPromo.discountCents / 100 : 0;
+  const displayTotal = +Math.max(0, total - promoDiscount - dishDiscount).toFixed(2);
 
   // ─── Delivery option sub-label ──────────────────────────────────────────────
   const deliveryOptionSub = useMemo(() => {
@@ -455,6 +478,16 @@ export default function CheckoutPage() {
                   />
                 )}
                 <Row label="Tip" value={`$${tip.toFixed(2)}`} />
+
+                {dishDiscount > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <dt style={{ color: "#22c55e" }}>
+                      Dish of the Day{" "}
+                      <span style={{ color: "#8A8276" }}>({dishOfDay?.discountPercent}% off)</span>
+                    </dt>
+                    <dd style={{ color: "#22c55e" }}>-${dishDiscount.toFixed(2)}</dd>
+                  </div>
+                )}
 
                 {/* ── Promo code entry / applied state ── */}
                 {appliedPromo ? (
