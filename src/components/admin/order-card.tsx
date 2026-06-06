@@ -19,7 +19,7 @@ export type AdminOrder = {
   total: string | null;
   deliveryAddress: string | null;
   createdAt: string;
-  items: { id: string; itemName: string | null; quantity: number | null }[];
+  items: { id: string; itemName: string | null; quantity: number | null; spiceLevel?: string | null }[];
   delivery: { trackingUrl: string | null; status: string | null } | null;
 };
 
@@ -60,7 +60,9 @@ export function OrderCard({
       <div className="text-sm" style={{ color: "#F3E9D6" }}>{order.customerName} · {order.customerPhone}</div>
       {order.deliveryAddress && <div className="text-xs" style={{ color: "#8A8276" }}>{order.deliveryAddress}</div>}
       <ul className="my-2 text-sm" style={{ color: "#C9C2B5" }}>
-        {order.items.map((i) => <li key={i.id}>{i.quantity}× {i.itemName}</li>)}
+        {order.items.map((i) => (
+          <li key={i.id}>{i.quantity}× {i.itemName}{i.spiceLevel ? ` · ${i.spiceLevel}` : ""}</li>
+        ))}
       </ul>
       <div className="text-sm mb-2" style={{ color: "#F3E9D6" }}>Total ${order.total}</div>
       {order.delivery?.trackingUrl && (

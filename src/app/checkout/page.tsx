@@ -181,7 +181,7 @@ export default function CheckoutPage() {
           email: email.trim(),
           fulfillment,
           address: fulfillment === "delivery" ? address.trim() : undefined,
-          items: lines.map((l) => ({ id: l.id, qty: l.qty })),
+          items: lines.map((l) => ({ id: l.id, qty: l.qty, spiceLevel: l.spiceLevel })),
           tip,
           externalDeliveryId: quote.externalDeliveryId ?? undefined,
         }),
@@ -392,6 +392,9 @@ export default function CheckoutPage() {
                       <p style={{ color: "#8A8276" }}>
                         {l.qty} × ${l.price.toFixed(2)}
                       </p>
+                      {l.spiceLevel && (
+                        <p className="text-[11px]" style={{ color: "#8A8276" }}>🌶 {l.spiceLevel}</p>
+                      )}
                     </div>
                     <span className="font-bold whitespace-nowrap" style={{ color: "#F3E9D6" }}>
                       ${(l.qty * l.price).toFixed(2)}

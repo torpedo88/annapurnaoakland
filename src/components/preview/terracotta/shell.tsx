@@ -223,6 +223,9 @@ function CartDrawer() {
                       </button>
                     </div>
                     <p className="text-sm" style={{ color: "#8A8276" }}>${l.price.toFixed(2)} each</p>
+                    {l.spiceLevel && (
+                      <p className="text-xs" style={{ color: "#8A8276" }}>🌶 {l.spiceLevel}</p>
+                    )}
                     <div className="mt-2 flex items-center justify-between">
                       <div
                         className="inline-flex items-center rounded-full"

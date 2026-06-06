@@ -11,6 +11,7 @@ const MENU_BY_ID = new Map(menu.map((m) => [m.id, m]));
 export interface RawLine {
   id: unknown;
   qty: unknown;
+  spiceLevel?: unknown;
 }
 
 export interface PricedLine {

@@ -21,7 +21,7 @@ export interface PlaceOrderInput {
   name: unknown; phone: unknown; email: unknown;
   fulfillment: "pickup" | "delivery";
   address?: unknown;
-  items: { id: unknown; qty: unknown }[];
+  items: { id: unknown; qty: unknown; spiceLevel?: unknown }[];
   tipCents: number;
   externalDeliveryId?: unknown;
   source?: "online" | "phone";

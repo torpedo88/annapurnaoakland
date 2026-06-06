@@ -68,12 +68,20 @@ export async function createOrder(
       .returning({ id: orders.id });
     if (!order) throw new Error("Order insert failed");
 
+    const spiceById = new Map(
+      input.items.map((i) => [
+        String(i.id),
+        typeof i.spiceLevel === "string" ? i.spiceLevel : null,
+      ]),
+    );
+
     await tx.insert(orderItems).values(
       totals.lines.map((l) => ({
         orderId: order.id,
         itemName: l.name, // resolved from catalog, not the client payload
         itemPrice: toDollars(l.priceCents),
         quantity: l.qty,
+        spiceLevel: spiceById.get(l.id) ?? null,
       })),
     );
     return { orderId: order.id, accessToken };

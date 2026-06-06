@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
 import { menu, categories, type MenuItem } from "@/data/menu";
 import { useCart } from "@/lib/preview-cart";
+import { hasSpiceOptions, SPICE_LEVELS, DEFAULT_SPICE } from "@/lib/spice";
 
 type Mode = "regular" | "catering";
 
@@ -244,6 +245,8 @@ export default function MenuPage() {
 function MenuCard({ item, unavailable }: { item: MenuItem; unavailable: boolean }) {
   const { add, lines, increment, decrement } = useCart();
   const inCart = lines.find((l) => l.id === item.id);
+  const showSpice = hasSpiceOptions(item.category);
+  const [spice, setSpice] = useState<string>(DEFAULT_SPICE);
 
   return (
     <article
@@ -309,6 +312,30 @@ function MenuCard({ item, unavailable }: { item: MenuItem; unavailable: boolean 
           className="mt-4 pt-4"
           style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
         >
+          {showSpice && !unavailable && (
+            <div className="flex items-center gap-1.5 mb-3">
+              {SPICE_LEVELS.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setSpice(level)}
+                  className="flex-1 rounded-full py-1 text-[11px] font-semibold transition"
+                  style={
+                    spice === level
+                      ? { backgroundColor: "#C9A24B", color: "#14100D" }
+                      : { border: "1px solid rgba(201,162,75,0.3)", color: "#8A8276", backgroundColor: "transparent" }
+                  }
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          )}
+          {inCart && inCart.spiceLevel && (
+            <p className="text-[11px] mb-2" style={{ color: "#8A8276" }}>
+              🌶 {inCart.spiceLevel}
+            </p>
+          )}
           {unavailable ? (
             <button
               disabled
@@ -351,7 +378,7 @@ function MenuCard({ item, unavailable }: { item: MenuItem; unavailable: boolean 
             </div>
           ) : (
             <button
-              onClick={() => add(item)}
+              onClick={() => add(item, 1, showSpice ? spice : undefined)}
               className="w-full inline-flex justify-center items-center gap-2 rounded-full py-2.5 font-semibold text-sm transition"
               style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
             >

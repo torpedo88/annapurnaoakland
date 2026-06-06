@@ -19,11 +19,12 @@ export type CartLine = {
   price: number;
   qty: number;
   image?: string;
+  spiceLevel?: string;
 };
 
 type CartContextShape = {
   lines: CartLine[];
-  add: (item: MenuItem, qty?: number) => void;
+  add: (item: MenuItem, qty?: number, spiceLevel?: string) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
   remove: (id: string) => void;
@@ -73,15 +74,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(CART_KEY, JSON.stringify(lines));
   }, [lines, hydrated]);
 
-  const add = useCallback((item: MenuItem, qty: number = 1) => {
+  const add = useCallback((item: MenuItem, qty: number = 1, spiceLevel?: string) => {
     setLines((prev) => {
       const existing = prev.find((l) => l.id === item.id);
       if (existing) {
-        return prev.map((l) => (l.id === item.id ? { ...l, qty: l.qty + qty } : l));
+        return prev.map((l) =>
+          l.id === item.id
+            ? { ...l, qty: l.qty + qty, spiceLevel: spiceLevel ?? l.spiceLevel }
+            : l
+        );
       }
       return [
         ...prev,
-        { id: item.id, name: item.name, price: item.price, qty, image: item.image },
+        { id: item.id, name: item.name, price: item.price, qty, image: item.image, spiceLevel },
       ];
     });
     setJustAdded({ id: item.id, ts: Date.now() });
