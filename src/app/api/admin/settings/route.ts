@@ -62,6 +62,14 @@ export async function PATCH(req: Request) {
     };
     await updateSetting("delivery", clean);
   }
+  if ("dish_of_day" in body && body.dish_of_day && typeof body.dish_of_day === "object") {
+    const d = body.dish_of_day as { itemId?: unknown; discountPercent?: unknown };
+    const pct = Number(d.discountPercent);
+    await updateSetting("dish_of_day", {
+      itemId: typeof d.itemId === "string" && d.itemId ? d.itemId : null,
+      discountPercent: Number.isFinite(pct) ? Math.min(100, Math.max(0, pct)) : 0,
+    });
+  }
 
   return NextResponse.json(await getSettings());
 }

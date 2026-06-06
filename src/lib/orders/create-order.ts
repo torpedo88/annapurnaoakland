@@ -19,6 +19,8 @@ export interface NewOrderInput {
   items: RawLine[];
   tipCents?: number;
   deliveryFeeCents?: number;
+  discountCents?: number;
+  status?: string; // defaults to "received"; online prepay uses "pending_payment"
   source?: "online" | "phone";
   paymentStatus?: "unpaid" | "paid" | "refunded";
   paymentMethod?: "cash" | "card" | "online" | null;
@@ -38,6 +40,7 @@ export async function createOrder(
   const totals = priceOrder(input.items, {
     tipCents: input.tipCents,
     deliveryFeeCents: input.deliveryFeeCents,
+    discountCents: input.discountCents,
     taxRate: settings.tax_rate,
   });
   const address =
@@ -52,7 +55,7 @@ export async function createOrder(
         customerEmail: contact.email || null,
         customerPhone: contact.phone,
         orderType: input.fulfillment,
-        status: "received",
+        status: input.status ?? "received",
         source: input.source ?? "online",
         paymentStatus: input.paymentStatus ?? "unpaid",
         paymentMethod: input.paymentMethod ?? null,
@@ -61,11 +64,19 @@ export async function createOrder(
         tax: toDollars(totals.taxCents),
         tip: toDollars(totals.tipCents),
         deliveryFee: toDollars(totals.deliveryFeeCents),
+        discount: toDollars(totals.discountCents),
         total: toDollars(totals.totalCents),
         deliveryAddress: address || null,
       })
       .returning({ id: orders.id });
     if (!order) throw new Error("Order insert failed");
+
+    const spiceById = new Map(
+      input.items.map((i) => [
+        String(i.id),
+        typeof i.spiceLevel === "string" ? i.spiceLevel : null,
+      ]),
+    );
 
     await tx.insert(orderItems).values(
       totals.lines.map((l) => ({
@@ -73,6 +84,7 @@ export async function createOrder(
         itemName: l.name, // resolved from catalog, not the client payload
         itemPrice: toDollars(l.priceCents),
         quantity: l.qty,
+        spiceLevel: spiceById.get(l.id) ?? null,
       })),
     );
     return { orderId: order.id, accessToken };

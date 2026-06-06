@@ -1,110 +1,124 @@
 /**
  * Per-dish image matching for the Annapurna menu.
  *
- * Sources (all URLs HEAD-verified):
- *  - TheMealDB — stable stock photos of named Indian meals
- *  - Unsplash — verified photo IDs for common Nepali/Indian dishes
+ * Images are self-hosted under /public/images/dishes/<key>.jpg, sourced from
+ * Wikimedia Commons (each photo is captioned as the named dish, so the label
+ * is authoritative) and visually verified. Self-hosting avoids upstream
+ * rate-limiting/hotlink breakage and gives next/image a same-origin source.
  *
- * Wikipedia Commons was evaluated but upload.wikimedia.org rate-limits
- * non-browser clients and breaks when served from dev servers, so it's
- * excluded here.
+ * To change a dish photo: drop a new <key>.jpg in public/images/dishes/ and,
+ * if needed, adjust the MATCHERS below. Matchers are priority-ordered — first
+ * match wins — so keep protein/ingredient-specific rules above generic ones.
  */
 
-type Match = { test: (name: string) => boolean; url: string };
+const img = (key: string) => `/images/dishes/${key}.jpg`;
 
-const unsplash = (id: string, w = 900) =>
-  `https://images.unsplash.com/${id}?w=${w}&q=85&auto=format&fit=crop`;
-const mealdb = (path: string) => `https://www.themealdb.com/images/media/meals/${path}`;
+type Match = { test: (name: string) => boolean; key: string };
 
+// Every key here corresponds to a file in public/images/dishes/<key>.jpg.
 const IMG = {
-  // Nepali
-  jholMomo: unsplash("photo-1625398407796-82650a8c135f"),             // verified: momo in red broth
-  momo: unsplash("photo-1625398407796-82650a8c135f"),                 // same family
-  momoPlate: unsplash("photo-1625398407796-82650a8c135f"),
-  chhoila: unsplash("photo-1599487488170-d11ec9c172f0"),              // charred chicken
-
-  // Appetizers
-  samosa: unsplash("photo-1601050690597-df0568f70950"),               // verified: samosas
-  pakora: unsplash("photo-1606491956689-2ea866880c84"),
-  paneerPakora: unsplash("photo-1567188040759-fb8a883dc6d8"),         // paneer cubes
+  // Nepali / appetizers
+  momo: img("momo"),
+  chickenMomo: img("chickenMomo"),
+  lambMomo: img("lambMomo"),
+  jholMomo: img("jholMomo"),
+  mixedMomo: img("mixedMomo"),
+  samosa: img("samosa"),
+  vegPakora: img("vegPakora"),
+  paneerPakora: img("paneerPakora"),
+  fishPakora: img("fishPakora"),
+  chhoila: img("chhoila"),
 
   // Vegetarian
-  palakPaneer: unsplash("photo-1631452180519-c014fe946bc7"),          // green paneer curry
-  matarPaneer: mealdb("xxpqsy1511452222.jpg"),                        // verified Matar Paneer
-  paneerTikka: unsplash("photo-1567188040759-fb8a883dc6d8"),
-  chanaMasala: mealdb("sywrsu1511463066.jpg"),                        // Kidney Bean Curry
-  malaiKofta: unsplash("photo-1585937421612-70a008356fbe"),
-  alooMatar: unsplash("photo-1565557623262-b51c2513a641"),
-  alooGobi: mealdb("urtpqw1487341253.jpg"),                           // Baingan Bharta (veg wet curry)
-  alooBhanta: mealdb("urtpqw1487341253.jpg"),                         // same Baingan Bharta
-  bhindi: unsplash("photo-1565557623262-b51c2513a641"),
-  mixVeg: unsplash("photo-1565557623262-b51c2513a641"),
-  potatoSpinach: unsplash("photo-1631452180519-c014fe946bc7"),
-  pumpkinMasala: unsplash("photo-1506368083636-6defb67639a7"),
-  vegKorma: unsplash("photo-1585937421612-70a008356fbe"),
-  dalMakhani: mealdb("wuxrtu1483564410.jpg"),                         // verified Dal Fry
-  dalTadka: mealdb("wuxrtu1483564410.jpg"),
+  alooMatar: img("alooMatar"),
+  alooGobi: img("alooGobi"),
+  chanaMasala: img("chanaMasala"),
+  bhindi: img("bhindi"),
+  matarPaneer: img("matarPaneer"),
+  palakPaneer: img("palakPaneer"),
+  malaiKofta: img("malaiKofta"),
+  mixVeg: img("mixVeg"),
+  alooBhanta: img("alooBhanta"),
+  potatoSpinach: img("potatoSpinach"),
+  pumpkinMasala: img("pumpkinMasala"),
+  paneerTikkaMasala: img("paneerTikkaMasala"),
+  vegKorma: img("vegKorma"),
+  dalMakhani: img("dalMakhani"),
+  dalTadka: img("dalTadka"),
 
   // Chicken
-  butterChicken: unsplash("photo-1603894584373-5ac82b2ae398"),        // verified: creamy chicken
-  chickenTikkaMasala: unsplash("photo-1585937421612-70a008356fbe"),
-  chickenTikka: unsplash("photo-1599487488170-d11ec9c172f0"),
-  chickenCurry: mealdb("wyxwsp1486979827.jpg"),                       // verified Chicken Handi
-  chickenKorma: mealdb("yxsurp1511304301.jpg"),                       // verified Nutty Chicken Curry
-  chickenChili: unsplash("photo-1585937421612-70a008356fbe"),
-  chickenSpinach: unsplash("photo-1631452180519-c014fe946bc7"),
-  chickenVindaloo: unsplash("photo-1585937421612-70a008356fbe"),
-  coconutChicken: unsplash("photo-1603894584373-5ac82b2ae398"),
+  butterChicken: img("butterChicken"),
+  chickenTikkaMasala: img("chickenTikkaMasala"),
+  chickenCurry: img("chickenCurry"),
+  chickenChili: img("chickenChili"),
+  chickenSpinach: img("chickenSpinach"),
+  chickenVindaloo: img("chickenVindaloo"),
+  chickenKorma: img("chickenKorma"),
+  coconutChicken: img("coconutChicken"),
+  chickenTikka: img("chickenTikka"),
 
   // Lamb & goat
-  lambCurry: mealdb("vvstvq1487342592.jpg"),                          // verified Rogan Josh
-  lambVindaloo: mealdb("vvstvq1487342592.jpg"),
-  lambBiryani: mealdb("xrttsx1487339558.jpg"),                        // verified Lamb Biryani
-  goatCurry: mealdb("vvstvq1487342592.jpg"),
+  lambCurry: img("lambCurry"),
+  lambTikkaMasala: img("lambTikkaMasala"),
+  lambSpinach: img("lambSpinach"),
+  lambMushroom: img("lambMushroom"),
+  lambVindaloo: img("lambVindaloo"),
+  lambKorma: img("lambKorma"),
+  goatCurry: img("goatCurry"),
+
+  // Seafood (DoorDash supplies distinct salmon/shrimp variants; tandoor separate)
+  salmonCurry: img("salmonCurry"),
+  salmonTikkaMasala: img("salmonTikkaMasala"),
+  salmonVindaloo: img("salmonVindaloo"),
+  salmonTandoor: img("salmonTandoor"),
+  shrimpKorma: img("shrimpKorma"),
+  shrimpTikkaMasala: img("shrimpTikkaMasala"),
+  shrimpTandoor: img("shrimpTandoor"),
 
   // Tandoori
-  tandooriChicken: mealdb("qptpvt1487339892.jpg"),                    // verified Tandoori Chicken
-  seekhKebab: unsplash("photo-1599487488170-d11ec9c172f0"),
-  tandooriMixed: mealdb("qptpvt1487339892.jpg"),
-
-  // Seafood
-  fishCurry: mealdb("uwxusv1487344500.jpg"),                          // verified Recheado Masala Fish
-  fishFry: mealdb("uwxusv1487344500.jpg"),
-  shrimpCurry: unsplash("photo-1631292784640-2b24be784d5d"),
+  tandooriChicken: img("tandooriChicken"),
+  mixedTandoori: img("mixedTandoori"),
 
   // Biryani
-  biryani: mealdb("xrttsx1487339558.jpg"),
-  chickenBiryani: mealdb("xrttsx1487339558.jpg"),
-  vegBiryani: mealdb("xrttsx1487339558.jpg"),
+  vegBiryani: img("vegBiryani"),
+  chickenBiryani: img("chickenBiryani"),
+  lambBiryani: img("lambBiryani"),
 
   // Breads
-  naan: unsplash("photo-1617692855027-33b14f061079"),                 // verified bread
-  garlicNaan: unsplash("photo-1617692855027-33b14f061079"),
-  roti: unsplash("photo-1617692855027-33b14f061079"),
-  kulcha: unsplash("photo-1617692855027-33b14f061079"),
-  paratha: unsplash("photo-1617692855027-33b14f061079"),
-  aaluParatha: unsplash("photo-1617692855027-33b14f061079"),
+  plainNaan: img("plainNaan"),
+  garlicNaan: img("garlicNaan"),
+  onionNaan: img("onionNaan"),
+  tandooriRoti: img("tandooriRoti"),
+  herbalNaan: img("herbalNaan"),
+  paneerParatha: img("paneerParatha"),
+  plainParatha: img("plainParatha"),
+  onionParatha: img("onionParatha"),
+  alooParatha: img("alooParatha"),
+  assortedNaan: img("assortedNaan"),
 
   // Sides
-  rice: unsplash("photo-1596560548464-f010549b84d7"),                 // verified rice bowl
-  raita: unsplash("photo-1568454537842-d933259bb258"),                // verified white dairy bowl
-  fries: unsplash("photo-1573080496219-bb080dd4f877"),
-  chutney: unsplash("photo-1565557623262-b51c2513a641"),
+  basmatiRice: img("basmatiRice"),
+  brownRice: img("brownRice"),
+  papad: img("papad"),
+  mangoChutney: img("mangoChutney"),
+  mixedPickle: img("mixedPickle"),
+  raita: img("raita"),
 
   // Desserts
-  gulabJamun: unsplash("photo-1587314168485-3236d6710814"),           // sweet syrupy bowl
-  kheer: unsplash("photo-1587314168485-3236d6710814"),
-  kulfi: unsplash("photo-1570197571499-166b36435e9f"),                // verified
-  rasmalai: unsplash("photo-1587314168485-3236d6710814"),
+  gulabJamun: img("gulabJamun"),
+  kheer: img("kheer"),
+  mangoKulfi: img("mangoKulfi"),
+  rasmalai: img("rasmalai"),
 
   // Drinks
-  chai: unsplash("photo-1545579133-99bb5ab189bd"),                    // verified warm drink
-  mangoLassi: unsplash("photo-1608897013039-887f21d8c804"),           // verified yellow drink
-  lassi: unsplash("photo-1568454537842-d933259bb258"),                // verified white drink
-  coffee: unsplash("photo-1497935586351-b67a49e012bf"),               // verified coffee
-  soda: unsplash("photo-1527960471264-932f39eb5846"),                 // verified soda
-  juice: unsplash("photo-1621263764928-df1444c5e859"),                // verified juice
-};
+  chai: img("chai"),
+  mangoLassi: img("mangoLassi"),
+  plainLassi: img("plainLassi"),
+  soda: img("soda"),
+  sparklingWater: img("sparklingWater"),
+  water: img("water"),
+  icedTea: img("icedTea"),
+} as const;
 
 const CATEGORY_FALLBACK: Record<string, string> = {
   appetizer: IMG.samosa,
@@ -112,107 +126,140 @@ const CATEGORY_FALLBACK: Record<string, string> = {
   "chicken-dish": IMG.butterChicken,
   "lamb-dishes": IMG.lambCurry,
   "tandoori-dish": IMG.tandooriChicken,
-  "sea-foods": IMG.fishCurry,
-  biryani: IMG.biryani,
-  "house-special": IMG.butterChicken,
-  breads: IMG.naan,
-  "side-order": IMG.rice,
-  dessert: IMG.kheer,
+  "sea-foods": IMG.salmonCurry,
+  biryani: IMG.chickenBiryani,
+  "house-special": IMG.goatCurry,
+  breads: IMG.plainNaan,
+  "side-order": IMG.basmatiRice,
+  dessert: IMG.gulabJamun,
   beverages: IMG.chai,
   "catering-appetizers": IMG.samosa,
   "catering-vegetarian-dish": IMG.palakPaneer,
   "catering-chicken-dish": IMG.butterChicken,
   "catering-lambgoat-dishes": IMG.lambCurry,
   "catering-tandoori-dish": IMG.tandooriChicken,
-  "catering-biryani": IMG.biryani,
-  "catering-breads": IMG.naan,
-  "catering-side-order": IMG.rice,
-  "catering-dessert": IMG.kheer,
+  "catering-biryani": IMG.chickenBiryani,
+  "catering-breads": IMG.plainNaan,
+  "catering-side-order": IMG.basmatiRice,
+  "catering-dessert": IMG.gulabJamun,
 };
 
-// Priority-ordered keyword matchers — first match wins
+// Priority-ordered keyword matchers — first match wins.
 const MATCHERS: Match[] = [
-  { test: (n) => /jhol.*momo|momo.*jhol/.test(n), url: IMG.jholMomo },
-  { test: (n) => /mixed.*momo/.test(n), url: IMG.momoPlate },
-  { test: (n) => /momo/.test(n), url: IMG.momo },
+  // Momos (specific before generic)
+  { test: (n) => /jhol/.test(n) && /momo/.test(n), key: "jholMomo" },
+  { test: (n) => /mixed?\s*momo/.test(n), key: "mixedMomo" },
+  { test: (n) => /chicken\s*momo/.test(n), key: "chickenMomo" },
+  { test: (n) => /lamb\s*momo/.test(n), key: "lambMomo" },
+  { test: (n) => /momo/.test(n), key: "momo" },
 
-  { test: (n) => /samosa/.test(n), url: IMG.samosa },
-  { test: (n) => /paneer.*pakora/.test(n), url: IMG.paneerPakora },
-  { test: (n) => /pakora|fritter/.test(n), url: IMG.pakora },
-  { test: (n) => /chhoila|choila/.test(n), url: IMG.chhoila },
+  // Other appetizers
+  { test: (n) => /samosa/.test(n), key: "samosa" },
+  { test: (n) => /paneer\s*pakora/.test(n), key: "paneerPakora" },
+  { test: (n) => /fish\s*pakora/.test(n), key: "fishPakora" },
+  { test: (n) => /pakora|fritter/.test(n), key: "vegPakora" }, // incl. pumpkin/veg pakora
+  { test: (n) => /chhoila|choila|chhwela/.test(n), key: "chhoila" },
 
-  { test: (n) => /palak|spinach.*paneer|saag.*paneer/.test(n), url: IMG.palakPaneer },
-  { test: (n) => /matar.*paneer|peas.*paneer/.test(n), url: IMG.matarPaneer },
-  { test: (n) => /paneer.*tikka|tikka.*paneer/.test(n), url: IMG.paneerTikka },
-  { test: (n) => /paneer/.test(n), url: IMG.paneerTikka },
-  { test: (n) => /malai.*kofta/.test(n), url: IMG.malaiKofta },
-  { test: (n) => /chana|garbanzo|chickpea|chole/.test(n), url: IMG.chanaMasala },
-  { test: (n) => /aloo.*matar|potato.*pea/.test(n), url: IMG.alooMatar },
-  { test: (n) => /aloo.*cauli|aloo.*gobi|cauliflower/.test(n), url: IMG.alooGobi },
-  { test: (n) => /aloo.*bhanta|bhanta|baingan|eggplant/.test(n), url: IMG.alooBhanta },
-  { test: (n) => /potato.*spinach|spinach.*potato/.test(n), url: IMG.potatoSpinach },
-  { test: (n) => /bhindi|okra/.test(n), url: IMG.bhindi },
-  { test: (n) => /pumpkin/.test(n), url: IMG.pumpkinMasala },
-  { test: (n) => /mix.*vegetable|mixed.*vegetable|seasonal.*veg/.test(n), url: IMG.mixVeg },
-  { test: (n) => /(veg|vegetable).*korma/.test(n), url: IMG.vegKorma },
-  { test: (n) => /dal.*makhani|daal.*makhani/.test(n), url: IMG.dalMakhani },
-  { test: (n) => /\bdal\b|\bdaal\b|lentil/.test(n), url: IMG.dalTadka },
+  // Seafood — match by protein BEFORE generic curry/masala/vindaloo rules
+  { test: (n) => /(salmon|fish)\s*tandoor/.test(n) || /tandoor.*salmon/.test(n), key: "salmonTandoor" },
+  { test: (n) => /(shrimp|prawn)\s*tandoor/.test(n) || /tandoor.*(shrimp|prawn)/.test(n), key: "shrimpTandoor" },
+  { test: (n) => /(salmon|fish).*tikka\s*masala/.test(n), key: "salmonTikkaMasala" },
+  { test: (n) => /(salmon|fish).*vindaloo/.test(n), key: "salmonVindaloo" },
+  { test: (n) => /salmon|fish/.test(n), key: "salmonCurry" },
+  { test: (n) => /(shrimp|prawn).*tikka\s*masala/.test(n), key: "shrimpTikkaMasala" },
+  { test: (n) => /shrimp|prawn/.test(n), key: "shrimpKorma" },
 
-  { test: (n) => /butter.*chicken|chicken.*nauni|chicken.*makhani/.test(n), url: IMG.butterChicken },
-  { test: (n) => /tikka.*masala/.test(n), url: IMG.chickenTikkaMasala },
-  { test: (n) => /chicken.*tikka/.test(n), url: IMG.chickenTikka },
-  { test: (n) => /chicken.*korma|nutty.*chicken/.test(n), url: IMG.chickenKorma },
-  { test: (n) => /chicken.*vindaloo/.test(n), url: IMG.chickenVindaloo },
-  { test: (n) => /chicken.*chili|chili.*chicken/.test(n), url: IMG.chickenChili },
-  { test: (n) => /chicken.*spinach|chicken.*saag|chicken.*palak/.test(n), url: IMG.chickenSpinach },
-  { test: (n) => /coconut.*chicken|chicken.*coconut/.test(n), url: IMG.coconutChicken },
-  { test: (n) => /chicken.*curry|curry.*chicken/.test(n), url: IMG.chickenCurry },
+  // Paneer / vegetarian
+  { test: (n) => /palak\s*paneer|saag\s*paneer|spinach.*paneer/.test(n), key: "palakPaneer" },
+  { test: (n) => /matar\s*paneer|peas.*paneer/.test(n), key: "matarPaneer" },
+  { test: (n) => /paneer\s*tikka|paneer.*masala/.test(n), key: "paneerTikkaMasala" },
+  { test: (n) => /malai\s*kofta|kofta/.test(n), key: "malaiKofta" },
+  { test: (n) => /chana|chole|garbanzo|chickpea/.test(n), key: "chanaMasala" },
+  { test: (n) => /aloo\s*matar|potato.*pea|matar.*aloo/.test(n), key: "alooMatar" },
+  { test: (n) => /aloo.*(cauli|gobi)|cauliflower|\bgobi\b/.test(n), key: "alooGobi" },
+  { test: (n) => /aloo\s*bhanta|bhanta|baingan|eggplant|brinjal/.test(n), key: "alooBhanta" },
+  { test: (n) => /bhindi|okra/.test(n), key: "bhindi" },
+  { test: (n) => /pumpkin\s*masala|kaddu/.test(n), key: "pumpkinMasala" },
+  { test: (n) => /(veg|vegetable)\s*korma|navratan/.test(n), key: "vegKorma" },
+  { test: (n) => /mix(ed)?\s*veg/.test(n), key: "mixVeg" },
+  { test: (n) => /dal\s*makhani|daal\s*makhani/.test(n), key: "dalMakhani" },
+  { test: (n) => /dal\s*tadka|dal\s*fry|daal/.test(n), key: "dalTadka" },
 
-  { test: (n) => /lamb.*biryani|goat.*biryani/.test(n), url: IMG.lambBiryani },
-  { test: (n) => /lamb.*vindaloo|goat.*vindaloo/.test(n), url: IMG.lambVindaloo },
-  { test: (n) => /lamb|goat|mutton/.test(n), url: IMG.lambCurry },
+  // Chicken (protein-specific spinach/vindaloo before lamb/generic)
+  { test: (n) => /butter\s*chicken|chicken.*nauni|chicken.*makhani|murgh.*makhani/.test(n), key: "butterChicken" },
+  { test: (n) => /coconut.*chicken|chicken.*coconut/.test(n), key: "coconutChicken" },
+  { test: (n) => /chicken.*tikka\s*masala|chicken.*masala/.test(n), key: "chickenTikkaMasala" },
+  { test: (n) => /chicken.*korma/.test(n), key: "chickenKorma" },
+  { test: (n) => /chicken.*vindaloo/.test(n), key: "chickenVindaloo" },
+  { test: (n) => /chicken.*(chili|chilli)|(chili|chilli).*chicken/.test(n), key: "chickenChili" },
+  { test: (n) => /chicken.*(spinach|saag|palak)/.test(n), key: "chickenSpinach" },
+  { test: (n) => /chicken.*tandoori\s*tikka|tandoori.*chicken.*tikka/.test(n), key: "chickenTikka" },
+  { test: (n) => /chicken.*tikka/.test(n), key: "chickenTikka" },
 
-  { test: (n) => /tandoori.*mix|mixed.*tandoori|tandoori.*platter/.test(n), url: IMG.tandooriMixed },
-  { test: (n) => /seekh|kebab/.test(n), url: IMG.seekhKebab },
-  { test: (n) => /tandoori/.test(n), url: IMG.tandooriChicken },
+  // Lamb / goat
+  { test: (n) => /lamb.*tikka\s*masala|lamb.*masala/.test(n), key: "lambTikkaMasala" },
+  { test: (n) => /lamb.*korma/.test(n), key: "lambKorma" },
+  { test: (n) => /lamb.*vindaloo/.test(n), key: "lambVindaloo" },
+  { test: (n) => /lamb.*(spinach|saag|palak)/.test(n), key: "lambSpinach" },
+  { test: (n) => /lamb.*mushroom|mushroom.*lamb/.test(n), key: "lambMushroom" },
+  { test: (n) => /goat/.test(n), key: "goatCurry" },
 
-  { test: (n) => /shrimp|prawn/.test(n), url: IMG.shrimpCurry },
-  { test: (n) => /fish.*fry|fried.*fish/.test(n), url: IMG.fishFry },
-  { test: (n) => /fish/.test(n), url: IMG.fishCurry },
+  // Tandoori
+  { test: (n) => /mixed?\s*tandoor|tandoori?\s*(platter|mix)/.test(n), key: "mixedTandoori" },
+  { test: (n) => /tandoori?\s*roti/.test(n), key: "tandooriRoti" },
+  { test: (n) => /tandoor/.test(n), key: "tandooriChicken" },
 
-  { test: (n) => /chicken.*biryani/.test(n), url: IMG.chickenBiryani },
-  { test: (n) => /veg.*biryani|vegetable.*biryani/.test(n), url: IMG.vegBiryani },
-  { test: (n) => /biryani/.test(n), url: IMG.biryani },
+  // Biryani
+  { test: (n) => /lamb\s*biryani|goat\s*biryani|mutton\s*biryani/.test(n), key: "lambBiryani" },
+  { test: (n) => /chicken\s*biryani/.test(n), key: "chickenBiryani" },
+  { test: (n) => /biryani/.test(n), key: "vegBiryani" },
 
-  { test: (n) => /garlic.*naan/.test(n), url: IMG.garlicNaan },
-  { test: (n) => /naan/.test(n), url: IMG.naan },
-  { test: (n) => /kulcha/.test(n), url: IMG.kulcha },
-  { test: (n) => /aloo.*paratha|alu.*paratha/.test(n), url: IMG.aaluParatha },
-  { test: (n) => /paratha/.test(n), url: IMG.paratha },
-  { test: (n) => /roti|chapati/.test(n), url: IMG.roti },
+  // Generic chicken/lamb curry (after all specific protein dishes)
+  { test: (n) => /chicken/.test(n), key: "chickenCurry" },
+  { test: (n) => /lamb|mutton/.test(n), key: "lambCurry" },
 
-  { test: (n) => /raita/.test(n), url: IMG.raita },
-  { test: (n) => /rice|basmati/.test(n), url: IMG.rice },
-  { test: (n) => /fries|french fry/.test(n), url: IMG.fries },
-  { test: (n) => /chutney/.test(n), url: IMG.chutney },
+  // Breads (specific before plain)
+  { test: (n) => /garlic\s*naan/.test(n), key: "garlicNaan" },
+  { test: (n) => /onion\s*naan/.test(n), key: "onionNaan" },
+  { test: (n) => /(herb|herbal|rosemary)\s*naan/.test(n), key: "herbalNaan" },
+  { test: (n) => /assorted\s*naan|naan\s*basket/.test(n), key: "assortedNaan" },
+  { test: (n) => /naan/.test(n), key: "plainNaan" }, // incl. coconut naan
+  { test: (n) => /paneer\s*paratha/.test(n), key: "paneerParatha" },
+  { test: (n) => /(aloo|alu|aalo)\s*paratha/.test(n), key: "alooParatha" },
+  { test: (n) => /onion\s*paratha/.test(n), key: "onionParatha" },
+  { test: (n) => /paratha/.test(n), key: "plainParatha" }, // incl. coconut paratha
+  { test: (n) => /roti|chapati/.test(n), key: "tandooriRoti" },
 
-  { test: (n) => /gulab.*jamun/.test(n), url: IMG.gulabJamun },
-  { test: (n) => /rasmalai|ras malai/.test(n), url: IMG.rasmalai },
-  { test: (n) => /kheer|rice.*pudding/.test(n), url: IMG.kheer },
-  { test: (n) => /kulfi|ice.*cream/.test(n), url: IMG.kulfi },
+  // Sides
+  { test: (n) => /raita/.test(n), key: "raita" },
+  { test: (n) => /brown\s*rice/.test(n), key: "brownRice" },
+  { test: (n) => /rice|basmati/.test(n), key: "basmatiRice" },
+  { test: (n) => /papad|papp?adum/.test(n), key: "papad" },
+  { test: (n) => /mango\s*chutney/.test(n), key: "mangoChutney" },
+  { test: (n) => /pickle|achar/.test(n), key: "mixedPickle" },
+  { test: (n) => /lentil\s*soup|\bdal\b|\bdaal\b|lentil/.test(n), key: "dalTadka" },
+  { test: (n) => /chutney/.test(n), key: "mangoChutney" },
 
-  { test: (n) => /chai|masala.*tea|\btea\b/.test(n), url: IMG.chai },
-  { test: (n) => /mango.*lassi/.test(n), url: IMG.mangoLassi },
-  { test: (n) => /lassi/.test(n), url: IMG.lassi },
-  { test: (n) => /coffee/.test(n), url: IMG.coffee },
-  { test: (n) => /juice|mango.*drink/.test(n), url: IMG.juice },
-  { test: (n) => /soda|water|coke|pepsi|sprite/.test(n), url: IMG.soda },
+  // Desserts
+  { test: (n) => /gulab\s*jamun/.test(n), key: "gulabJamun" },
+  { test: (n) => /rasmalai|ras\s*malai/.test(n), key: "rasmalai" },
+  { test: (n) => /kheer|rice\s*pudding/.test(n), key: "kheer" },
+  { test: (n) => /kulfi/.test(n), key: "mangoKulfi" },
+
+  // Drinks (iced tea before tea/chai)
+  { test: (n) => /iced\s*tea/.test(n), key: "icedTea" },
+  { test: (n) => /mango\s*lassi/.test(n), key: "mangoLassi" },
+  { test: (n) => /lassi/.test(n), key: "plainLassi" },
+  { test: (n) => /chai|masala\s*tea|\btea\b/.test(n), key: "chai" },
+  { test: (n) => /sparkling/.test(n), key: "sparklingWater" },
+  { test: (n) => /soda|coke|pepsi|sprite|cola/.test(n), key: "soda" },
+  { test: (n) => /water/.test(n), key: "water" },
 ];
 
 export function dishImage(name: string, category: string): string {
   const n = name.toLowerCase();
   for (const m of MATCHERS) {
-    if (m.test(n)) return m.url;
+    if (m.test(n)) return (IMG as Record<string, string>)[m.key] ?? IMG.chickenCurry;
   }
   return CATEGORY_FALLBACK[category] ?? IMG.butterChicken;
 }

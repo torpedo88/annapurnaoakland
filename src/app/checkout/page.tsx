@@ -1,10 +1,12 @@
 "use client";
 
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Zap } from "lucide-react";
+import { loadStripe } from "@stripe/stripe-js";
+import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "@/lib/preview-cart";
+
+const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
 type Fulfillment = "pickup" | "delivery";
 const TIP_PRESETS = [0.15, 0.18, 0.2];
@@ -26,8 +28,7 @@ const INITIAL_QUOTE: QuoteState = {
 };
 
 export default function CheckoutPage() {
-  const router = useRouter();
-  const { lines, subtotal, tax, clear } = useCart();
+  const { lines, subtotal, tax } = useCart();
 
   const [fulfillment, setFulfillment] = useState<Fulfillment>("pickup");
   const [name, setName] = useState("");
@@ -37,12 +38,32 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [tipPct, setTipPct] = useState<number>(0.18);
   const [customTip, setCustomTip] = useState<string>("");
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountCents: number; label: string } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deliveryNotice, setDeliveryNotice] = useState<string | null>(null);
   const [quote, setQuote] = useState<QuoteState>(INITIAL_QUOTE);
+  const [clientSecret, setClientSecret] = useState<string | null>(null);
+  // Dish of the Day discount auto-applies when the featured item is in the cart.
+  const [dishOfDay, setDishOfDay] = useState<{ id: string; discountPercent: number } | null>(null);
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    let on = true;
+    fetch("/api/settings/public")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d) => {
+        if (on && d?.dish_of_day?.id && d.dish_of_day.discountPercent > 0) {
+          setDishOfDay({ id: d.dish_of_day.id, discountPercent: d.dish_of_day.discountPercent });
+        }
+      })
+      .catch(() => { /* no special */ });
+    return () => { on = false; };
+  }, []);
 
   // ─── Live delivery quote (debounced) ───────────────────────────────────────
   useEffect(() => {
@@ -113,6 +134,15 @@ export default function CheckoutPage() {
   }, [customTip, tipPct, subtotal]);
 
   const total = +(subtotal + tax + tip + deliveryFee).toFixed(2);
+  // Dish-of-the-day discount: % off the featured item's line when it's in the cart.
+  const dishDiscount = useMemo(() => {
+    if (!dishOfDay) return 0;
+    const line = lines.find((l) => l.id === dishOfDay.id);
+    if (!line) return 0;
+    return +(line.price * line.qty * (dishOfDay.discountPercent / 100)).toFixed(2);
+  }, [dishOfDay, lines]);
+  const promoDiscount = appliedPromo ? appliedPromo.discountCents / 100 : 0;
+  const displayTotal = +Math.max(0, total - promoDiscount - dishDiscount).toFixed(2);
 
   // ─── Delivery option sub-label ──────────────────────────────────────────────
   const deliveryOptionSub = useMemo(() => {
@@ -129,6 +159,40 @@ export default function CheckoutPage() {
     if (quote.error) return "Quote unavailable";
     return "Enter address for live fee";
   }, [fulfillment, quote]);
+
+  // ─── Promo handlers ───────────────────────────────────────────────────────
+  const applyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setCheckingPromo(true);
+    setPromoError(null);
+    try {
+      const res = await fetch("/api/promos/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          items: lines.map((l) => ({ id: l.id, qty: l.qty })),
+        }),
+      });
+      const json = (await res.json()) as { valid: boolean; discountCents: number; label: string; code: string; reason?: string };
+      if (json.valid) {
+        setAppliedPromo({ code: json.code, discountCents: json.discountCents, label: json.label });
+        setPromoError(null);
+      } else {
+        setPromoError(json.reason ?? "Invalid promo code.");
+      }
+    } catch {
+      setPromoError("Could not validate promo code. Please try again.");
+    } finally {
+      setCheckingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+    setPromoError(null);
+  };
 
   // ─── Empty cart ────────────────────────────────────────────────────────────
   if (lines.length === 0) {
@@ -170,7 +234,7 @@ export default function CheckoutPage() {
     setSubmitting(true);
 
     try {
-      const res = await fetch("/api/orders", {
+      const res = await fetch("/api/checkout/session", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -179,28 +243,20 @@ export default function CheckoutPage() {
           email: email.trim(),
           fulfillment,
           address: fulfillment === "delivery" ? address.trim() : undefined,
-          notes: notes.trim() || undefined,
-          // Only ids + quantities — the server recomputes all prices from the catalog.
-          items: lines.map((l) => ({ id: l.id, qty: l.qty })),
+          items: lines.map((l) => ({ id: l.id, qty: l.qty, spiceLevel: l.spiceLevel })),
           tip,
           externalDeliveryId: quote.externalDeliveryId ?? undefined,
+          promoCode: appliedPromo?.code,
         }),
       });
-
-      const json = (await res.json()) as {
-        orderId?: string;
-        accessToken?: string;
-        error?: string;
-      };
-
-      if (!res.ok || !json.orderId || !json.accessToken) {
-        setError(json.error ?? "Could not place order. Please try again.");
+      const json = (await res.json()) as { clientSecret?: string; error?: string };
+      if (!res.ok || !json.clientSecret) {
+        setError(json.error ?? "Could not start checkout. Please try again.");
         setSubmitting(false);
         return;
       }
-
-      clear();
-      router.push(`/order/${json.orderId}?t=${encodeURIComponent(json.accessToken)}`);
+      setClientSecret(json.clientSecret);
+      setSubmitting(false);
     } catch {
       setError("Network error. Please check your connection and try again.");
       setSubmitting(false);
@@ -348,31 +404,22 @@ export default function CheckoutPage() {
               </div>
             </div>
 
-            {/* Payment (demo notice) */}
+            {/* Payment */}
             <div>
               <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>Payment</h2>
-              <div
-                className="rounded-2xl p-5"
-                style={{
-                  backgroundColor: "#1C1712",
-                  border: "2px dashed rgba(201,162,75,0.2)",
-                }}
-              >
-                <div className="flex items-center gap-3">
-                  <div
-                    className="h-10 w-10 rounded-full flex items-center justify-center font-bold"
-                    style={{ backgroundColor: "rgba(201,162,75,0.15)", color: "#C9A24B" }}
-                  >
-                    <Zap className="h-5 w-5" aria-hidden="true" />
-                  </div>
-                  <div>
-                    <p className="font-bold" style={{ color: "#F3E9D6" }}>Demo mode — no card required</p>
-                    <p className="text-sm" style={{ color: "#8A8276" }}>
-                      Real build wires Toast Order Pay or Stripe here. This one skips straight to confirmation.
-                    </p>
-                  </div>
+              {clientSecret ? (
+                <div className="rounded-2xl overflow-hidden" style={{ backgroundColor: "#fff" }}>
+                  <EmbeddedCheckoutProvider stripe={stripePromise} options={{ clientSecret }}>
+                    <EmbeddedCheckout />
+                  </EmbeddedCheckoutProvider>
                 </div>
-              </div>
+              ) : (
+                <div className="rounded-2xl p-5" style={{ backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.2)" }}>
+                  <p className="text-sm" style={{ color: "#8A8276" }}>
+                    Review your order, then continue to secure card payment (Apple Pay &amp; Google Pay supported).
+                  </p>
+                </div>
+              )}
             </div>
 
             {error && (
@@ -408,6 +455,9 @@ export default function CheckoutPage() {
                       <p style={{ color: "#8A8276" }}>
                         {l.qty} × ${l.price.toFixed(2)}
                       </p>
+                      {l.spiceLevel && (
+                        <p className="text-[11px]" style={{ color: "#8A8276" }}>🌶 {l.spiceLevel}</p>
+                      )}
                     </div>
                     <span className="font-bold whitespace-nowrap" style={{ color: "#F3E9D6" }}>
                       ${(l.qty * l.price).toFixed(2)}
@@ -428,6 +478,72 @@ export default function CheckoutPage() {
                   />
                 )}
                 <Row label="Tip" value={`$${tip.toFixed(2)}`} />
+
+                {dishDiscount > 0 && (
+                  <div className="flex justify-between items-center text-sm">
+                    <dt style={{ color: "#22c55e" }}>
+                      Dish of the Day{" "}
+                      <span style={{ color: "#8A8276" }}>({dishOfDay?.discountPercent}% off)</span>
+                    </dt>
+                    <dd style={{ color: "#22c55e" }}>-${dishDiscount.toFixed(2)}</dd>
+                  </div>
+                )}
+
+                {/* ── Promo code entry / applied state ── */}
+                {appliedPromo ? (
+                  <>
+                    <div className="flex justify-between items-center text-sm">
+                      <dt style={{ color: "#22c55e" }}>
+                        Promo {appliedPromo.code}{" "}
+                        <span style={{ color: "#8A8276" }}>({appliedPromo.label})</span>
+                      </dt>
+                      <dd>
+                        <button
+                          type="button"
+                          onClick={removePromo}
+                          className="text-xs underline"
+                          style={{ color: "#8A8276" }}
+                        >
+                          Remove
+                        </button>
+                      </dd>
+                    </div>
+                    <Row label="Discount" value={`-$${(appliedPromo.discountCents / 100).toFixed(2)}`} />
+                  </>
+                ) : (
+                  <div className="pt-1">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(); } }}
+                        placeholder="Promo code"
+                        className="flex-1 rounded-full px-4 py-2 text-sm focus:outline-none transition"
+                        style={{
+                          backgroundColor: "#14100D",
+                          border: "1px solid rgba(201,162,75,0.2)",
+                          color: "#F3E9D6",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void applyPromo()}
+                        disabled={checkingPromo || !promoCode.trim()}
+                        className="rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
+                        style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+                      >
+                        {checkingPromo ? "…" : "Apply"}
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="mt-1.5 text-xs" style={{ color: "#f87171" }}>
+                        {promoError}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div
                   className="pt-2 mt-2 flex justify-between items-baseline"
                   style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
@@ -437,18 +553,20 @@ export default function CheckoutPage() {
                     className="text-3xl font-bold"
                     style={{ color: "#C9A24B", fontFamily: "var(--font-display)" }}
                   >
-                    ${total.toFixed(2)}
+                    ${displayTotal.toFixed(2)}
                   </dd>
                 </div>
               </dl>
-              <button
-                type="submit"
-                disabled={submitting}
-                className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold text-base transition disabled:opacity-60 disabled:cursor-wait"
-                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
-              >
-                {submitting ? "Placing order…" : `Place order · $${total.toFixed(2)}`}
-              </button>
+              {!clientSecret && (
+                <button
+                  type="submit"
+                  disabled={submitting || (fulfillment === "delivery" && quote.loading)}
+                  className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold text-base transition disabled:opacity-60 disabled:cursor-wait"
+                  style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+                >
+                  {submitting ? "Starting checkout…" : `Continue to payment · $${displayTotal.toFixed(2)}`}
+                </button>
+              )}
               <p
                 className="mt-3 text-center text-[11px] uppercase tracking-widest"
                 style={{ color: "#8A8276" }}

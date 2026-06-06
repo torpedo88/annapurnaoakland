@@ -13,12 +13,18 @@ export interface DeliverySettings {
   maxRadiusMiles: number;
 }
 
+export interface DishOfDay {
+  itemId: string | null;
+  discountPercent: number;
+}
+
 export interface Settings {
   tax_rate: number;
   delivery: DeliverySettings;
   ordering_paused: boolean;
   pickup_enabled: boolean;
   delivery_enabled: boolean;
+  dish_of_day: DishOfDay;
 }
 
 export const DEFAULT_SETTINGS: Settings = {
@@ -35,6 +41,7 @@ export const DEFAULT_SETTINGS: Settings = {
   ordering_paused: false,
   pickup_enabled: true,
   delivery_enabled: true,
+  dish_of_day: { itemId: null, discountPercent: 0 },
 };
 
 type Row = { key: string; value: unknown };
@@ -69,6 +76,17 @@ export function mergeSettings(rows: Row[]): Settings {
             if (typeof val === "number" && Number.isFinite(val) && val >= 0) {
               d[k] = val;
             }
+          }
+        }
+        break;
+      case "dish_of_day":
+        if (value && typeof value === "object") {
+          const v = value as Record<string, unknown>;
+          if ("itemId" in v && (typeof v.itemId === "string" || v.itemId === null)) {
+            out.dish_of_day.itemId = v.itemId;
+          }
+          if ("discountPercent" in v && typeof v.discountPercent === "number" && Number.isFinite(v.discountPercent) && v.discountPercent >= 0 && v.discountPercent <= 100) {
+            out.dish_of_day.discountPercent = v.discountPercent;
           }
         }
         break;

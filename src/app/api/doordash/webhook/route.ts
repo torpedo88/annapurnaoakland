@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { deliveries, orders } from "@/db/schema";
 import { eq } from "drizzle-orm";
-import { verifyWebhookSignature, parseEvent, mapDeliveryStatus } from "@/lib/doordash/webhook";
+import { verifyWebhookSignature, verifyWebhookAuth, parseEvent, mapDeliveryStatus } from "@/lib/doordash/webhook";
 import { canTransition } from "@/lib/orders/status";
 
 export const runtime = "nodejs";
@@ -11,8 +11,13 @@ const ack = () => NextResponse.json({ ok: true });
 
 export async function POST(req: Request) {
   const raw = await req.text();
-  if (!verifyWebhookSignature(raw, req.headers.get("x-doordash-signature"))) {
-    return NextResponse.json({ error: "bad signature" }, { status: 401 });
+  // Accept either the portal's Authorization-header token or an HMAC body
+  // signature, so it works regardless of how the DoorDash webhook is configured.
+  const authed =
+    verifyWebhookAuth(req.headers.get("authorization")) ||
+    verifyWebhookSignature(raw, req.headers.get("x-doordash-signature"));
+  if (!authed) {
+    return NextResponse.json({ error: "unauthorized" }, { status: 401 });
   }
 
   let parsed: unknown;

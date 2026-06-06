@@ -10,6 +10,12 @@ export default function AdminLoginPage() {
   return (
     <section className="min-h-[calc(100vh-4rem)] flex items-center justify-center px-6 py-16">
       <div className="w-full max-w-md">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/annapurna-logo.png"
+          alt="Annapurna Restaurant & Bar"
+          className="h-32 w-auto object-contain mb-6 mx-auto block"
+        />
         <div
           className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest mb-6"
           style={{ backgroundColor: "rgba(201,162,75,0.15)", color: "#C9A24B" }}

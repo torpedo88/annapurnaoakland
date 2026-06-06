@@ -19,7 +19,7 @@ export type AdminOrder = {
   total: string | null;
   deliveryAddress: string | null;
   createdAt: string;
-  items: { id: string; itemName: string | null; quantity: number | null }[];
+  items: { id: string; itemName: string | null; quantity: number | null; spiceLevel?: string | null }[];
   delivery: { trackingUrl: string | null; status: string | null } | null;
 };
 
@@ -30,12 +30,13 @@ const LABEL: Record<string, string> = {
 };
 
 export function OrderCard({
-  order, busy, onStatus, onPayment,
+  order, busy, onStatus, onPayment, onRefund,
 }: {
   order: AdminOrder;
   busy: boolean;
   onStatus: (id: string, to: string) => void;
   onPayment: (id: string, patch: { payment_status?: string; payment_method?: string }) => void;
+  onRefund: (id: string) => void;
 }) {
   const fulfillment: Fulfillment = order.orderType === "delivery" ? "delivery" : "pickup";
   const actions = nextStatuses(fulfillment, order.status);
@@ -59,7 +60,9 @@ export function OrderCard({
       <div className="text-sm" style={{ color: "#F3E9D6" }}>{order.customerName} · {order.customerPhone}</div>
       {order.deliveryAddress && <div className="text-xs" style={{ color: "#8A8276" }}>{order.deliveryAddress}</div>}
       <ul className="my-2 text-sm" style={{ color: "#C9C2B5" }}>
-        {order.items.map((i) => <li key={i.id}>{i.quantity}× {i.itemName}</li>)}
+        {order.items.map((i) => (
+          <li key={i.id}>{i.quantity}× {i.itemName}{i.spiceLevel ? ` · ${i.spiceLevel}` : ""}</li>
+        ))}
       </ul>
       <div className="text-sm mb-2" style={{ color: "#F3E9D6" }}>Total ${order.total}</div>
       {order.delivery?.trackingUrl && (
@@ -86,6 +89,12 @@ export function OrderCard({
             <button disabled={busy} onClick={() => onPayment(order.id, { payment_status: "paid", payment_method: "card" })}
               className="px-2 py-1 rounded" style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#C9A24B" }}>Paid · card</button>
           </>
+        )}
+        {order.paymentStatus === "paid" && (
+          <button disabled={busy} onClick={() => { if (confirm("Refund this order? This cannot be undone.")) onRefund(order.id); }}
+            className="px-2 py-1 rounded" style={{ border: "1px solid rgba(220,38,38,0.4)", color: "#E0807A" }}>
+            Refund
+          </button>
         )}
       </div>
     </div>

@@ -233,3 +233,20 @@ export const staff = pgTable("staff", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
 });
+
+// ─── Promos / Discounts ────────────────────────────────────────────────────────
+export const promos = pgTable("promos", {
+  id: uuid("id").primaryKey().default(genUuid()),
+  code: text("code").notNull().unique(),
+  description: text("description"),
+  discountType: text("discount_type").notNull().default("percent"), // percent | fixed
+  discountValue: decimal("discount_value", { precision: 10, scale: 2 }).notNull(),
+  minOrder: decimal("min_order", { precision: 10, scale: 2 }),
+  maxRedemptions: integer("max_redemptions"),
+  timesRedeemed: integer("times_redeemed").notNull().default(0),
+  isActive: boolean("is_active").notNull().default(true),
+  startsAt: timestamp("starts_at", { withTimezone: true }),
+  expiresAt: timestamp("expires_at", { withTimezone: true }),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
+});

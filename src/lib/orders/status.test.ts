@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nextStatuses, canTransition } from "@/lib/orders/status";
+import { nextStatuses, canTransition, PENDING_PAYMENT } from "@/lib/orders/status";
 
 describe("nextStatuses (staff buttons)", () => {
   it("pickup received -> [preparing, cancelled]", () => {
@@ -46,5 +46,21 @@ describe("canTransition", () => {
   it("webhook cannot move pickup orders or go backward", () => {
     expect(canTransition("pickup", "received", "courier_picked_up", "webhook")).toBe(false);
     expect(canTransition("delivery", "en_route", "ready", "webhook")).toBe(false);
+  });
+});
+
+describe("pending_payment", () => {
+  it("webhook advances pending_payment → received", () => {
+    expect(canTransition("delivery", PENDING_PAYMENT, "received", "webhook")).toBe(true);
+    expect(canTransition("pickup", PENDING_PAYMENT, "received", "webhook")).toBe(true);
+  });
+  it("staff cannot advance pending_payment → received", () => {
+    expect(canTransition("pickup", PENDING_PAYMENT, "received", "staff")).toBe(false);
+  });
+  it("pending_payment can be cancelled", () => {
+    expect(canTransition("delivery", PENDING_PAYMENT, "cancelled", "webhook")).toBe(true);
+  });
+  it("nothing transitions into pending_payment", () => {
+    expect(canTransition("pickup", "received", PENDING_PAYMENT, "staff")).toBe(false);
   });
 });

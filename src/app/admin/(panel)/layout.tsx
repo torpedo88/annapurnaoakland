@@ -41,6 +41,13 @@ export default async function AdminLayout({ children }: { children: React.ReactN
           ))}
         </nav>
         <div className="flex items-center gap-3">
+          <Link
+            href="/admin?new=1"
+            className="px-4 py-2 rounded-full text-sm font-semibold"
+            style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+          >
+            + New Order
+          </Link>
           <span className="text-xs uppercase tracking-widest" style={{ color: "#8A8276" }}>
             {session.role}
           </span>

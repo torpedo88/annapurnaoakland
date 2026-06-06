@@ -1,10 +1,11 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
 import { menu, categories, type MenuItem } from "@/data/menu";
 import { useCart } from "@/lib/preview-cart";
+import { hasSpiceOptions, SPICE_LEVELS, DEFAULT_SPICE } from "@/lib/spice";
 
 type Mode = "regular" | "catering";
 
@@ -13,6 +14,23 @@ export default function MenuPage() {
   const [q, setQ] = useState("");
   const [vegOnly, setVegOnly] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
+  // Item availability ("86"/unavailable) is managed in the admin panel and
+  // lives in the DB; the static menu has no availability, so overlay it here.
+  const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
+  // Admin-uploaded photos (menu_items.imageUrl) override the static catalog image.
+  const [imageOverrides, setImageOverrides] = useState<Record<string, string>>({});
+  useEffect(() => {
+    let on = true;
+    fetch("/api/menu/availability", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : { unavailable: [], images: {} }))
+      .then((d) => {
+        if (!on) return;
+        setUnavailable(new Set<string>(d.unavailable ?? []));
+        setImageOverrides((d.images ?? {}) as Record<string, string>);
+      })
+      .catch(() => { /* keep everything available on failure */ });
+    return () => { on = false; };
+  }, []);
 
   const visibleCategories = useMemo(
     () => categories.filter((c) => c.isCatering === (mode === "catering")),
@@ -216,7 +234,7 @@ export default function MenuPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {g.items.map((item) => (
-                    <MenuCard key={item.id} item={item} />
+                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} imageSrc={imageOverrides[item.id] || "/images/annapurna-logo.png"} />
                   ))}
                 </div>
               </div>
@@ -230,9 +248,14 @@ export default function MenuPage() {
   );
 }
 
-function MenuCard({ item }: { item: MenuItem }) {
+function MenuCard({ item, unavailable, imageSrc }: { item: MenuItem; unavailable: boolean; imageSrc: string }) {
   const { add, lines, increment, decrement } = useCart();
   const inCart = lines.find((l) => l.id === item.id);
+  const showSpice = hasSpiceOptions(item.category);
+  const [spice, setSpice] = useState<string>(DEFAULT_SPICE);
+  const [src, setSrc] = useState(imageSrc || "/images/annapurna-logo.png");
+  // Re-sync when the DB image override resolves after mount (fetch is async).
+  useEffect(() => { setSrc(imageSrc || "/images/annapurna-logo.png"); }, [imageSrc]);
 
   return (
     <article
@@ -241,13 +264,25 @@ function MenuCard({ item }: { item: MenuItem }) {
     >
       <div className="relative aspect-[5/3] overflow-hidden" style={{ backgroundColor: "#14100D" }}>
         <Image
-          src={item.image}
+          src={src}
           alt={item.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
-          className="object-cover transition-transform duration-700 group-hover:scale-105"
+          className={`${src.endsWith("annapurna-logo.png") ? "object-contain p-8 opacity-90" : "object-cover"} transition-transform duration-700 group-hover:scale-105`}
           loading="lazy"
+          style={unavailable ? { filter: "grayscale(0.7) brightness(0.6)" } : undefined}
+          onError={() => setSrc((s) => s.endsWith("annapurna-logo.png") ? s : "/images/annapurna-logo.png")}
         />
+        {unavailable && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <span
+              className="rounded-full text-xs font-bold uppercase tracking-widest px-4 py-1.5"
+              style={{ backgroundColor: "#7A2E2E", color: "#F3E9D6", border: "1px solid rgba(243,233,214,0.25)" }}
+            >
+              86 · Sold Out
+            </span>
+          </div>
+        )}
         {item.tags.includes("vegetarian") && (
           <span
             className="absolute top-3 left-3 inline-flex items-center gap-1 rounded-full text-[10px] font-bold uppercase tracking-wider px-2.5 py-1"
@@ -287,7 +322,39 @@ function MenuCard({ item }: { item: MenuItem }) {
           className="mt-4 pt-4"
           style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
         >
-          {inCart ? (
+          {showSpice && !unavailable && (
+            <div className="flex items-center gap-1.5 mb-3">
+              {SPICE_LEVELS.map((level) => (
+                <button
+                  key={level}
+                  type="button"
+                  onClick={() => setSpice(level)}
+                  className="flex-1 rounded-full py-1 text-[11px] font-semibold transition"
+                  style={
+                    spice === level
+                      ? { backgroundColor: "#C9A24B", color: "#14100D" }
+                      : { border: "1px solid rgba(201,162,75,0.3)", color: "#8A8276", backgroundColor: "transparent" }
+                  }
+                >
+                  {level}
+                </button>
+              ))}
+            </div>
+          )}
+          {inCart && inCart.spiceLevel && (
+            <p className="text-[11px] mb-2" style={{ color: "#8A8276" }}>
+              🌶 {inCart.spiceLevel}
+            </p>
+          )}
+          {unavailable ? (
+            <button
+              disabled
+              className="w-full inline-flex justify-center items-center rounded-full py-2.5 font-semibold text-sm cursor-not-allowed"
+              style={{ backgroundColor: "rgba(122,46,46,0.15)", color: "#A38A7A", border: "1px solid rgba(201,162,75,0.15)" }}
+            >
+              Unavailable today
+            </button>
+          ) : inCart ? (
             <div className="flex items-center justify-between">
               <div
                 className="inline-flex items-center rounded-full"
@@ -321,7 +388,7 @@ function MenuCard({ item }: { item: MenuItem }) {
             </div>
           ) : (
             <button
-              onClick={() => add(item)}
+              onClick={() => add(item, 1, showSpice ? spice : undefined)}
               className="w-full inline-flex justify-center items-center gap-2 rounded-full py-2.5 font-semibold text-sm transition"
               style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
             >

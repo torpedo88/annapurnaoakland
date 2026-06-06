@@ -15,7 +15,6 @@ const nav = [
 export function TerracottaShell({ children }: { children: React.ReactNode }) {
   const { count, setOpen } = useCart();
   const pathname = usePathname();
-  const isHome = pathname === "/";
 
   return (
     <>
@@ -23,24 +22,24 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
         className="sticky top-0 z-30 backdrop-blur-md"
         style={{ backgroundColor: "rgba(20,16,13,0.85)", borderBottom: "1px solid rgba(201,162,75,0.15)" }}
       >
-        <div className="mx-auto max-w-7xl px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
-          <a
-            href="tel:+15102509696"
-            className="hidden sm:inline text-[10px] uppercase tracking-[0.25em]"
-            style={{ color: "#8A8276" }}
-          >
-            (510) 250-9696
-          </a>
-
-          <Link href="/" className="flex items-center">
+        <div className="mx-auto max-w-7xl px-6 lg:px-10 h-20 flex items-center justify-between gap-4">
+          {/* Left: brand — logo + name */}
+          <Link href="/" className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/annapurna-logo.png"
+              alt="Annapurna Restaurant & Bar"
+              className="h-14 w-auto object-contain shrink-0"
+            />
             <span
-              className="uppercase tracking-[0.16em] text-xl"
+              className="uppercase tracking-[0.16em] text-2xl"
               style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
             >
               Annapurna
             </span>
           </Link>
 
+          {/* Center: nav */}
           <nav className="hidden md:flex items-center gap-7 text-[12px] uppercase tracking-[0.14em]">
             {nav.map((n) => {
               const active = pathname === n.href;
@@ -57,16 +56,15 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          <div className="flex items-center gap-2">
-            {!isHome && (
-              <Link
-                href="/menu"
-                className="hidden sm:inline-flex rounded-[2px] px-4 py-2 text-[11px] uppercase tracking-[0.16em] font-medium transition"
-                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
-              >
-                Order
-              </Link>
-            )}
+          {/* Right: Order Now + cart */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/menu"
+              className="hidden sm:inline-flex rounded-[2px] px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] font-semibold transition"
+              style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+            >
+              Order Now
+            </Link>
             <button
               onClick={() => setOpen(true)}
               aria-label="Open cart"
@@ -197,13 +195,17 @@ function CartDrawer() {
                   className="flex gap-4 pb-4 last:border-b-0"
                   style={{ borderBottom: "1px solid rgba(201,162,75,0.15)" }}
                 >
-                  {l.image && (
-                    <img
-                      src={l.image}
-                      alt=""
-                      className="h-20 w-20 rounded-2xl object-cover shrink-0"
-                    />
-                  )}
+                  <img
+                    src={l.image || "/images/annapurna-logo.png"}
+                    alt=""
+                    className="h-20 w-20 rounded-2xl object-cover shrink-0"
+                    style={{ backgroundColor: "#14100D" }}
+                    onError={(e) => {
+                      if (!e.currentTarget.src.endsWith("/images/annapurna-logo.png")) {
+                        e.currentTarget.src = "/images/annapurna-logo.png";
+                      }
+                    }}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between gap-3">
                       <h3 className="font-semibold truncate" style={{ color: "#F3E9D6" }}>{l.name}</h3>
@@ -215,7 +217,20 @@ function CartDrawer() {
                         Remove
                       </button>
                     </div>
-                    <p className="text-sm" style={{ color: "#8A8276" }}>${l.price.toFixed(2)} each</p>
+                    {l.discountPercent ? (
+                      <p className="text-sm" style={{ color: "#8A8276" }}>
+                        <span className="line-through">${l.price.toFixed(2)}</span>{" "}
+                        <span style={{ color: "#C9A24B", fontWeight: 600 }}>
+                          ${(l.price * (1 - l.discountPercent / 100)).toFixed(2)}
+                        </span>{" "}
+                        each · {l.discountPercent}% off
+                      </p>
+                    ) : (
+                      <p className="text-sm" style={{ color: "#8A8276" }}>${l.price.toFixed(2)} each</p>
+                    )}
+                    {l.spiceLevel && (
+                      <p className="text-xs" style={{ color: "#8A8276" }}>🌶 {l.spiceLevel}</p>
+                    )}
                     <div className="mt-2 flex items-center justify-between">
                       <div
                         className="inline-flex items-center rounded-full"
