@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import type { Settings } from "@/lib/settings";
+import { menu } from "@/data/menu";
 
 export function SettingsForm({ initial, role }: { initial: Settings; role: "owner" | "manager" | "staff" }) {
   const [s, setS] = useState<Settings>(initial);
@@ -80,6 +81,61 @@ export function SettingsForm({ initial, role }: { initial: Settings; role: "owne
         <h2 className="text-lg mb-4" style={{ color: "#F3E9D6" }}>Delivery charges {!isOwner && "(owner only)"}</h2>
         <DeliveryFields s={s} disabled={!isOwner || saving}
           onSave={(delivery) => save({ delivery })} label={label} input={input} inputStyle={inputStyle} />
+      </section>
+
+      {/* Dish of the Day — manager+ */}
+      <section style={card}>
+        <h2 className="text-lg mb-4" style={{ color: "#F3E9D6" }}>Dish of the Day</h2>
+        <div className="mb-4">
+          <label className={label} style={{ color: "#8A8276" }}>Menu item</label>
+          <select
+            className={input}
+            style={inputStyle}
+            value={s.dish_of_day?.itemId ?? ""}
+            disabled={saving}
+            onChange={(e) =>
+              save({
+                dish_of_day: {
+                  itemId: e.target.value || null,
+                  discountPercent: s.dish_of_day?.discountPercent ?? 0,
+                },
+              })
+            }
+          >
+            <option value="">— None —</option>
+            {menu
+              .filter((m) => !m.isCatering)
+              .map((m) => (
+                <option key={m.id} value={m.id}>
+                  {m.name}
+                </option>
+              ))}
+          </select>
+        </div>
+        <div>
+          <label className={label} style={{ color: "#8A8276" }}>Discount % (optional)</label>
+          <input
+            className={input}
+            style={inputStyle}
+            type="number"
+            min={0}
+            max={100}
+            step={1}
+            defaultValue={s.dish_of_day?.discountPercent ?? 0}
+            disabled={saving}
+            onBlur={(e) =>
+              save({
+                dish_of_day: {
+                  itemId: s.dish_of_day?.itemId ?? null,
+                  discountPercent: Number(e.target.value),
+                },
+              })
+            }
+          />
+          <p className="mt-1 text-xs" style={{ color: "#8A8276" }}>
+            Shown on the homepage with a strikethrough price.
+          </p>
+        </div>
       </section>
     </div>
   );
