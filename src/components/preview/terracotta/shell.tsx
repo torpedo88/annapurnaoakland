@@ -37,7 +37,7 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             <img
               src="/images/annapurna.jpg"
               alt="Annapurna Restaurant & Bar"
-              className="h-9 w-9 rounded-full object-cover shrink-0"
+              className="h-12 w-12 rounded-full object-cover shrink-0"
               style={{ border: "1px solid rgba(201,162,75,0.35)" }}
             />
             <span
