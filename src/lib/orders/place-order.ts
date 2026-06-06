@@ -1,4 +1,4 @@
-import { eq, inArray } from "drizzle-orm";
+import { and, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db";
 import { deliveries, menuItems, orders } from "@/db/schema";
 import { createOrder } from "@/lib/orders/create-order";
@@ -227,15 +227,19 @@ export async function dispatchPaidOrder(args: {
 }): Promise<void> {
   const [order] = await db.select().from(orders).where(eq(orders.id, args.orderId)).limit(1);
   if (!order) { console.error("[dispatchPaidOrder] order not found", args.orderId); return; }
-  if (order.paymentStatus === "paid") return; // idempotent — already processed
 
-  await db.update(orders).set({
+  // Atomic, idempotent claim: flip to paid only if not already paid. Stripe can
+  // deliver the same event more than once (and retries on 5xx); the losers of
+  // this race get 0 rows back and exit before dispatching — no double charge,
+  // no double driver.
+  const claimed = await db.update(orders).set({
     paymentStatus: "paid",
     status: order.status === "pending_payment" ? "received" : order.status,
     stripePaymentIntentId: args.paymentIntentId ?? undefined,
     stripeCheckoutSessionId: args.checkoutSessionId ?? undefined,
     updatedAt: new Date(),
-  }).where(eq(orders.id, args.orderId));
+  }).where(and(eq(orders.id, args.orderId), ne(orders.paymentStatus, "paid"))).returning({ id: orders.id });
+  if (claimed.length === 0) return; // already processed by another delivery of this event
 
   if (order.orderType !== "delivery") return;
 
@@ -250,7 +254,14 @@ export async function dispatchPaidOrder(args: {
     try {
       accepted = await acceptQuote(edi);
     } catch {
-      // Quote likely expired — re-quote with the same id, then accept.
+      // Quote likely expired (payment took >5 min). Re-quote with the same id,
+      // then accept. The customer was already charged the original delivery fee;
+      // the kitchen still owes them a delivery, so we dispatch regardless and the
+      // restaurant absorbs any small DoorDash fee delta. Log it so it's not silent.
+      console.warn(
+        "[dispatchPaidOrder] quote expired; re-quoting paid order",
+        args.orderId, "charged deliveryFee=$" + (order.deliveryFee ?? "0"),
+      );
       await quoteDelivery({
         externalDeliveryId: edi,
         dropoffAddress: order.deliveryAddress ?? "",
