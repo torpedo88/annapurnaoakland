@@ -20,4 +20,8 @@ export const env = {
   }),
   baseUrl: () => process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
   staffSessionSecret: () => required("STAFF_SESSION_SECRET"),
+  stripe: () => ({
+    secretKey: required("STRIPE_SECRET_KEY"),
+    webhookSecret: required("STRIPE_WEBHOOK_SECRET"),
+  }),
 };
