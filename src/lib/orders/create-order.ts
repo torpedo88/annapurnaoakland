@@ -19,6 +19,7 @@ export interface NewOrderInput {
   items: RawLine[];
   tipCents?: number;
   deliveryFeeCents?: number;
+  status?: string; // defaults to "received"; online prepay uses "pending_payment"
   source?: "online" | "phone";
   paymentStatus?: "unpaid" | "paid" | "refunded";
   paymentMethod?: "cash" | "card" | "online" | null;
@@ -52,7 +53,7 @@ export async function createOrder(
         customerEmail: contact.email || null,
         customerPhone: contact.phone,
         orderType: input.fulfillment,
-        status: "received",
+        status: input.status ?? "received",
         source: input.source ?? "online",
         paymentStatus: input.paymentStatus ?? "unpaid",
         paymentMethod: input.paymentMethod ?? null,
