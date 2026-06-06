@@ -38,6 +38,10 @@ export default function CheckoutPage() {
   const [notes, setNotes] = useState("");
   const [tipPct, setTipPct] = useState<number>(0.18);
   const [customTip, setCustomTip] = useState<string>("");
+  const [promoCode, setPromoCode] = useState("");
+  const [appliedPromo, setAppliedPromo] = useState<{ code: string; discountCents: number; label: string } | null>(null);
+  const [promoError, setPromoError] = useState<string | null>(null);
+  const [checkingPromo, setCheckingPromo] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [deliveryNotice, setDeliveryNotice] = useState<string | null>(null);
@@ -115,6 +119,7 @@ export default function CheckoutPage() {
   }, [customTip, tipPct, subtotal]);
 
   const total = +(subtotal + tax + tip + deliveryFee).toFixed(2);
+  const displayTotal = +Math.max(0, total - (appliedPromo ? appliedPromo.discountCents / 100 : 0)).toFixed(2);
 
   // ─── Delivery option sub-label ──────────────────────────────────────────────
   const deliveryOptionSub = useMemo(() => {
@@ -131,6 +136,40 @@ export default function CheckoutPage() {
     if (quote.error) return "Quote unavailable";
     return "Enter address for live fee";
   }, [fulfillment, quote]);
+
+  // ─── Promo handlers ───────────────────────────────────────────────────────
+  const applyPromo = async () => {
+    if (!promoCode.trim()) return;
+    setCheckingPromo(true);
+    setPromoError(null);
+    try {
+      const res = await fetch("/api/promos/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: promoCode.trim(),
+          items: lines.map((l) => ({ id: l.id, qty: l.qty })),
+        }),
+      });
+      const json = (await res.json()) as { valid: boolean; discountCents: number; label: string; code: string; reason?: string };
+      if (json.valid) {
+        setAppliedPromo({ code: json.code, discountCents: json.discountCents, label: json.label });
+        setPromoError(null);
+      } else {
+        setPromoError(json.reason ?? "Invalid promo code.");
+      }
+    } catch {
+      setPromoError("Could not validate promo code. Please try again.");
+    } finally {
+      setCheckingPromo(false);
+    }
+  };
+
+  const removePromo = () => {
+    setAppliedPromo(null);
+    setPromoCode("");
+    setPromoError(null);
+  };
 
   // ─── Empty cart ────────────────────────────────────────────────────────────
   if (lines.length === 0) {
@@ -184,6 +223,7 @@ export default function CheckoutPage() {
           items: lines.map((l) => ({ id: l.id, qty: l.qty, spiceLevel: l.spiceLevel })),
           tip,
           externalDeliveryId: quote.externalDeliveryId ?? undefined,
+          promoCode: appliedPromo?.code,
         }),
       });
       const json = (await res.json()) as { clientSecret?: string; error?: string };
@@ -415,6 +455,62 @@ export default function CheckoutPage() {
                   />
                 )}
                 <Row label="Tip" value={`$${tip.toFixed(2)}`} />
+
+                {/* ── Promo code entry / applied state ── */}
+                {appliedPromo ? (
+                  <>
+                    <div className="flex justify-between items-center text-sm">
+                      <dt style={{ color: "#22c55e" }}>
+                        Promo {appliedPromo.code}{" "}
+                        <span style={{ color: "#8A8276" }}>({appliedPromo.label})</span>
+                      </dt>
+                      <dd>
+                        <button
+                          type="button"
+                          onClick={removePromo}
+                          className="text-xs underline"
+                          style={{ color: "#8A8276" }}
+                        >
+                          Remove
+                        </button>
+                      </dd>
+                    </div>
+                    <Row label="Discount" value={`-$${(appliedPromo.discountCents / 100).toFixed(2)}`} />
+                  </>
+                ) : (
+                  <div className="pt-1">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={promoCode}
+                        onChange={(e) => setPromoCode(e.target.value.toUpperCase())}
+                        onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); void applyPromo(); } }}
+                        placeholder="Promo code"
+                        className="flex-1 rounded-full px-4 py-2 text-sm focus:outline-none transition"
+                        style={{
+                          backgroundColor: "#14100D",
+                          border: "1px solid rgba(201,162,75,0.2)",
+                          color: "#F3E9D6",
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => void applyPromo()}
+                        disabled={checkingPromo || !promoCode.trim()}
+                        className="rounded-full px-4 py-2 text-sm font-semibold transition disabled:opacity-50"
+                        style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+                      >
+                        {checkingPromo ? "…" : "Apply"}
+                      </button>
+                    </div>
+                    {promoError && (
+                      <p className="mt-1.5 text-xs" style={{ color: "#f87171" }}>
+                        {promoError}
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 <div
                   className="pt-2 mt-2 flex justify-between items-baseline"
                   style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
@@ -424,7 +520,7 @@ export default function CheckoutPage() {
                     className="text-3xl font-bold"
                     style={{ color: "#C9A24B", fontFamily: "var(--font-display)" }}
                   >
-                    ${total.toFixed(2)}
+                    ${displayTotal.toFixed(2)}
                   </dd>
                 </div>
               </dl>
@@ -435,7 +531,7 @@ export default function CheckoutPage() {
                   className="mt-5 w-full inline-flex justify-center items-center gap-2 rounded-full py-4 font-bold text-base transition disabled:opacity-60 disabled:cursor-wait"
                   style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
                 >
-                  {submitting ? "Starting checkout…" : `Continue to payment · $${total.toFixed(2)}`}
+                  {submitting ? "Starting checkout…" : `Continue to payment · $${displayTotal.toFixed(2)}`}
                 </button>
               )}
               <p
