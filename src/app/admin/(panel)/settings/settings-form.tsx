@@ -65,14 +65,20 @@ export function SettingsForm({ initial, role }: { initial: Settings; role: "owne
       {/* Tax — owner only */}
       <section style={card}>
         <h2 className="text-lg mb-4" style={{ color: "#F3E9D6" }}>Tax {!isOwner && "(owner only)"}</h2>
-        <label className={label} style={{ color: "#8A8276" }}>Tax rate (decimal, e.g. 0.0925 = 9.25%)</label>
+        <label className={label} style={{ color: "#8A8276" }}>Sales tax rate (%) — e.g. 9.25</label>
         <div className="flex gap-3 items-center">
           <input
-            className={input} style={inputStyle} type="number" step="0.0001" min="0" max="0.9999"
-            defaultValue={s.tax_rate} disabled={!isOwner || saving}
-            onBlur={(e) => isOwner && save({ tax_rate: Number(e.target.value) })}
+            key={s.tax_rate}
+            className={input} style={inputStyle} type="number" step="0.01" min="0" max="99.99"
+            defaultValue={+(s.tax_rate * 100).toFixed(2)} disabled={!isOwner || saving}
+            onBlur={(e) => {
+              if (!isOwner) return;
+              const pct = Number(e.target.value);
+              if (!Number.isFinite(pct) || pct < 0 || pct >= 100) { setMsg("Enter a percent between 0 and 99.99"); return; }
+              save({ tax_rate: +(pct / 100).toFixed(6) });
+            }}
           />
-          <span style={{ color: "#8A8276" }}>{(s.tax_rate * 100).toFixed(2)}%</span>
+          <span style={{ color: "#8A8276" }}>%  (= {(s.tax_rate * 100).toFixed(2)}% applied)</span>
         </div>
       </section>
 
