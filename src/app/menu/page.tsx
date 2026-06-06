@@ -254,6 +254,8 @@ function MenuCard({ item, unavailable, imageSrc }: { item: MenuItem; unavailable
   const showSpice = hasSpiceOptions(item.category);
   const [spice, setSpice] = useState<string>(DEFAULT_SPICE);
   const [src, setSrc] = useState(imageSrc || "/images/annapurna-logo.png");
+  // Re-sync when the DB image override resolves after mount (fetch is async).
+  useEffect(() => { setSrc(imageSrc || "/images/annapurna-logo.png"); }, [imageSrc]);
 
   return (
     <article
