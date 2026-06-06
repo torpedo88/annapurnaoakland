@@ -7,6 +7,7 @@ import {
   priceOrder, validateContact, cleanString,
   isValidExternalDeliveryId, httpsUrlOrNull, PricingError,
 } from "@/lib/orders/pricing";
+import { validatePromo, redeemPromo } from "@/lib/orders/promo";
 import { getSettings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
 
@@ -27,6 +28,14 @@ export interface PlaceOrderInput {
   source?: "online" | "phone";
   paymentStatus?: "unpaid" | "paid" | "refunded";
   paymentMethod?: "cash" | "card" | "online" | null;
+  promoCode?: unknown;
+}
+
+async function resolveDiscount(input: PlaceOrderInput): Promise<{ discountCents: number; promoCode: string | null }> {
+  if (!input.promoCode) return { discountCents: 0, promoCode: null };
+  const subtotalCents = priceOrder(input.items).subtotalCents;
+  const r = await validatePromo(input.promoCode, subtotalCents);
+  return r.ok ? { discountCents: r.discountCents, promoCode: r.code } : { discountCents: 0, promoCode: null };
 }
 
 /**
@@ -107,13 +116,17 @@ export async function placeOrder(
     ).feeCents;
   }
 
-  // 3) Persist (createOrder recomputes money server-side incl. DB tax).
+  // 3) Resolve promo discount (server-authoritative; client amount never trusted).
+  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input);
+
+  // 4) Persist (createOrder recomputes money server-side incl. DB tax).
   let result: { orderId: string; accessToken: string };
   try {
     result = await createOrder({
       name: input.name, phone: input.phone, email: input.email,
       fulfillment: input.fulfillment, address: input.address,
       items: input.items, tipCents: input.tipCents, deliveryFeeCents,
+      discountCents,
       source: input.source, paymentStatus: input.paymentStatus, paymentMethod: input.paymentMethod,
     });
   } catch (e) {
@@ -125,7 +138,14 @@ export async function placeOrder(
     throw new OrderError(e instanceof PricingError ? e.message : "Could not place order", 400);
   }
 
-  // 4) Record the delivery row (non-fatal).
+  // Redeem promo (best-effort; non-fatal if it fails).
+  if (resolvedPromoCode) {
+    try { await redeemPromo(resolvedPromoCode); } catch (e) {
+      console.error("[placeOrder] redeemPromo failed (non-fatal):", e);
+    }
+  }
+
+  // 5) Record the delivery row (non-fatal).
   if (accepted) {
     try {
       await db.insert(deliveries).values({
@@ -152,7 +172,7 @@ export async function placeOrder(
  */
 export async function createPendingOrder(
   input: PlaceOrderInput,
-): Promise<{ orderId: string; accessToken: string; totalCents: number; deliveryFeeCents: number }> {
+): Promise<{ orderId: string; accessToken: string; totalCents: number; deliveryFeeCents: number; promoCode: string | null }> {
   const settings = await getSettings();
   if (settings.ordering_paused) throw new OrderError("Online ordering is paused. Please call the restaurant.", 503);
   if (input.fulfillment === "delivery" && !settings.delivery_enabled) throw new OrderError("Delivery is currently unavailable.", 503);
@@ -200,17 +220,21 @@ export async function createPendingOrder(
     }
   }
 
+  // Resolve promo discount server-side (client-supplied amount is never trusted).
+  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input);
+
   const { orderId, accessToken } = await createOrder({
     name: input.name, phone: input.phone, email: input.email,
     fulfillment: input.fulfillment, address: input.address,
     items: input.items, tipCents: input.tipCents, deliveryFeeCents,
+    discountCents,
     source: "online", paymentStatus: "unpaid", paymentMethod: "online",
     status: "pending_payment",
   });
 
   // Recompute the persisted total so the Stripe amount matches the DB exactly.
-  const totals = priceOrder(input.items, { tipCents: input.tipCents, deliveryFeeCents, taxRate: settings.tax_rate });
-  return { orderId, accessToken, totalCents: totals.totalCents, deliveryFeeCents };
+  const totals = priceOrder(input.items, { tipCents: input.tipCents, deliveryFeeCents, discountCents, taxRate: settings.tax_rate });
+  return { orderId, accessToken, totalCents: totals.totalCents, deliveryFeeCents, promoCode: resolvedPromoCode };
 }
 
 /**
@@ -224,6 +248,7 @@ export async function dispatchPaidOrder(args: {
   paymentIntentId: string | null;
   checkoutSessionId: string | null;
   externalDeliveryId?: string;
+  promoCode?: string;
 }): Promise<void> {
   const [order] = await db.select().from(orders).where(eq(orders.id, args.orderId)).limit(1);
   if (!order) { console.error("[dispatchPaidOrder] order not found", args.orderId); return; }
@@ -240,6 +265,13 @@ export async function dispatchPaidOrder(args: {
     updatedAt: new Date(),
   }).where(and(eq(orders.id, args.orderId), ne(orders.paymentStatus, "paid"))).returning({ id: orders.id });
   if (claimed.length === 0) return; // already processed by another delivery of this event
+
+  // Redeem promo on confirmed payment (online path). Best-effort; non-fatal.
+  if (args.promoCode) {
+    try { await redeemPromo(args.promoCode); } catch (e) {
+      console.error("[dispatchPaidOrder] redeemPromo failed (non-fatal):", e);
+    }
+  }
 
   if (order.orderType !== "delivery") return;
 

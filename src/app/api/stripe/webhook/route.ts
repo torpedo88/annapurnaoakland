@@ -28,6 +28,7 @@ export async function POST(req: Request) {
             paymentIntentId: typeof session.payment_intent === "string" ? session.payment_intent : null,
             checkoutSessionId: session.id,
             externalDeliveryId: session.metadata?.externalDeliveryId || undefined,
+            promoCode: session.metadata?.promoCode || undefined,
           });
         }
       }

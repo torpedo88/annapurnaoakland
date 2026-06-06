@@ -27,6 +27,7 @@ export interface OrderTotals {
   taxCents: number;
   tipCents: number;
   deliveryFeeCents: number;
+  discountCents: number;
   totalCents: number;
 }
 
@@ -51,7 +52,7 @@ function clampMoney(cents: number, maxCents: number): number {
  */
 export function priceOrder(
   rawItems: RawLine[],
-  opts: { tipCents?: number; deliveryFeeCents?: number; taxRate?: number } = {},
+  opts: { tipCents?: number; deliveryFeeCents?: number; taxRate?: number; discountCents?: number } = {},
 ): OrderTotals {
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     throw new PricingError("Cart is empty");
@@ -72,9 +73,11 @@ export function priceOrder(
   const deliveryFeeCents = clampMoney(opts.deliveryFeeCents ?? 0, subtotalCents * 5);
   // Tip is user-chosen but clamped to a sane ceiling of the recomputed subtotal.
   const tipCents = clampMoney(opts.tipCents ?? 0, Math.max(subtotalCents * 3, 20000));
+  // Discount is clamped to subtotal + tax so total never goes negative.
+  const discountCents = clampMoney(opts.discountCents ?? 0, subtotalCents + taxCents);
 
-  const totalCents = subtotalCents + taxCents + tipCents + deliveryFeeCents;
-  return { lines, subtotalCents, taxCents, tipCents, deliveryFeeCents, totalCents };
+  const totalCents = subtotalCents + taxCents + tipCents + deliveryFeeCents - discountCents;
+  return { lines, subtotalCents, taxCents, tipCents, deliveryFeeCents, discountCents, totalCents };
 }
 
 // ─── Field validation (length caps + format) ────────────────────────────────

@@ -19,6 +19,7 @@ export interface NewOrderInput {
   items: RawLine[];
   tipCents?: number;
   deliveryFeeCents?: number;
+  discountCents?: number;
   status?: string; // defaults to "received"; online prepay uses "pending_payment"
   source?: "online" | "phone";
   paymentStatus?: "unpaid" | "paid" | "refunded";
@@ -39,6 +40,7 @@ export async function createOrder(
   const totals = priceOrder(input.items, {
     tipCents: input.tipCents,
     deliveryFeeCents: input.deliveryFeeCents,
+    discountCents: input.discountCents,
     taxRate: settings.tax_rate,
   });
   const address =
@@ -62,6 +64,7 @@ export async function createOrder(
         tax: toDollars(totals.taxCents),
         tip: toDollars(totals.tipCents),
         deliveryFee: toDollars(totals.deliveryFeeCents),
+        discount: toDollars(totals.discountCents),
         total: toDollars(totals.totalCents),
         deliveryAddress: address || null,
       })

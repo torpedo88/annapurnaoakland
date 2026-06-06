@@ -22,6 +22,7 @@ export async function POST(req: Request) {
       tipCents: toCents(Number(body?.tip) || 0),
       externalDeliveryId: body.externalDeliveryId,
       source: "online",
+      promoCode: body.promoCode,
     });
   } catch (e) {
     if (e instanceof OrderError) return NextResponse.json({ error: e.message }, { status: e.status });
@@ -46,6 +47,7 @@ export async function POST(req: Request) {
       metadata: {
         orderId: pending.orderId,
         externalDeliveryId: typeof body.externalDeliveryId === "string" ? body.externalDeliveryId : "",
+        promoCode: pending.promoCode ?? "",
       },
       return_url: `${base}/order/${pending.orderId}?t=${pending.accessToken}&session_id={CHECKOUT_SESSION_ID}`,
     });
