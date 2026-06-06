@@ -30,12 +30,13 @@ const LABEL: Record<string, string> = {
 };
 
 export function OrderCard({
-  order, busy, onStatus, onPayment,
+  order, busy, onStatus, onPayment, onRefund,
 }: {
   order: AdminOrder;
   busy: boolean;
   onStatus: (id: string, to: string) => void;
   onPayment: (id: string, patch: { payment_status?: string; payment_method?: string }) => void;
+  onRefund: (id: string) => void;
 }) {
   const fulfillment: Fulfillment = order.orderType === "delivery" ? "delivery" : "pickup";
   const actions = nextStatuses(fulfillment, order.status);
@@ -86,6 +87,12 @@ export function OrderCard({
             <button disabled={busy} onClick={() => onPayment(order.id, { payment_status: "paid", payment_method: "card" })}
               className="px-2 py-1 rounded" style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#C9A24B" }}>Paid · card</button>
           </>
+        )}
+        {order.paymentStatus === "paid" && (
+          <button disabled={busy} onClick={() => { if (confirm("Refund this order? This cannot be undone.")) onRefund(order.id); }}
+            className="px-2 py-1 rounded" style={{ border: "1px solid rgba(220,38,38,0.4)", color: "#E0807A" }}>
+            Refund
+          </button>
         )}
       </div>
     </div>

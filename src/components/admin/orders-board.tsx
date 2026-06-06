@@ -79,6 +79,12 @@ export function OrdersBoard() {
     setBusyId(null);
     load(lane);
   };
+  const refund = async (id: string) => {
+    setBusyId(id);
+    await fetch(`/api/admin/orders/${id}/refund`, { method: "POST" });
+    setBusyId(null);
+    load(lane);
+  };
   const toggleSound = () => {
     const next = !soundOn;
     setSoundOn(next);
@@ -112,7 +118,7 @@ export function OrdersBoard() {
       )}
       {orders.length === 0 && <p style={{ color: "#8A8276" }}>No orders in this lane.</p>}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} />
+        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={refund} />
       ))}
     </div>
   );
