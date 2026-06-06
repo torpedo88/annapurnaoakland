@@ -15,7 +15,6 @@ const nav = [
 export function TerracottaShell({ children }: { children: React.ReactNode }) {
   const { count, setOpen } = useCart();
   const pathname = usePathname();
-  const isHome = pathname === "/";
 
   return (
     <>
@@ -23,8 +22,25 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
         className="sticky top-0 z-30 backdrop-blur-md"
         style={{ backgroundColor: "rgba(20,16,13,0.85)", borderBottom: "1px solid rgba(201,162,75,0.15)" }}
       >
-        <div className="mx-auto max-w-7xl px-6 lg:px-10 h-16 flex items-center justify-between gap-4">
-          {/* Left: nav */}
+        <div className="mx-auto max-w-7xl px-6 lg:px-10 h-20 flex items-center justify-between gap-4">
+          {/* Left: brand — logo + name */}
+          <Link href="/" className="flex items-center gap-3">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/annapurna.jpg"
+              alt="Annapurna Restaurant & Bar"
+              className="h-14 w-14 rounded-full object-cover shrink-0"
+              style={{ border: "1px solid rgba(201,162,75,0.35)" }}
+            />
+            <span
+              className="uppercase tracking-[0.16em] text-2xl"
+              style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
+            >
+              Annapurna
+            </span>
+          </Link>
+
+          {/* Center: nav */}
           <nav className="hidden md:flex items-center gap-7 text-[12px] uppercase tracking-[0.14em]">
             {nav.map((n) => {
               const active = pathname === n.href;
@@ -41,17 +57,15 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Right: order, cart, then brand (far right) */}
-          <div className="flex items-center gap-3 ml-auto">
-            {!isHome && (
-              <Link
-                href="/menu"
-                className="hidden sm:inline-flex rounded-[2px] px-4 py-2 text-[11px] uppercase tracking-[0.16em] font-medium transition"
-                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
-              >
-                Order
-              </Link>
-            )}
+          {/* Right: Order Now + cart */}
+          <div className="flex items-center gap-3">
+            <Link
+              href="/menu"
+              className="hidden sm:inline-flex rounded-[2px] px-5 py-2.5 text-[11px] uppercase tracking-[0.16em] font-semibold transition"
+              style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+            >
+              Order Now
+            </Link>
             <button
               onClick={() => setOpen(true)}
               aria-label="Open cart"
@@ -68,22 +82,6 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
                 </span>
               )}
             </button>
-
-            <Link href="/" className="flex items-center gap-2.5">
-              <span
-                className="hidden sm:inline uppercase tracking-[0.16em] text-xl"
-                style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
-              >
-                Annapurna
-              </span>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/annapurna.jpg"
-                alt="Annapurna Restaurant & Bar"
-                className="h-12 w-12 rounded-full object-cover shrink-0"
-                style={{ border: "1px solid rgba(201,162,75,0.35)" }}
-              />
-            </Link>
           </div>
         </div>
       </header>

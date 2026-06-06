@@ -14,7 +14,7 @@ export default function AdminLoginPage() {
         <img
           src="/images/annapurna.jpg"
           alt="Annapurna Restaurant & Bar"
-          className="h-20 w-20 rounded-full object-cover mb-6"
+          className="h-28 w-28 rounded-full object-cover mb-6 mx-auto block"
           style={{ border: "1px solid rgba(201,162,75,0.35)" }}
         />
         <div
