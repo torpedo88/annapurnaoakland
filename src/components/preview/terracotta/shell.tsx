@@ -32,7 +32,14 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             (510) 250-9696
           </a>
 
-          <Link href="/" className="flex items-center">
+          <Link href="/" className="flex items-center gap-2.5">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/annapurna.jpg"
+              alt="Annapurna Restaurant & Bar"
+              className="h-9 w-9 rounded-full object-cover shrink-0"
+              style={{ border: "1px solid rgba(201,162,75,0.35)" }}
+            />
             <span
               className="uppercase tracking-[0.16em] text-xl"
               style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
