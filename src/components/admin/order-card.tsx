@@ -21,11 +21,13 @@ export type AdminOrder = {
   createdAt: string;
   items: { id: string; itemName: string | null; quantity: number | null; spiceLevel?: string | null }[];
   delivery: { trackingUrl: string | null; status: string | null } | null;
+  selfDelivery?: boolean;
 };
 
 const LABEL: Record<string, string> = {
   received: "Received", preparing: "Preparing", ready: "Ready",
   courier_picked_up: "Courier picked up", en_route: "En route",
+  out_for_delivery: "Out for delivery",
   completed: "Completed", delivered: "Delivered", cancelled: "Cancelled",
 };
 
@@ -39,7 +41,7 @@ export function OrderCard({
   onRefund: (id: string) => void;
 }) {
   const fulfillment: Fulfillment = order.orderType === "delivery" ? "delivery" : "pickup";
-  const actions = nextStatuses(fulfillment, order.status);
+  const actions = nextStatuses(fulfillment, order.status, order.selfDelivery);
   const card: React.CSSProperties = {
     backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.18)",
     borderRadius: 14, padding: 16, marginBottom: 12,

@@ -114,9 +114,6 @@ export async function placeOrder(
   let accepted: Awaited<ReturnType<typeof acceptQuote>> | null = null;
   let deliveryFeeCents = 0;
   if (input.fulfillment === "delivery") {
-    if (!isValidExternalDeliveryId(input.externalDeliveryId)) {
-      throw new OrderError("Invalid delivery reference", 400);
-    }
     const subtotalCents = priceOrder(input.items).subtotalCents;
     try {
       assertDeliverable({ subtotalCents }, settings.delivery);
@@ -126,16 +123,28 @@ export async function placeOrder(
       }
       throw e;
     }
-    try {
-      accepted = await acceptQuote(input.externalDeliveryId as string);
-    } catch (e) {
-      console.error("[placeOrder] Drive acceptQuote failed:", e);
-      throw new OrderError("Could not arrange delivery right now. Please try again.", 502);
+    if (settings.delivery.dispatchMode === "self") {
+      // Self-delivery: flat fee only, no DoorDash required.
+      deliveryFeeCents = computeDeliveryFee(
+        { doordashFeeCents: 0, subtotalCents },
+        { ...settings.delivery, mode: "flat" },
+      ).feeCents;
+    } else {
+      // DoorDash path: require a valid externalDeliveryId and accept the quote.
+      if (!isValidExternalDeliveryId(input.externalDeliveryId)) {
+        throw new OrderError("Invalid delivery reference", 400);
+      }
+      try {
+        accepted = await acceptQuote(input.externalDeliveryId as string);
+      } catch (e) {
+        console.error("[placeOrder] Drive acceptQuote failed:", e);
+        throw new OrderError("Could not arrange delivery right now. Please try again.", 502);
+      }
+      deliveryFeeCents = computeDeliveryFee(
+        { doordashFeeCents: accepted.feeCents ?? 0, subtotalCents },
+        settings.delivery,
+      ).feeCents;
     }
-    deliveryFeeCents = computeDeliveryFee(
-      { doordashFeeCents: accepted.feeCents ?? 0, subtotalCents },
-      settings.delivery,
-    ).feeCents;
   }
 
   // 3) Resolve promo discount (server-authoritative; client amount never trusted).
@@ -221,24 +230,33 @@ export async function createPendingOrder(
   let deliveryFeeCents = 0;
   if (input.fulfillment === "delivery") {
     if (!cleanString(input.address, 200)) throw new OrderError("Delivery address is required", 400);
-    if (!isValidExternalDeliveryId(input.externalDeliveryId)) throw new OrderError("Invalid delivery reference", 400);
     const subtotalCents = priceOrder(input.items).subtotalCents;
     try { assertDeliverable({ subtotalCents }, settings.delivery); }
     catch (e) {
       if (e instanceof MinOrderError) throw new OrderError(`Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.`, 400);
       throw e;
     }
-    try {
-      const q = await quoteDelivery({
-        externalDeliveryId: input.externalDeliveryId as string,
-        dropoffAddress: cleanString(input.address, 200),
-        dropoffPhone: cleanString(input.phone, 30),
-        orderValueCents: subtotalCents,
-      });
-      deliveryFeeCents = computeDeliveryFee({ doordashFeeCents: q.feeCents, subtotalCents }, settings.delivery).feeCents;
-    } catch (e) {
-      console.error("[createPendingOrder] quote failed:", e);
-      throw new OrderError("Could not price delivery right now. Please try again.", 502);
+    if (settings.delivery.dispatchMode === "self") {
+      // Self-delivery: flat fee only, no DoorDash required.
+      deliveryFeeCents = computeDeliveryFee(
+        { doordashFeeCents: 0, subtotalCents },
+        { ...settings.delivery, mode: "flat" },
+      ).feeCents;
+    } else {
+      // DoorDash path: require a valid externalDeliveryId and re-quote.
+      if (!isValidExternalDeliveryId(input.externalDeliveryId)) throw new OrderError("Invalid delivery reference", 400);
+      try {
+        const q = await quoteDelivery({
+          externalDeliveryId: input.externalDeliveryId as string,
+          dropoffAddress: cleanString(input.address, 200),
+          dropoffPhone: cleanString(input.phone, 30),
+          orderValueCents: subtotalCents,
+        });
+        deliveryFeeCents = computeDeliveryFee({ doordashFeeCents: q.feeCents, subtotalCents }, settings.delivery).feeCents;
+      } catch (e) {
+        console.error("[createPendingOrder] quote failed:", e);
+        throw new OrderError("Could not price delivery right now. Please try again.", 502);
+      }
     }
   }
 
@@ -296,6 +314,10 @@ export async function dispatchPaidOrder(args: {
   }
 
   if (order.orderType !== "delivery") return;
+
+  // Self-delivery: no DoorDash dispatch needed — the paid+received claim above is sufficient.
+  const settings = await getSettings();
+  if (settings.delivery.dispatchMode === "self") return;
 
   const [existing] = await db.select({ id: deliveries.id }).from(deliveries).where(eq(deliveries.orderId, args.orderId)).limit(1);
   if (existing) return; // already dispatched

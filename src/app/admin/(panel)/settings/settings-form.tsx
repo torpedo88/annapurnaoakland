@@ -159,7 +159,15 @@ function DeliveryFields({
   return (
     <>
       <div className="mb-3">
-        <label className={label} style={{ color: "#8A8276" }}>Mode</label>
+        <label className={label} style={{ color: "#8A8276" }}>Delivery dispatch</label>
+        <select className={input} style={inputStyle} value={d.dispatchMode ?? "doordash"} disabled={disabled}
+          onChange={(e) => set({ dispatchMode: e.target.value === "self" ? "self" : "doordash" })}>
+          <option value="doordash">DoorDash (auto-dispatch)</option>
+          <option value="self">Self-delivery (flat fee, staff deliver)</option>
+        </select>
+      </div>
+      <div className="mb-3">
+        <label className={label} style={{ color: "#8A8276" }}>Fee mode</label>
         <select className={input} style={inputStyle} value={d.mode} disabled={disabled}
           onChange={(e) => set({ mode: e.target.value === "flat" ? "flat" : "live" })}>
           <option value="live">Live DoorDash quote</option>

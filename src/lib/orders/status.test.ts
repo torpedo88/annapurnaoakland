@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { nextStatuses, canTransition, PENDING_PAYMENT } from "@/lib/orders/status";
+import { nextStatuses, canTransition, PENDING_PAYMENT, SELF_DELIVERY_FLOW } from "@/lib/orders/status";
 
 describe("nextStatuses (staff buttons)", () => {
   it("pickup received -> [preparing, cancelled]", () => {
@@ -46,6 +46,46 @@ describe("canTransition", () => {
   it("webhook cannot move pickup orders or go backward", () => {
     expect(canTransition("pickup", "received", "courier_picked_up", "webhook")).toBe(false);
     expect(canTransition("delivery", "en_route", "ready", "webhook")).toBe(false);
+  });
+});
+
+describe("self-delivery mode (selfDelivery = true)", () => {
+  it("staff can advance delivery received→preparing→ready→out_for_delivery→delivered", () => {
+    const steps = [...SELF_DELIVERY_FLOW];
+    for (let i = 0; i < steps.length - 1; i++) {
+      const from = steps[i]!;
+      const to = steps[i + 1]!;
+      expect(canTransition("delivery", from, to, "staff", true)).toBe(true);
+    }
+  });
+  it("nextStatuses includes out_for_delivery and delivered for staff in self-delivery mode", () => {
+    expect(nextStatuses("delivery", "ready", true)).toEqual(["out_for_delivery", "cancelled"]);
+    expect(nextStatuses("delivery", "out_for_delivery", true)).toEqual(["delivered", "cancelled"]);
+  });
+  it("nextStatuses in self-delivery mode returns [] once delivered (terminal)", () => {
+    expect(nextStatuses("delivery", "delivered", true)).toEqual([]);
+  });
+  it("staff cannot skip steps in self-delivery mode", () => {
+    expect(canTransition("delivery", "received", "ready", "staff", true)).toBe(false);
+    expect(canTransition("delivery", "received", "out_for_delivery", "staff", true)).toBe(false);
+  });
+  it("webhook cannot drive self-delivery flow", () => {
+    expect(canTransition("delivery", "ready", "out_for_delivery", "webhook", true)).toBe(false);
+    expect(canTransition("delivery", "ready", "delivered", "webhook", true)).toBe(false);
+  });
+  it("staff still cannot reach courier states in DoorDash mode (selfDelivery=false)", () => {
+    expect(canTransition("delivery", "ready", "courier_picked_up", "staff", false)).toBe(false);
+    expect(canTransition("delivery", "ready", "en_route", "staff", false)).toBe(false);
+    expect(canTransition("delivery", "ready", "delivered", "staff", false)).toBe(false);
+  });
+  it("nextStatuses in DoorDash mode still caps staff at ready (no courier states)", () => {
+    expect(nextStatuses("delivery", "ready", false)).toEqual(["cancelled"]);
+    expect(nextStatuses("delivery", "preparing", false)).toEqual(["ready", "cancelled"]);
+  });
+  it("staff may cancel in self-delivery mode at any non-terminal step", () => {
+    for (const step of ["received", "preparing", "ready", "out_for_delivery"]) {
+      expect(canTransition("delivery", step, "cancelled", "staff", true)).toBe(true);
+    }
   });
 });
 

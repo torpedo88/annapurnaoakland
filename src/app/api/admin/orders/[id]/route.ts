@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { orders } from "@/db/schema";
 import { requireRole, AuthError } from "@/lib/auth/session";
 import { canTransition, type Fulfillment } from "@/lib/orders/status";
+import { getSettings } from "@/lib/settings";
 
 export const runtime = "nodejs";
 
@@ -23,15 +24,19 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   }
   const to = typeof body.status === "string" ? body.status : "";
 
-  const [order] = await db
-    .select({ status: orders.status, orderType: orders.orderType })
-    .from(orders)
-    .where(eq(orders.id, id))
-    .limit(1);
+  const [[order], settings] = await Promise.all([
+    db
+      .select({ status: orders.status, orderType: orders.orderType })
+      .from(orders)
+      .where(eq(orders.id, id))
+      .limit(1),
+    getSettings(),
+  ]);
   if (!order) return NextResponse.json({ error: "Order not found" }, { status: 404 });
 
   const fulfillment: Fulfillment = order.orderType === "delivery" ? "delivery" : "pickup";
-  if (!canTransition(fulfillment, order.status ?? "received", to, "staff")) {
+  const selfDelivery = settings.delivery.dispatchMode === "self";
+  if (!canTransition(fulfillment, order.status ?? "received", to, "staff", selfDelivery)) {
     return NextResponse.json({ error: "Invalid status change" }, { status: 409 });
   }
 

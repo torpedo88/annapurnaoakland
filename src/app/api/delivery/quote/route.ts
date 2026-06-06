@@ -46,6 +46,20 @@ export async function POST(req: Request) {
     throw e;
   }
 
+  // Self-delivery mode: return the flat fee without calling DoorDash.
+  if (settings.delivery.dispatchMode === "self") {
+    const { feeCents, freeApplied } = computeDeliveryFee(
+      { doordashFeeCents: 0, subtotalCents: orderValueCents },
+      { ...settings.delivery, mode: "flat" },
+    );
+    return NextResponse.json({
+      externalDeliveryId: null,
+      feeCents,
+      freeApplied,
+      durationSeconds: null,
+    });
+  }
+
   const externalDeliveryId = `anp-${randomUUID()}`;
   try {
     const q = await quoteDelivery({

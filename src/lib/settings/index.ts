@@ -11,6 +11,7 @@ export interface DeliverySettings {
   freeThresholdCents: number; // 0 = disabled
   minOrderCents: number;
   maxRadiusMiles: number;
+  dispatchMode: "doordash" | "self";
 }
 
 export interface DishOfDay {
@@ -37,6 +38,7 @@ export const DEFAULT_SETTINGS: Settings = {
     freeThresholdCents: 0,
     minOrderCents: 0,
     maxRadiusMiles: 8,
+    dispatchMode: "doordash",
   },
   ordering_paused: false,
   pickup_enabled: true,
@@ -76,6 +78,9 @@ export function mergeSettings(rows: Row[]): Settings {
             if (typeof val === "number" && Number.isFinite(val) && val >= 0) {
               d[k] = val;
             }
+          }
+          if (v.dispatchMode === "doordash" || v.dispatchMode === "self") {
+            d.dispatchMode = v.dispatchMode;
           }
         }
         break;

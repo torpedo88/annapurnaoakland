@@ -5,6 +5,7 @@ import { orders, orderItems, deliveries } from "@/db/schema";
 import { requireRole, AuthError } from "@/lib/auth/session";
 import { toCents } from "@/lib/orders/money";
 import { placeOrder, OrderError } from "@/lib/orders/place-order";
+import { getSettings } from "@/lib/settings";
 
 export const runtime = "nodejs";
 
@@ -24,12 +25,17 @@ export async function GET(req: Request) {
   const lane = new URL(req.url).searchParams.get("lane") ?? "active";
   const statuses = LANES[lane] ?? LANES.active ?? [];
 
-  const rows = await db
-    .select()
-    .from(orders)
-    .where(inArray(orders.status, statuses))
-    .orderBy(desc(orders.createdAt))
-    .limit(200);
+  const [rows, settings] = await Promise.all([
+    db
+      .select()
+      .from(orders)
+      .where(inArray(orders.status, statuses))
+      .orderBy(desc(orders.createdAt))
+      .limit(200),
+    getSettings(),
+  ]);
+
+  const selfDelivery = settings.delivery.dispatchMode === "self";
 
   const ids = rows.map((o) => o.id);
   const items = ids.length
@@ -48,6 +54,7 @@ export async function GET(req: Request) {
       ...o,
       items: items.filter((i) => i.orderId === o.id),
       delivery: dels.find((d) => d.orderId === o.id) ?? null,
+      selfDelivery,
     };
   });
 
