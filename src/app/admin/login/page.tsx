@@ -12,10 +12,9 @@ export default function AdminLoginPage() {
       <div className="w-full max-w-md">
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
-          src="/images/annapurna.jpg"
+          src="/images/annapurna-logo.png"
           alt="Annapurna Restaurant & Bar"
-          className="h-28 w-28 rounded-full object-cover mb-6 mx-auto block"
-          style={{ border: "1px solid rgba(201,162,75,0.35)" }}
+          className="h-32 w-auto object-contain mb-6 mx-auto block"
         />
         <div
           className="inline-flex items-center gap-2 rounded-full px-4 py-1.5 text-[10px] font-bold uppercase tracking-widest mb-6"

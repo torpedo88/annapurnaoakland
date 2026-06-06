@@ -27,10 +27,9 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
           <Link href="/" className="flex items-center gap-3">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
-              src="/images/annapurna.jpg"
+              src="/images/annapurna-logo.png"
               alt="Annapurna Restaurant & Bar"
-              className="h-14 w-14 rounded-full object-cover shrink-0"
-              style={{ border: "1px solid rgba(201,162,75,0.35)" }}
+              className="h-14 w-auto object-contain shrink-0"
             />
             <span
               className="uppercase tracking-[0.16em] text-2xl"
@@ -214,7 +213,17 @@ function CartDrawer() {
                         Remove
                       </button>
                     </div>
-                    <p className="text-sm" style={{ color: "#8A8276" }}>${l.price.toFixed(2)} each</p>
+                    {l.discountPercent ? (
+                      <p className="text-sm" style={{ color: "#8A8276" }}>
+                        <span className="line-through">${l.price.toFixed(2)}</span>{" "}
+                        <span style={{ color: "#C9A24B", fontWeight: 600 }}>
+                          ${(l.price * (1 - l.discountPercent / 100)).toFixed(2)}
+                        </span>{" "}
+                        each · {l.discountPercent}% off
+                      </p>
+                    ) : (
+                      <p className="text-sm" style={{ color: "#8A8276" }}>${l.price.toFixed(2)} each</p>
+                    )}
                     {l.spiceLevel && (
                       <p className="text-xs" style={{ color: "#8A8276" }}>🌶 {l.spiceLevel}</p>
                     )}

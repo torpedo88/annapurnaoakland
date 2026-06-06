@@ -59,7 +59,7 @@ export function Specials() {
       isCatering: false,
       tags: [],
     };
-    add(item, 1);
+    add(item, 1, undefined, dish.discountPercent > 0 ? dish.discountPercent : undefined);
   }
 
   if (!loaded) return null;

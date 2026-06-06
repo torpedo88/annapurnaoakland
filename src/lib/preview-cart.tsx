@@ -20,11 +20,14 @@ export type CartLine = {
   qty: number;
   image?: string;
   spiceLevel?: string;
+  // Dish-of-the-Day % off — shows a strikethrough price on the cart line. The
+  // actual discount is applied server-side at checkout (not double-counted here).
+  discountPercent?: number;
 };
 
 type CartContextShape = {
   lines: CartLine[];
-  add: (item: MenuItem, qty?: number, spiceLevel?: string) => void;
+  add: (item: MenuItem, qty?: number, spiceLevel?: string, discountPercent?: number) => void;
   increment: (id: string) => void;
   decrement: (id: string) => void;
   remove: (id: string) => void;
@@ -74,19 +77,19 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(CART_KEY, JSON.stringify(lines));
   }, [lines, hydrated]);
 
-  const add = useCallback((item: MenuItem, qty: number = 1, spiceLevel?: string) => {
+  const add = useCallback((item: MenuItem, qty: number = 1, spiceLevel?: string, discountPercent?: number) => {
     setLines((prev) => {
       const existing = prev.find((l) => l.id === item.id);
       if (existing) {
         return prev.map((l) =>
           l.id === item.id
-            ? { ...l, qty: l.qty + qty, spiceLevel: spiceLevel ?? l.spiceLevel }
+            ? { ...l, qty: l.qty + qty, spiceLevel: spiceLevel ?? l.spiceLevel, discountPercent: discountPercent ?? l.discountPercent }
             : l
         );
       }
       return [
         ...prev,
-        { id: item.id, name: item.name, price: item.price, qty, image: item.image, spiceLevel },
+        { id: item.id, name: item.name, price: item.price, qty, image: item.image, spiceLevel, discountPercent },
       ];
     });
     setJustAdded({ id: item.id, ts: Date.now() });
