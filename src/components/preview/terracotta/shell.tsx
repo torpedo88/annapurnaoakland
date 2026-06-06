@@ -195,13 +195,17 @@ function CartDrawer() {
                   className="flex gap-4 pb-4 last:border-b-0"
                   style={{ borderBottom: "1px solid rgba(201,162,75,0.15)" }}
                 >
-                  {l.image && (
-                    <img
-                      src={l.image}
-                      alt=""
-                      className="h-20 w-20 rounded-2xl object-cover shrink-0"
-                    />
-                  )}
+                  <img
+                    src={l.image || "/images/annapurna-logo.png"}
+                    alt=""
+                    className="h-20 w-20 rounded-2xl object-cover shrink-0"
+                    style={{ backgroundColor: "#14100D" }}
+                    onError={(e) => {
+                      if (!e.currentTarget.src.endsWith("/images/annapurna-logo.png")) {
+                        e.currentTarget.src = "/images/annapurna-logo.png";
+                      }
+                    }}
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between gap-3">
                       <h3 className="font-semibold truncate" style={{ color: "#F3E9D6" }}>{l.name}</h3>

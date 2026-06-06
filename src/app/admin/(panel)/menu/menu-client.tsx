@@ -443,22 +443,18 @@ function ItemForm({
         <div className="col-span-2">
           <label className={labelCls} style={{ color: "#8A8276" }}>Image</label>
           <div className="flex items-start gap-3">
-            {form.imageUrl ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={form.imageUrl}
-                alt=""
-                className="h-16 w-16 rounded-lg object-cover shrink-0"
-                style={{ border: "1px solid rgba(201,162,75,0.2)" }}
-              />
-            ) : (
-              <div
-                className="h-16 w-16 rounded-lg shrink-0 flex items-center justify-center text-[10px] text-center"
-                style={{ border: "1px dashed rgba(201,162,75,0.25)", color: "#8A8276" }}
-              >
-                No image
-              </div>
-            )}
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={form.imageUrl || "/images/annapurna-logo.png"}
+              alt=""
+              className="h-16 w-16 rounded-lg object-contain shrink-0"
+              style={{ border: "1px solid rgba(201,162,75,0.2)", backgroundColor: "#14100D" }}
+              onError={(e) => {
+                if (!e.currentTarget.src.endsWith("/images/annapurna-logo.png")) {
+                  e.currentTarget.src = "/images/annapurna-logo.png";
+                }
+              }}
+            />
             <div className="flex-1">
               <input
                 className={inputCls}
