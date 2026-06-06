@@ -28,4 +28,15 @@ export const env = {
     url: required("NEXT_PUBLIC_SUPABASE_URL"),
     serviceKey: required("SUPABASE_SERVICE_ROLE_KEY"),
   }),
+  resend: () => ({
+    apiKey: process.env.RESEND_API_KEY ?? "",
+    from: process.env.EMAIL_FROM ?? "Annapurna <onboarding@resend.dev>",
+    restaurantEmail: process.env.RESTAURANT_NOTIFY_EMAIL ?? "",
+  }),
+  twilio: () => ({
+    accountSid: process.env.TWILIO_ACCOUNT_SID ?? "",
+    authToken: process.env.TWILIO_AUTH_TOKEN ?? "",
+    from: process.env.TWILIO_FROM ?? "",
+    restaurantPhone: process.env.RESTAURANT_NOTIFY_PHONE ?? process.env.RESTAURANT_PICKUP_PHONE ?? "",
+  }),
 };
