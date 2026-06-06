@@ -6,6 +6,28 @@ import { env } from "@/lib/env";
 
 export const runtime = "nodejs";
 
+// Returns a trusted base URL for the Stripe return_url. The Origin/Host headers
+// are attacker-controllable, so only honor them when the host is one of ours;
+// otherwise fall back to the configured env base. Prevents Host-header injection
+// from redirecting the order accessToken to an arbitrary domain (IDOR/PII leak).
+function allowedBaseUrl(origin: string | null, host: string | null): string {
+  const fallback = env.baseUrl();
+  let candidate: URL | null = null;
+  try {
+    candidate = origin ? new URL(origin) : host ? new URL(`https://${host}`) : null;
+  } catch {
+    candidate = null;
+  }
+  if (!candidate) return fallback;
+  const h = candidate.host;
+  const allowed =
+    h === new URL(fallback).host ||
+    h === "localhost:3000" ||
+    // this project's Vercel deployments/previews only
+    /^annapurnaoakland[a-z0-9-]*\.vercel\.app$/.test(h);
+  return allowed ? candidate.origin : fallback;
+}
+
 export async function POST(req: Request) {
   let body: Record<string, unknown>;
   try { body = await req.json(); }
@@ -30,12 +52,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
   }
 
-  // Derive the base URL from the request origin so the Stripe return_url is
-  // correct on whatever deployment served the request (prod, preview, or local)
-  // — not a fixed env value that would cross environments. Falls back to env.
-  const origin = req.headers.get("origin");
-  const host = req.headers.get("host");
-  const base = origin ?? (host ? `https://${host}` : env.baseUrl());
+  // Base URL for the Stripe return_url. We prefer the request's own origin so
+  // the redirect stays on the deployment that served it (prod/preview/local),
+  // but the Host/Origin header is attacker-controllable — an unvalidated value
+  // would leak the order accessToken to an arbitrary domain. So validate the
+  // host against an allowlist and fall back to env.baseUrl() otherwise.
+  const base = allowedBaseUrl(req.headers.get("origin"), req.headers.get("host"));
   try {
     const session = await stripe().checkout.sessions.create({
       ui_mode: "embedded_page",
