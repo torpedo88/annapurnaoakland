@@ -282,6 +282,24 @@ function ItemForm({
   );
   const [saving, setSaving] = useState(false);
   const [err, setErr] = useState<string | null>(null);
+  const [uploading, setUploading] = useState(false);
+
+  async function uploadPhoto(file: File) {
+    setUploading(true);
+    setErr(null);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/admin/menu/upload", { method: "POST", body: fd });
+      const data = await res.json();
+      if (!res.ok) { setErr(data.error ?? "Upload failed"); return; }
+      setForm((p) => ({ ...p, imageUrl: data.url as string }));
+    } catch {
+      setErr("Upload failed");
+    } finally {
+      setUploading(false);
+    }
+  }
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -421,16 +439,54 @@ function ItemForm({
             onChange={(e) => setForm((p) => ({ ...p, fullTrayPrice: e.target.value }))}
           />
         </div>
-        {/* Image URL */}
+        {/* Image — upload to Supabase Storage, or paste a URL */}
         <div className="col-span-2">
-          <label className={labelCls} style={{ color: "#8A8276" }}>Image URL</label>
-          <input
-            className={inputCls}
-            style={inputStyle}
-            type="url"
-            value={form.imageUrl}
-            onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
-          />
+          <label className={labelCls} style={{ color: "#8A8276" }}>Image</label>
+          <div className="flex items-start gap-3">
+            {form.imageUrl ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img
+                src={form.imageUrl}
+                alt=""
+                className="h-16 w-16 rounded-lg object-cover shrink-0"
+                style={{ border: "1px solid rgba(201,162,75,0.2)" }}
+              />
+            ) : (
+              <div
+                className="h-16 w-16 rounded-lg shrink-0 flex items-center justify-center text-[10px] text-center"
+                style={{ border: "1px dashed rgba(201,162,75,0.25)", color: "#8A8276" }}
+              >
+                No image
+              </div>
+            )}
+            <div className="flex-1">
+              <input
+                className={inputCls}
+                style={inputStyle}
+                type="url"
+                placeholder="https://…  or upload a photo →"
+                value={form.imageUrl}
+                onChange={(e) => setForm((p) => ({ ...p, imageUrl: e.target.value }))}
+              />
+              <label
+                className="inline-flex items-center gap-2 mt-2 px-3 py-1.5 rounded-full text-xs font-semibold cursor-pointer"
+                style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#C9A24B", opacity: uploading ? 0.6 : 1 }}
+              >
+                {uploading ? "Uploading…" : "Upload photo"}
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  disabled={uploading}
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) void uploadPhoto(f);
+                    e.target.value = "";
+                  }}
+                />
+              </label>
+            </div>
+          </div>
         </div>
         {/* Boolean flags */}
         <div className="col-span-2">

@@ -24,4 +24,8 @@ export const env = {
     secretKey: required("STRIPE_SECRET_KEY"),
     webhookSecret: required("STRIPE_WEBHOOK_SECRET"),
   }),
+  supabase: () => ({
+    url: required("NEXT_PUBLIC_SUPABASE_URL"),
+    serviceKey: required("SUPABASE_SERVICE_ROLE_KEY"),
+  }),
 };
