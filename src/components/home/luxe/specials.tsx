@@ -82,22 +82,25 @@ export function Specials() {
               className="w-full max-w-5xl rounded-[1.75rem] overflow-hidden md:flex"
               style={{ backgroundColor: luxe.surface, border: "1px solid rgba(201,162,75,0.18)" }}
             >
-              {dish.image && (
-                <div className="md:w-1/2 relative min-h-[240px]">
-                  <img
-                    src={dish.image}
-                    alt={dish.name}
-                    className="w-full h-full object-cover min-h-[240px]"
-                  />
-                </div>
-              )}
+              <div className="md:w-1/2 relative min-h-[240px]">
+                <img
+                  src={dish.image || "/images/annapurna-logo.png"}
+                  alt={dish.name}
+                  className="w-full h-full object-cover min-h-[240px]"
+                  onError={(e) => {
+                    if (!e.currentTarget.src.endsWith("/images/annapurna-logo.png")) {
+                      e.currentTarget.src = "/images/annapurna-logo.png";
+                    }
+                  }}
+                />
+              </div>
               <div className="md:w-1/2 p-8 flex flex-col justify-center">
                 <div className="mb-4">
                   <span
                     className="inline-flex items-center rounded-full px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.12em]"
                     style={{ backgroundColor: "rgba(201,162,75,0.15)", color: luxe.gold }}
                   >
-                    Dish of the Day
+                    Daily Special
                     {dish.discountedPrice !== null && ` · ${dish.discountPercent}% off`}
                   </span>
                 </div>

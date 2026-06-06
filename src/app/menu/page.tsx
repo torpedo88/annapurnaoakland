@@ -253,6 +253,7 @@ function MenuCard({ item, unavailable, imageSrc }: { item: MenuItem; unavailable
   const inCart = lines.find((l) => l.id === item.id);
   const showSpice = hasSpiceOptions(item.category);
   const [spice, setSpice] = useState<string>(DEFAULT_SPICE);
+  const [src, setSrc] = useState(imageSrc || "/images/annapurna-logo.png");
 
   return (
     <article
@@ -261,13 +262,14 @@ function MenuCard({ item, unavailable, imageSrc }: { item: MenuItem; unavailable
     >
       <div className="relative aspect-[5/3] overflow-hidden" style={{ backgroundColor: "#14100D" }}>
         <Image
-          src={imageSrc}
+          src={src}
           alt={item.name}
           fill
           sizes="(max-width: 768px) 100vw, (max-width: 1024px) 50vw, 33vw"
           className="object-cover transition-transform duration-700 group-hover:scale-105"
           loading="lazy"
           style={unavailable ? { filter: "grayscale(0.7) brightness(0.6)" } : undefined}
+          onError={() => setSrc((s) => s.endsWith("annapurna-logo.png") ? s : "/images/annapurna-logo.png")}
         />
         {unavailable && (
           <div className="absolute inset-0 flex items-center justify-center">
