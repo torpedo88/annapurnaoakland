@@ -30,7 +30,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Could not start checkout" }, { status: 500 });
   }
 
-  const base = env.baseUrl();
+  // Derive the base URL from the request origin so the Stripe return_url is
+  // correct on whatever deployment served the request (prod, preview, or local)
+  // — not a fixed env value that would cross environments. Falls back to env.
+  const origin = req.headers.get("origin");
+  const host = req.headers.get("host");
+  const base = origin ?? (host ? `https://${host}` : env.baseUrl());
   try {
     const session = await stripe().checkout.sessions.create({
       ui_mode: "embedded_page",
