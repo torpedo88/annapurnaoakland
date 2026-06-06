@@ -102,6 +102,210 @@ function isoToDtLocal(iso: string | null): string {
   return iso.slice(0, 16);
 }
 
+// ── Form (module-level so its identity is stable across parent re-renders) ──────
+// Defining this inside PromosClient remounted it on every keystroke, which stole
+// focus from the active input. Keeping it at module scope fixes that.
+
+function PromoForm({
+  form,
+  setForm,
+  onSubmit,
+  submitting,
+  submitLabel,
+  formError,
+  onCancel,
+}: {
+  form: FormState;
+  setForm: React.Dispatch<React.SetStateAction<FormState>>;
+  onSubmit: (e: React.FormEvent) => void;
+  submitting: boolean;
+  submitLabel: string;
+  formError: string | null;
+  onCancel: () => void;
+}) {
+  const set = (k: keyof FormState, v: string | boolean) =>
+    setForm((prev) => ({ ...prev, [k]: v }));
+
+  return (
+    <form onSubmit={onSubmit}>
+      {formError && (
+        <p className="mb-4 text-sm" style={{ color: "#E57373" }}>
+          {formError}
+        </p>
+      )}
+
+      <div className="grid grid-cols-2 gap-4 mb-4">
+        {/* Code */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Code
+          </label>
+          <input
+            required
+            className={inputCls}
+            style={inputStyle}
+            type="text"
+            placeholder="SUMMER20"
+            value={form.code}
+            onChange={(e) => set("code", e.target.value.toUpperCase())}
+          />
+        </div>
+
+        {/* Discount type */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Discount type
+          </label>
+          <select
+            className={inputCls}
+            style={inputStyle}
+            value={form.discountType}
+            onChange={(e) =>
+              set("discountType", e.target.value as "percent" | "fixed")
+            }
+          >
+            <option value="percent">Percent (%)</option>
+            <option value="fixed">Fixed ($)</option>
+          </select>
+        </div>
+
+        {/* Discount value */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Discount value{" "}
+            <span style={{ color: "#C9A24B" }}>
+              {form.discountType === "percent" ? "%" : "$"}
+            </span>
+          </label>
+          <input
+            required
+            className={inputCls}
+            style={inputStyle}
+            type="number"
+            min="0"
+            max={form.discountType === "percent" ? 100 : undefined}
+            step="0.01"
+            placeholder={form.discountType === "percent" ? "20" : "5.00"}
+            value={form.discountValue}
+            onChange={(e) => set("discountValue", e.target.value)}
+          />
+        </div>
+
+        {/* Min order */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Min order ($) <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
+          </label>
+          <input
+            className={inputCls}
+            style={inputStyle}
+            type="number"
+            min="0"
+            step="0.01"
+            placeholder="0.00"
+            value={form.minOrder}
+            onChange={(e) => set("minOrder", e.target.value)}
+          />
+        </div>
+
+        {/* Max redemptions */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Max redemptions <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
+          </label>
+          <input
+            className={inputCls}
+            style={inputStyle}
+            type="number"
+            min="1"
+            step="1"
+            placeholder="unlimited"
+            value={form.maxRedemptions}
+            onChange={(e) => set("maxRedemptions", e.target.value)}
+          />
+        </div>
+
+        {/* Starts at */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Starts at <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
+          </label>
+          <input
+            className={inputCls}
+            style={inputStyle}
+            type="datetime-local"
+            value={form.startsAt}
+            onChange={(e) => set("startsAt", e.target.value)}
+          />
+        </div>
+
+        {/* Expires at */}
+        <div>
+          <label className={labelCls} style={{ color: "#8A8276" }}>
+            Expires at <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
+          </label>
+          <input
+            className={inputCls}
+            style={inputStyle}
+            type="datetime-local"
+            value={form.expiresAt}
+            onChange={(e) => set("expiresAt", e.target.value)}
+          />
+        </div>
+      </div>
+
+      {/* Description — full width */}
+      <div className="mb-4">
+        <label className={labelCls} style={{ color: "#8A8276" }}>
+          Description <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
+        </label>
+        <input
+          className={inputCls}
+          style={inputStyle}
+          type="text"
+          placeholder="e.g. Summer discount for returning customers"
+          value={form.description}
+          onChange={(e) => set("description", e.target.value)}
+        />
+      </div>
+
+      {/* Active toggle */}
+      <div className="mb-6">
+        <label
+          className="flex items-center gap-3 cursor-pointer"
+          style={{ color: "#F3E9D6" }}
+        >
+          <input
+            type="checkbox"
+            checked={form.isActive}
+            onChange={(e) => set("isActive", e.target.checked)}
+          />
+          <span className="text-sm">Active</span>
+        </label>
+      </div>
+
+      <div className="flex gap-3">
+        <button
+          type="submit"
+          disabled={submitting}
+          className={btnBaseCls}
+          style={{ ...primaryBtn, opacity: submitting ? 0.6 : 1 }}
+        >
+          {submitting ? "Saving…" : submitLabel}
+        </button>
+        <button
+          type="button"
+          onClick={onCancel}
+          className={btnBaseCls}
+          style={secondaryBtn}
+        >
+          Cancel
+        </button>
+      </div>
+    </form>
+  );
+}
+
 // ── Main component ─────────────────────────────────────────────────────────────
 
 export function PromosClient() {
@@ -250,208 +454,6 @@ export function PromosClient() {
     } finally {
       setDeletingId(null);
     }
-  }
-
-  // ── Render helpers ─────────────────────────────────────────────────────────
-
-  function PromoForm({
-    form,
-    setForm,
-    onSubmit,
-    submitting,
-    submitLabel,
-    formError,
-    onCancel,
-  }: {
-    form: FormState;
-    setForm: React.Dispatch<React.SetStateAction<FormState>>;
-    onSubmit: (e: React.FormEvent) => void;
-    submitting: boolean;
-    submitLabel: string;
-    formError: string | null;
-    onCancel: () => void;
-  }) {
-    const set = (k: keyof FormState, v: string | boolean) =>
-      setForm((prev) => ({ ...prev, [k]: v }));
-
-    return (
-      <form onSubmit={onSubmit}>
-        {formError && (
-          <p className="mb-4 text-sm" style={{ color: "#E57373" }}>
-            {formError}
-          </p>
-        )}
-
-        <div className="grid grid-cols-2 gap-4 mb-4">
-          {/* Code */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Code
-            </label>
-            <input
-              required
-              className={inputCls}
-              style={inputStyle}
-              type="text"
-              placeholder="SUMMER20"
-              value={form.code}
-              onChange={(e) => set("code", e.target.value.toUpperCase())}
-            />
-          </div>
-
-          {/* Discount type */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Discount type
-            </label>
-            <select
-              className={inputCls}
-              style={inputStyle}
-              value={form.discountType}
-              onChange={(e) =>
-                set("discountType", e.target.value as "percent" | "fixed")
-              }
-            >
-              <option value="percent">Percent (%)</option>
-              <option value="fixed">Fixed ($)</option>
-            </select>
-          </div>
-
-          {/* Discount value */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Discount value{" "}
-              <span style={{ color: "#C9A24B" }}>
-                {form.discountType === "percent" ? "%" : "$"}
-              </span>
-            </label>
-            <input
-              required
-              className={inputCls}
-              style={inputStyle}
-              type="number"
-              min="0"
-              max={form.discountType === "percent" ? 100 : undefined}
-              step="0.01"
-              placeholder={form.discountType === "percent" ? "20" : "5.00"}
-              value={form.discountValue}
-              onChange={(e) => set("discountValue", e.target.value)}
-            />
-          </div>
-
-          {/* Min order */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Min order ($) <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
-            </label>
-            <input
-              className={inputCls}
-              style={inputStyle}
-              type="number"
-              min="0"
-              step="0.01"
-              placeholder="0.00"
-              value={form.minOrder}
-              onChange={(e) => set("minOrder", e.target.value)}
-            />
-          </div>
-
-          {/* Max redemptions */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Max redemptions <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
-            </label>
-            <input
-              className={inputCls}
-              style={inputStyle}
-              type="number"
-              min="1"
-              step="1"
-              placeholder="unlimited"
-              value={form.maxRedemptions}
-              onChange={(e) => set("maxRedemptions", e.target.value)}
-            />
-          </div>
-
-          {/* Starts at */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Starts at <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
-            </label>
-            <input
-              className={inputCls}
-              style={inputStyle}
-              type="datetime-local"
-              value={form.startsAt}
-              onChange={(e) => set("startsAt", e.target.value)}
-            />
-          </div>
-
-          {/* Expires at */}
-          <div>
-            <label className={labelCls} style={{ color: "#8A8276" }}>
-              Expires at <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
-            </label>
-            <input
-              className={inputCls}
-              style={inputStyle}
-              type="datetime-local"
-              value={form.expiresAt}
-              onChange={(e) => set("expiresAt", e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Description — full width */}
-        <div className="mb-4">
-          <label className={labelCls} style={{ color: "#8A8276" }}>
-            Description <span style={{ color: "#8A8276", fontWeight: 400 }}>optional</span>
-          </label>
-          <input
-            className={inputCls}
-            style={inputStyle}
-            type="text"
-            placeholder="e.g. Summer discount for returning customers"
-            value={form.description}
-            onChange={(e) => set("description", e.target.value)}
-          />
-        </div>
-
-        {/* Active toggle */}
-        <div className="mb-6">
-          <label
-            className="flex items-center gap-3 cursor-pointer"
-            style={{ color: "#F3E9D6" }}
-          >
-            <input
-              type="checkbox"
-              checked={form.isActive}
-              onChange={(e) => set("isActive", e.target.checked)}
-            />
-            <span className="text-sm">Active</span>
-          </label>
-        </div>
-
-        <div className="flex gap-3">
-          <button
-            type="submit"
-            disabled={submitting}
-            className={btnBaseCls}
-            style={{ ...primaryBtn, opacity: submitting ? 0.6 : 1 }}
-          >
-            {submitting ? "Saving…" : submitLabel}
-          </button>
-          <button
-            type="button"
-            onClick={onCancel}
-            className={btnBaseCls}
-            style={secondaryBtn}
-          >
-            Cancel
-          </button>
-        </div>
-      </form>
-    );
   }
 
   // ── Render ─────────────────────────────────────────────────────────────────
