@@ -10,6 +10,7 @@ import {
 import { validatePromo, redeemPromo } from "@/lib/orders/promo";
 import { getSettings, type Settings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
+import { after } from "next/server";
 import { sendOrderNotifications } from "@/lib/notify";
 
 export class OrderError extends Error {
@@ -194,7 +195,7 @@ export async function placeOrder(
   }
 
   // Notify customer + restaurant (best-effort; never blocks the response).
-  void sendOrderNotifications(result.orderId).catch((e) => console.error("[notify] placeOrder:", e));
+  after(() => sendOrderNotifications(result.orderId).catch((e) => console.error("[notify] placeOrder:", e)));
 
   return result;
 }
@@ -311,7 +312,7 @@ export async function dispatchPaidOrder(args: {
   if (claimed.length === 0) return; // already processed by another delivery of this event
 
   // Notify customer + restaurant (best-effort; never blocks the response).
-  void sendOrderNotifications(args.orderId).catch((e) => console.error("[notify] dispatchPaidOrder:", e));
+  after(() => sendOrderNotifications(args.orderId).catch((e) => console.error("[notify] dispatchPaidOrder:", e)));
 
   // Redeem promo on confirmed payment (online path). Best-effort; non-fatal.
   if (args.promoCode) {
