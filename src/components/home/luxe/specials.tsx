@@ -171,30 +171,33 @@ export function Specials() {
                 {promos.map((promo) => (
                   <div
                     key={promo.code}
-                    className="rounded-2xl p-5 text-left"
-                    style={{ backgroundColor: luxe.surface, border: "1px solid rgba(201,162,75,0.18)" }}
+                    className="rounded-2xl p-5 text-left shadow-lg"
+                    style={{
+                      background: "linear-gradient(135deg, #B91C1C 0%, #7F1414 100%)",
+                      border: "1px solid rgba(255,255,255,0.18)",
+                    }}
                   >
-                    <p className="text-xl font-bold tracking-[0.18em] uppercase mb-2" style={{ color: luxe.gold }}>
+                    <p className="text-xl font-bold tracking-[0.18em] uppercase mb-2" style={{ color: "#FFFFFF" }}>
                       {promo.code}
                     </p>
-                    <p className="text-sm font-semibold mb-2" style={{ color: luxe.ink }}>
+                    <p className="text-sm font-semibold mb-2" style={{ color: "#FDE8E8" }}>
                       {promo.discountType === "percent" ? `${promo.discountValue}% off` : `$${promo.discountValue} off`}
                     </p>
                     {promo.description && (
-                      <p className="text-sm mb-2" style={{ color: luxe.muted }}>{promo.description}</p>
+                      <p className="text-sm mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>{promo.description}</p>
                     )}
                     {promo.minOrder && (
-                      <p className="text-xs mb-1" style={{ color: luxe.muted }}>Min ${promo.minOrder}</p>
+                      <p className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>Min ${promo.minOrder}</p>
                     )}
                     {promo.expiresAt && (
-                      <p className="text-xs mb-3" style={{ color: luxe.muted }}>
+                      <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.7)" }}>
                         Ends{" "}
                         {new Date(promo.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
                       </p>
                     )}
                     <p
                       className="text-[11px] uppercase tracking-wider mt-3 pt-3"
-                      style={{ color: luxe.muted, borderTop: `1px solid ${luxe.line}` }}
+                      style={{ color: "rgba(255,255,255,0.85)", borderTop: "1px solid rgba(255,255,255,0.25)" }}
                     >
                       Use your code at checkout.
                     </p>
