@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { ShoppingBag, X, Plus, Minus, Check } from "lucide-react";
 import { useCart } from "@/lib/preview-cart";
 import { useEffect, useState } from "react";
+import { PromoMarquee } from "./promo-marquee";
 
 const nav = [
   { href: "/", label: "Home" },
@@ -84,6 +85,8 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       </header>
+
+      <PromoMarquee />
 
       {children}
 
