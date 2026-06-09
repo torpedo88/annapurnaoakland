@@ -4,6 +4,7 @@ import { quoteDelivery } from "@/lib/doordash/client";
 import { priceOrder, cleanString, PricingError } from "@/lib/orders/pricing";
 import { getSettings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
+import { assertWithinDeliveryRadius, OutOfRangeError } from "@/lib/orders/geofence";
 
 export const runtime = "nodejs";
 
@@ -40,6 +41,19 @@ export async function POST(req: Request) {
     if (e instanceof MinOrderError) {
       return NextResponse.json(
         { error: `Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.` },
+        { status: 400 },
+      );
+    }
+    throw e;
+  }
+
+  // Geofence: reject addresses beyond the configured radius from the restaurant.
+  try {
+    await assertWithinDeliveryRadius(address, settings.delivery.maxRadiusMiles);
+  } catch (e) {
+    if (e instanceof OutOfRangeError) {
+      return NextResponse.json(
+        { error: `Sorry, that address is outside our ${e.maxMiles}-mile delivery range.` },
         { status: 400 },
       );
     }

@@ -10,6 +10,7 @@ import {
 import { validatePromo, redeemPromo } from "@/lib/orders/promo";
 import { getSettings, type Settings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
+import { assertWithinDeliveryRadius, OutOfRangeError } from "@/lib/orders/geofence";
 import { after } from "next/server";
 import { sendOrderNotifications } from "@/lib/notify";
 
@@ -122,6 +123,15 @@ export async function placeOrder(
     } catch (e) {
       if (e instanceof MinOrderError) {
         throw new OrderError(`Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.`, 400);
+      }
+      throw e;
+    }
+    // Geofence: server-authoritative radius check (client cannot bypass).
+    try {
+      await assertWithinDeliveryRadius(cleanString(input.address, 200), settings.delivery.maxRadiusMiles);
+    } catch (e) {
+      if (e instanceof OutOfRangeError) {
+        throw new OrderError(`Sorry, that address is outside our ${e.maxMiles}-mile delivery range.`, 400);
       }
       throw e;
     }
@@ -240,6 +250,13 @@ export async function createPendingOrder(
     try { assertDeliverable({ subtotalCents }, settings.delivery); }
     catch (e) {
       if (e instanceof MinOrderError) throw new OrderError(`Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.`, 400);
+      throw e;
+    }
+    // Geofence: server-authoritative radius check (client cannot bypass).
+    try {
+      await assertWithinDeliveryRadius(cleanString(input.address, 200), settings.delivery.maxRadiusMiles);
+    } catch (e) {
+      if (e instanceof OutOfRangeError) throw new OrderError(`Sorry, that address is outside our ${e.maxMiles}-mile delivery range.`, 400);
       throw e;
     }
     if (settings.delivery.dispatchMode === "self") {

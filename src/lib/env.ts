@@ -19,6 +19,7 @@ export const env = {
     pickupPhone: required("RESTAURANT_PICKUP_PHONE"),
   }),
   baseUrl: () => process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
+  geocoding: () => ({ apiKey: process.env.GOOGLE_GEOCODING_API_KEY ?? "" }),
   staffSessionSecret: () => required("STAFF_SESSION_SECRET"),
   stripe: () => ({
     secretKey: required("STRIPE_SECRET_KEY"),
