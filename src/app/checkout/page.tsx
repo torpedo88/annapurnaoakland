@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "@/lib/preview-cart";
+import { AddressAutocomplete } from "@/components/checkout/address-autocomplete";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -31,7 +32,8 @@ export default function CheckoutPage() {
   const { lines, subtotal, tax } = useCart();
 
   const [fulfillment, setFulfillment] = useState<Fulfillment>("pickup");
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
@@ -223,8 +225,8 @@ export default function CheckoutPage() {
     e.preventDefault();
     setError(null);
     setDeliveryNotice(null);
-    if (!name.trim() || !phone.trim()) {
-      setError("Name and phone are required.");
+    if (!firstName.trim() || !lastName.trim() || !phone.trim()) {
+      setError("First name, last name, and phone are required.");
       return;
     }
     if (fulfillment === "delivery" && !address.trim()) {
@@ -238,7 +240,9 @@ export default function CheckoutPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name: name.trim(),
+          firstName: firstName.trim(),
+          lastName: lastName.trim(),
+          name: `${firstName.trim()} ${lastName.trim()}`.trim(),
           phone: phone.trim(),
           email: email.trim(),
           fulfillment,
@@ -325,12 +329,28 @@ export default function CheckoutPage() {
             {/* Contact */}
             <div>
               <h2 className="text-lg font-bold mb-3" style={{ color: "#F3E9D6" }}>Who&apos;s this for?</h2>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <Field label="Full name *" value={name} onChange={setName} placeholder="Your name" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="First name *" value={firstName} onChange={setFirstName} placeholder="First name" />
+                <Field label="Last name *" value={lastName} onChange={setLastName} placeholder="Last name" />
                 <Field label="Phone *" value={phone} onChange={setPhone} placeholder="(510) 555-0199" type="tel" />
-                <Field label="Email (for receipt)" value={email} onChange={setEmail} placeholder="you@email.com" type="email" full />
+                <Field label="Email (for receipt)" value={email} onChange={setEmail} placeholder="you@email.com" type="email" />
                 {fulfillment === "delivery" && (
-                  <Field label="Delivery address *" value={address} onChange={setAddress} placeholder="Street, Apt, City" full />
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "#8A8276" }}>
+                      Delivery address *
+                    </label>
+                    <AddressAutocomplete
+                      value={address}
+                      onChange={setAddress}
+                      placeholder="Start typing your address…"
+                      className="w-full rounded-full px-5 py-3 text-sm focus:outline-none transition"
+                      style={{
+                        backgroundColor: "#1C1712",
+                        border: "1px solid rgba(201,162,75,0.2)",
+                        color: "#F3E9D6",
+                      }}
+                    />
+                  </div>
                 )}
                 <div className="sm:col-span-2">
                   <label className="block text-xs font-semibold uppercase tracking-wider mb-1.5" style={{ color: "#8A8276" }}>

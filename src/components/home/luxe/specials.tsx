@@ -6,15 +6,6 @@ import { luxe } from "@/lib/theme";
 import { useCart } from "@/lib/preview-cart";
 import type { MenuItem } from "@/data/menu";
 
-interface Promo {
-  code: string;
-  description: string | null;
-  discountType: "percent" | "fixed";
-  discountValue: string;
-  minOrder: string | null;
-  expiresAt: string | null;
-}
-
 interface DishOfDay {
   id: string;
   name: string;
@@ -27,21 +18,17 @@ interface DishOfDay {
 
 export function Specials() {
   const { add } = useCart();
-  const [promos, setPromos] = useState<Promo[]>([]);
   const [dish, setDish] = useState<DishOfDay | null>(null);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
-    Promise.all([
-      fetch("/api/promos/active").then((r) => r.json()) as Promise<{ promos: Promo[] }>,
-      fetch("/api/settings/public").then((r) => r.json()) as Promise<{ dish_of_day: DishOfDay | null }>,
-    ]).then(([promosData, settingsData]) => {
-      setPromos(promosData.promos ?? []);
-      setDish(settingsData.dish_of_day ?? null);
-      setLoaded(true);
-    }).catch(() => {
-      setLoaded(true);
-    });
+    fetch("/api/settings/public")
+      .then((r) => (r.ok ? r.json() : null))
+      .then((settingsData: { dish_of_day: DishOfDay | null } | null) => {
+        setDish(settingsData?.dish_of_day ?? null);
+        setLoaded(true);
+      })
+      .catch(() => setLoaded(true));
   }, []);
 
   // Add the dish of the day to the cart. Cart holds the full price; the
@@ -63,7 +50,7 @@ export function Specials() {
   }
 
   if (!loaded) return null;
-  if (!dish && promos.length === 0) return null;
+  if (!dish) return null;
 
   return (
     <section className="py-16" style={{ borderTop: `1px solid ${luxe.line}` }}>
@@ -154,55 +141,6 @@ export function Specials() {
                     View menu
                   </Link>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* ── Current Offers — promo banners ── */}
-          {promos.length > 0 && (
-            <div className="w-full max-w-5xl">
-              <h2
-                className="text-2xl mb-6 text-center"
-                style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: luxe.ink }}
-              >
-                Current offers
-              </h2>
-              <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                {promos.map((promo) => (
-                  <div
-                    key={promo.code}
-                    className="rounded-2xl p-5 text-left shadow-lg"
-                    style={{
-                      background: "linear-gradient(135deg, #B91C1C 0%, #7F1414 100%)",
-                      border: "1px solid rgba(255,255,255,0.18)",
-                    }}
-                  >
-                    <p className="text-xl font-bold tracking-[0.18em] uppercase mb-2" style={{ color: "#FFFFFF" }}>
-                      {promo.code}
-                    </p>
-                    <p className="text-sm font-semibold mb-2" style={{ color: "#FDE8E8" }}>
-                      {promo.discountType === "percent" ? `${promo.discountValue}% off` : `$${promo.discountValue} off`}
-                    </p>
-                    {promo.description && (
-                      <p className="text-sm mb-2" style={{ color: "rgba(255,255,255,0.85)" }}>{promo.description}</p>
-                    )}
-                    {promo.minOrder && (
-                      <p className="text-xs mb-1" style={{ color: "rgba(255,255,255,0.7)" }}>Min ${promo.minOrder}</p>
-                    )}
-                    {promo.expiresAt && (
-                      <p className="text-xs mb-3" style={{ color: "rgba(255,255,255,0.7)" }}>
-                        Ends{" "}
-                        {new Date(promo.expiresAt).toLocaleDateString(undefined, { month: "short", day: "numeric", year: "numeric" })}
-                      </p>
-                    )}
-                    <p
-                      className="text-[11px] uppercase tracking-wider mt-3 pt-3"
-                      style={{ color: "rgba(255,255,255,0.85)", borderTop: "1px solid rgba(255,255,255,0.25)" }}
-                    >
-                      Use your code at checkout.
-                    </p>
-                  </div>
-                ))}
               </div>
             </div>
           )}

@@ -81,9 +81,13 @@ export async function POST(req: Request) {
     payMethodRaw === "cash" || payMethodRaw === "card" || payMethodRaw === "online" ? payMethodRaw : null;
   const paymentStatus: "paid" | "unpaid" = body?.payment_status === "paid" ? "paid" : "unpaid";
 
+  const firstName = typeof body.firstName === "string" ? body.firstName.trim() : "";
+  const lastName = typeof body.lastName === "string" ? body.lastName.trim() : "";
+  const composedName = `${firstName} ${lastName}`.trim() || (typeof body.name === "string" ? body.name : "");
+
   try {
     const { orderId } = await placeOrder({
-      name: body.name, phone: body.phone, email: body.email,
+      name: composedName, firstName, lastName, phone: body.phone, email: body.email,
       fulfillment,
       address: body.address,
       items: (body?.items as { id: unknown; qty: unknown }[]) ?? [],

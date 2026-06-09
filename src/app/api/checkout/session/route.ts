@@ -35,10 +35,14 @@ export async function POST(req: Request) {
 
   const fulfillment = body?.fulfillment === "delivery" ? "delivery" : "pickup";
 
+  const firstName = typeof body.firstName === "string" ? body.firstName.trim() : "";
+  const lastName = typeof body.lastName === "string" ? body.lastName.trim() : "";
+  const composedName = `${firstName} ${lastName}`.trim() || (typeof body.name === "string" ? body.name : "");
+
   let pending;
   try {
     pending = await createPendingOrder({
-      name: body.name, phone: body.phone, email: body.email,
+      name: composedName, firstName, lastName, phone: body.phone, email: body.email,
       fulfillment, address: body.address,
       items: (body?.items as { id: unknown; qty: unknown }[]) ?? [],
       tipCents: toCents(Number(body?.tip) || 0),

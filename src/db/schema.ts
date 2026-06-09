@@ -78,6 +78,8 @@ export const orders = pgTable("orders", {
   orderNumber: serial("order_number"),
   customerId: uuid("customer_id").references(() => customers.id),
   customerName: text("customer_name"),
+  firstName: text("first_name"),
+  lastName: text("last_name"),
   customerEmail: text("customer_email"),
   customerPhone: text("customer_phone"),
   orderType: text("order_type"),

@@ -7,7 +7,8 @@ type Line = { id: string; qty: number };
 
 export function ManualOrderForm({ onCreated, onClose }: { onCreated: () => void; onClose: () => void }) {
   const [lines, setLines] = useState<Line[]>([]);
-  const [name, setName] = useState("");
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");
   const [fulfillment, setFulfillment] = useState<"pickup" | "delivery">("pickup");
   const [address, setAddress] = useState("");
@@ -38,7 +39,8 @@ export function ManualOrderForm({ onCreated, onClose }: { onCreated: () => void;
       const res = await fetch("/api/admin/orders", {
         method: "POST", headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          name, phone, email: "", fulfillment, address, items: lines,
+          firstName, lastName, name: `${firstName} ${lastName}`.trim(),
+          phone, email: "", fulfillment, address, items: lines,
           externalDeliveryId,
           payment_status: paid ? "paid" : "unpaid",
           payment_method: paid ? method : null,
@@ -65,7 +67,10 @@ export function ManualOrderForm({ onCreated, onClose }: { onCreated: () => void;
         <button onClick={onClose} style={{ color: "#8A8276" }}>✕</button>
       </div>
       {err && <p className="mb-2 text-sm" style={{ color: "#FCA5A5" }}>{err}</p>}
-      <input className={input} style={inputStyle} placeholder="Customer name" value={name} onChange={(e) => setName(e.target.value)} />
+      <div className="flex gap-2">
+        <input className={input} style={inputStyle} placeholder="First name" value={firstName} onChange={(e) => setFirstName(e.target.value)} />
+        <input className={input} style={inputStyle} placeholder="Last name" value={lastName} onChange={(e) => setLastName(e.target.value)} />
+      </div>
       <input className={input} style={inputStyle} placeholder="Phone" value={phone} onChange={(e) => setPhone(e.target.value)} />
       <div className="flex gap-2 mb-2">
         {(["pickup", "delivery"] as const).map((f) => (
@@ -102,7 +107,7 @@ export function ManualOrderForm({ onCreated, onClose }: { onCreated: () => void;
           </select>
         )}
       </label>
-      <button disabled={submitting || lines.length === 0 || !name || !phone || (fulfillment === "delivery" && !address)}
+      <button disabled={submitting || lines.length === 0 || !firstName || !lastName || !phone || (fulfillment === "delivery" && !address)}
         onClick={submit} className="px-5 py-2.5 rounded-full font-bold disabled:opacity-50"
         style={{ backgroundColor: "#C9A24B", color: "#14100D" }}>
         {submitting ? "Creating…" : fulfillment === "delivery" ? "Quote + dispatch delivery" : "Create order"}

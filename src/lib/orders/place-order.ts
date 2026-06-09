@@ -21,7 +21,7 @@ export class OrderError extends Error {
 }
 
 export interface PlaceOrderInput {
-  name: unknown; phone: unknown; email: unknown;
+  name: unknown; firstName?: unknown; lastName?: unknown; phone: unknown; email: unknown;
   fulfillment: "pickup" | "delivery";
   address?: unknown;
   items: { id: unknown; qty: unknown; spiceLevel?: unknown }[];
@@ -156,7 +156,8 @@ export async function placeOrder(
   let result: { orderId: string; accessToken: string };
   try {
     result = await createOrder({
-      name: input.name, phone: input.phone, email: input.email,
+      name: input.name, firstName: input.firstName, lastName: input.lastName,
+      phone: input.phone, email: input.email,
       fulfillment: input.fulfillment, address: input.address,
       items: input.items, tipCents: input.tipCents, deliveryFeeCents,
       discountCents,
@@ -269,7 +270,8 @@ export async function createPendingOrder(
   const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings);
 
   const { orderId, accessToken } = await createOrder({
-    name: input.name, phone: input.phone, email: input.email,
+    name: input.name, firstName: input.firstName, lastName: input.lastName,
+    phone: input.phone, email: input.email,
     fulfillment: input.fulfillment, address: input.address,
     items: input.items, tipCents: input.tipCents, deliveryFeeCents,
     discountCents,

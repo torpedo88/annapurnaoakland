@@ -12,6 +12,8 @@ import { getSettings } from "@/lib/settings";
 
 export interface NewOrderInput {
   name: unknown;
+  firstName?: unknown;
+  lastName?: unknown;
   phone: unknown;
   email: unknown;
   fulfillment: "pickup" | "delivery";
@@ -36,6 +38,8 @@ export async function createOrder(
   input: NewOrderInput,
 ): Promise<{ orderId: string; accessToken: string }> {
   const contact = validateContact(input);
+  const firstName = cleanString(input.firstName, 60) || null;
+  const lastName = cleanString(input.lastName, 60) || null;
   const settings = await getSettings();
   const totals = priceOrder(input.items, {
     tipCents: input.tipCents,
@@ -52,6 +56,8 @@ export async function createOrder(
       .insert(orders)
       .values({
         customerName: contact.name,
+        firstName,
+        lastName,
         customerEmail: contact.email || null,
         customerPhone: contact.phone,
         orderType: input.fulfillment,
