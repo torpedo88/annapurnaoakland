@@ -17,9 +17,10 @@ export type AdminOrder = {
   tip: string | null;
   deliveryFee: string | null;
   total: string | null;
+  refundedTotal: string | null;
   deliveryAddress: string | null;
   createdAt: string;
-  items: { id: string; itemName: string | null; quantity: number | null; spiceLevel?: string | null }[];
+  items: { id: string; itemName: string | null; itemPrice: string | null; quantity: number | null; spiceLevel?: string | null }[];
   delivery: { trackingUrl: string | null; status: string | null } | null;
   selfDelivery?: boolean;
 };
@@ -82,9 +83,14 @@ export function OrderCard({
           </button>
         ))}
       </div>
-      <div className="flex items-center gap-2 mt-3 text-xs" style={{ color: "#8A8276" }}>
-        <span>Payment: {order.paymentStatus}{order.paymentMethod ? ` (${order.paymentMethod})` : ""}</span>
-        {order.paymentStatus !== "paid" && (
+      <div className="flex items-center flex-wrap gap-2 mt-3 text-xs" style={{ color: "#8A8276" }}>
+        <span>
+          Payment: {order.paymentStatus}{order.paymentMethod ? ` (${order.paymentMethod})` : ""}
+          {Number(order.refundedTotal ?? 0) > 0 && (
+            <span style={{ color: "#E0807A" }}> · refunded ${Number(order.refundedTotal).toFixed(2)}</span>
+          )}
+        </span>
+        {order.paymentStatus !== "paid" && order.paymentStatus !== "partially_refunded" && order.paymentStatus !== "refunded" && (
           <>
             <button disabled={busy} onClick={() => onPayment(order.id, { payment_status: "paid", payment_method: "cash" })}
               className="px-2 py-1 rounded" style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#C9A24B" }}>Paid · cash</button>
@@ -92,10 +98,10 @@ export function OrderCard({
               className="px-2 py-1 rounded" style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#C9A24B" }}>Paid · card</button>
           </>
         )}
-        {order.paymentStatus === "paid" && (
-          <button disabled={busy} onClick={() => { if (confirm("Refund this order? This cannot be undone.")) onRefund(order.id); }}
+        {(order.paymentStatus === "paid" || order.paymentStatus === "partially_refunded") && order.paymentMethod === "online" && (
+          <button disabled={busy} onClick={() => onRefund(order.id)}
             className="px-2 py-1 rounded" style={{ border: "1px solid rgba(220,38,38,0.4)", color: "#E0807A" }}>
-            Refund
+            {order.paymentStatus === "partially_refunded" ? "Refund more" : "Refund"}
           </button>
         )}
       </div>

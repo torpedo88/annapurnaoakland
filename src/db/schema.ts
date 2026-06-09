@@ -95,6 +95,9 @@ export const orders = pgTable("orders", {
   deliveryFee: decimal("delivery_fee", { precision: 10, scale: 2 }).default("0"),
   discount: decimal("discount", { precision: 10, scale: 2 }).default("0"),
   total: decimal("total", { precision: 10, scale: 2 }),
+  // Running total refunded (dollars). paymentStatus becomes partially_refunded
+  // or refunded as this grows toward `total`.
+  refundedTotal: decimal("refunded_total", { precision: 10, scale: 2 }).default("0"),
   loyaltyPointsEarned: integer("loyalty_points_earned"),
   loyaltyPointsRedeemed: integer("loyalty_points_redeemed"),
   stripePaymentIntentId: text("stripe_payment_intent_id"),
@@ -120,6 +123,22 @@ export const orderItems = pgTable("order_items", {
   riceChoice: text("rice_choice"),
   specialInstructions: text("special_instructions"),
   traySize: text("tray_size"),
+  createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
+});
+
+// ─── Order Refunds ───────────────────────────────────────────────────────────────
+// One row per refund action (full, partial-amount, or itemized). The order's
+// running refundedTotal is the sum of these.
+export const orderRefunds = pgTable("order_refunds", {
+  id: uuid("id").primaryKey().default(genUuid()),
+  orderId: uuid("order_id")
+    .notNull()
+    .references(() => orders.id, { onDelete: "cascade" }),
+  amountCents: integer("amount_cents").notNull(),
+  reason: text("reason"),
+  // [{ orderItemId, itemName, quantity, amountCents }] for itemized refunds; null otherwise.
+  items: jsonb("items"),
+  stripeRefundId: text("stripe_refund_id"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
 });
 

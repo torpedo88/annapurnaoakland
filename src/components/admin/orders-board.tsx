@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { OrderCard, type AdminOrder } from "./order-card";
 import { ManualOrderForm } from "./manual-order-form";
+import { RefundModal } from "./refund-modal";
 
 type Lane = "active" | "completed" | "cancelled";
 const SOUND_KEY = "annapurna:admin:sound";
@@ -29,6 +30,7 @@ export function OrdersBoard() {
   const [busyId, setBusyId] = useState<string | null>(null);
   const [soundOn, setSoundOn] = useState(false);
   const [showForm, setShowForm] = useState(false);
+  const [refunding, setRefunding] = useState<AdminOrder | null>(null);
   const seenRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
 
@@ -79,11 +81,9 @@ export function OrdersBoard() {
     setBusyId(null);
     load(lane);
   };
-  const refund = async (id: string) => {
-    setBusyId(id);
-    await fetch(`/api/admin/orders/${id}/refund`, { method: "POST" });
-    setBusyId(null);
-    load(lane);
+  const openRefund = (id: string) => {
+    const o = orders.find((x) => x.id === id);
+    if (o) setRefunding(o);
   };
   const toggleSound = () => {
     const next = !soundOn;
@@ -118,8 +118,11 @@ export function OrdersBoard() {
       )}
       {orders.length === 0 && <p style={{ color: "#8A8276" }}>No orders in this lane.</p>}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={refund} />
+        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={openRefund} />
       ))}
+      {refunding && (
+        <RefundModal order={refunding} onClose={() => setRefunding(null)} onDone={() => load(lane)} />
+      )}
     </div>
   );
 }

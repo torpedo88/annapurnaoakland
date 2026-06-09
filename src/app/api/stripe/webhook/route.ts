@@ -33,11 +33,20 @@ export async function POST(req: Request) {
         }
       }
     } else if (event.type === "charge.refunded") {
+      // Fires on every refund (full OR partial), including ones issued from the
+      // Stripe dashboard. Reconcile against Stripe's authoritative amounts so a
+      // partial refund is recorded as partially_refunded, not fully refunded.
       const charge = event.data.object;
       const pi = typeof charge.payment_intent === "string" ? charge.payment_intent : null;
       if (pi) {
-        await db.update(orders).set({ paymentStatus: "refunded", updatedAt: new Date() })
-          .where(eq(orders.stripePaymentIntentId, pi));
+        const amount = charge.amount ?? 0;
+        const amountRefunded = charge.amount_refunded ?? 0;
+        const fully = amount > 0 && amountRefunded >= amount;
+        await db.update(orders).set({
+          paymentStatus: fully ? "refunded" : "partially_refunded",
+          refundedTotal: (amountRefunded / 100).toFixed(2),
+          updatedAt: new Date(),
+        }).where(eq(orders.stripePaymentIntentId, pi));
       }
     }
   } catch (e) {
