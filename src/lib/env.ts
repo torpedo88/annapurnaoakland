@@ -29,9 +29,9 @@ export const env = {
     url: required("NEXT_PUBLIC_SUPABASE_URL"),
     serviceKey: required("SUPABASE_SERVICE_ROLE_KEY"),
   }),
-  resend: () => ({
-    apiKey: process.env.RESEND_API_KEY ?? "",
-    from: process.env.EMAIL_FROM ?? "Annapurna <onboarding@resend.dev>",
+  sendgrid: () => ({
+    apiKey: process.env.SENDGRID_API_KEY ?? "",
+    from: process.env.EMAIL_FROM ?? "Annapurna Oakland <orders@annapurnaoakland.com>",
     restaurantEmail: process.env.RESTAURANT_NOTIFY_EMAIL ?? "",
   }),
   twilio: () => ({

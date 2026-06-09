@@ -7,7 +7,14 @@ import { env } from "@/lib/env";
 // ─── Feature gates ────────────────────────────────────────────────────────────
 
 function isEmailEnabled(): boolean {
-  return Boolean(env.resend().apiKey);
+  return Boolean(env.sendgrid().apiKey);
+}
+
+/** Parse an EMAIL_FROM like `Annapurna Oakland <orders@x.com>` into SendGrid's shape. */
+function parseFrom(s: string): { email: string; name?: string } {
+  const m = s.match(/^\s*(.*?)\s*<([^>]+)>\s*$/);
+  if (m && m[2]) return { email: m[2].trim(), name: m[1]?.trim() || undefined };
+  return { email: s.trim() };
 }
 
 function isSmsEnabled(): boolean {
@@ -228,16 +235,17 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
 
   const trackingUrl = `${env.baseUrl()}/order/${order.id}?t=${order.accessToken}`;
   const fulfillment = fulfillmentLabel(order as OrderRow);
-  const resendCfg = env.resend();
+  const emailCfg = env.sendgrid();
+  const from = parseFrom(emailCfg.from);
   const twilCfg = env.twilio();
 
   // ── Customer email ────────────────────────────────────────────────────────
   if (isEmailEnabled() && order.customerEmail) {
     try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(resendCfg.apiKey);
-      await resend.emails.send({
-        from: resendCfg.from,
+      const sg = (await import("@sendgrid/mail")).default;
+      sg.setApiKey(emailCfg.apiKey);
+      await sg.send({
+        from,
         to: order.customerEmail,
         subject: `Annapurna — order #${order.orderNumber} confirmed`,
         html: buildCustomerHtml(order as OrderRow, items, trackingUrl),
@@ -248,13 +256,13 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
   }
 
   // ── Restaurant email ──────────────────────────────────────────────────────
-  if (isEmailEnabled() && resendCfg.restaurantEmail) {
+  if (isEmailEnabled() && emailCfg.restaurantEmail) {
     try {
-      const { Resend } = await import("resend");
-      const resend = new Resend(resendCfg.apiKey);
-      await resend.emails.send({
-        from: resendCfg.from,
-        to: resendCfg.restaurantEmail,
+      const sg = (await import("@sendgrid/mail")).default;
+      sg.setApiKey(emailCfg.apiKey);
+      await sg.send({
+        from,
+        to: emailCfg.restaurantEmail,
         subject: `New order #${order.orderNumber} — ${fulfillment}`,
         html: buildRestaurantHtml(order as OrderRow, items),
       });
