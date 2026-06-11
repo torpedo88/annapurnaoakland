@@ -160,9 +160,21 @@ export default function MenuPage() {
           </span>
         </div>
 
-        {/* Category pills */}
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-10 pb-6">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 -mx-6 px-6 lg:-mx-10 lg:px-10">
+      </section>
+
+      {/* ─── Sticky category filter — pinned under the site header so customers
+              can switch food types while scrolling the long menu ─── */}
+      <div
+        className="sticky top-20 z-20"
+        style={{
+          backgroundColor: "rgba(20,16,13,0.92)",
+          borderBottom: "1px solid rgba(201,162,75,0.15)",
+          backdropFilter: "blur(8px)",
+          WebkitBackdropFilter: "blur(8px)",
+        }}
+      >
+        <div className="mx-auto max-w-7xl px-6 lg:px-10 py-3">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6 lg:-mx-10 lg:px-10">
             <button
               onClick={() => setActiveCat(null)}
               className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition"
@@ -194,7 +206,7 @@ export default function MenuPage() {
             ))}
           </div>
         </div>
-      </section>
+      </div>
 
       {/* ─── Menu grid ────────────────────────────────── */}
       <section className="py-10 lg:py-14">
@@ -222,7 +234,7 @@ export default function MenuPage() {
             </div>
           ) : (
             grouped.map((g) => (
-              <div key={g.slug} id={`cat-${g.slug}`} className="scroll-mt-28">
+              <div key={g.slug} id={`cat-${g.slug}`} className="scroll-mt-36">
                 <div className="flex items-baseline justify-between mb-6">
                   <h2
                     className="text-3xl lg:text-4xl leading-none tracking-tight"
