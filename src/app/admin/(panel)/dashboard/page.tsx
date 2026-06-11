@@ -3,6 +3,7 @@ import { sql, and, gte, eq, desc } from "drizzle-orm";
 import { getSession } from "@/lib/auth/session";
 import { db } from "@/db";
 import { orders, orderItems } from "@/db/schema";
+import { DashboardCharts } from "./dashboard-charts";
 
 export const dynamic = "force-dynamic";
 
@@ -132,6 +133,33 @@ export default async function DashboardPage() {
 
   const statusRows = todayByStatus.filter((r) => (r.count ?? 0) > 0);
 
+  // ─── Chart data: 30-day daily revenue/orders series + order-type split ────
+  const dailyRows = (await db.execute(sql`
+    SELECT to_char(d::date, 'YYYY-MM-DD') AS day,
+           coalesce(count(o.id), 0)::int AS orders,
+           coalesce(sum(o.total) filter (where o.payment_status = 'paid'), 0)::float8 AS revenue
+    FROM generate_series(
+      (date_trunc('day', now() AT TIME ZONE 'America/Los_Angeles') - interval '29 days'),
+      date_trunc('day', now() AT TIME ZONE 'America/Los_Angeles'),
+      interval '1 day'
+    ) d
+    LEFT JOIN orders o
+      ON (o.created_at AT TIME ZONE 'America/Los_Angeles')::date = d::date
+    GROUP BY d
+    ORDER BY d
+  `)) as unknown as { day: string; orders: number; revenue: number }[];
+  const daily = dailyRows.map((r) => ({ day: r.day, orders: Number(r.orders), revenue: Number(r.revenue) }));
+
+  const typeRows = (await db.execute(sql`
+    SELECT coalesce(order_type, 'pickup') AS type, count(*)::int AS count
+    FROM orders
+    WHERE created_at >= now() - interval '30 days'
+    GROUP BY order_type
+  `)) as unknown as { type: string; count: number }[];
+  const typeSplit = typeRows.map((r) => ({ type: r.type === "delivery" ? "Delivery" : "Pickup", count: Number(r.count) }));
+
+  const topItemsChart = topItems.map((t) => ({ name: t.itemName ?? "—", qty: Number(t.qty) }));
+
   return (
     <div style={{ background: PAGE_BG, minHeight: "100%", padding: "24px" }}>
       <h1
@@ -153,6 +181,9 @@ export default async function DashboardPage() {
         <StatCard label="All-Time Orders" value={String(allTime.count)} hint="every order" />
         <StatCard label="All-Time Revenue" value={money(allTime.revenue)} hint="paid orders" accent />
       </div>
+
+      {/* ─── Charts: trends + market mix ───────────────────────────────── */}
+      <DashboardCharts daily={daily} typeSplit={typeSplit} topItems={topItemsChart} />
 
       {/* ─── Today by status + Top items ───────────────────────────────── */}
       <div className="grid lg:grid-cols-2 gap-4" style={{ marginTop: 16 }}>
