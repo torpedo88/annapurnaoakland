@@ -301,3 +301,77 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
     }
   }
 }
+
+// ─── Status updates (email) ─────────────────────────────────────────────────────
+
+interface StatusInfo { short: string; heading: string; body: string }
+
+/** Customer-facing copy per status. Returns null for statuses we don't email about. */
+function statusEmailContent(status: string, orderType: string | null): StatusInfo | null {
+  const delivery = orderType === "delivery";
+  switch (status) {
+    case "preparing":
+      return { short: "Preparing", heading: "We're preparing your order", body: "Our kitchen is on it — we'll let you know the moment it's ready." };
+    case "ready":
+      return delivery
+        ? { short: "Ready", heading: "Your order is ready", body: "It's packed and about to head out for delivery." }
+        : { short: "Ready for pickup", heading: "Your order is ready for pickup", body: "Come grab it at 948 Clay Street, Oakland. See you soon!" };
+    case "courier_picked_up":
+    case "out_for_delivery":
+    case "en_route":
+      return { short: "Out for delivery", heading: "Your order is on the way", body: "Your driver is heading to you now — track it below." };
+    case "delivered":
+      return { short: "Delivered", heading: "Delivered — enjoy!", body: "Your order has been delivered. Thank you for ordering from Annapurna." };
+    case "completed":
+      return { short: "Completed", heading: "Thanks for your order", body: "Hope you enjoyed it. We'd love to see you again soon." };
+    case "cancelled":
+      return { short: "Cancelled", heading: "Your order was cancelled", body: "If this is unexpected, please call the restaurant." };
+    default:
+      return null; // received / pending_payment / unknown — no status email
+  }
+}
+
+function buildStatusHtml(order: OrderRow, info: StatusInfo, trackingUrl: string): string {
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><title>Order update</title></head>
+<body style="font-family:sans-serif;color:#111;background:#fff;margin:0;padding:0">
+  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:32px auto;padding:0 16px"><tr><td>
+    <h1 style="font-size:22px;margin-bottom:4px">Annapurna Oakland</h1>
+    <h2 style="font-size:16px;font-weight:normal;margin-top:0;color:#444">Order #${order.orderNumber} · ${esc(info.short)}</h2>
+    <p style="font-size:19px;font-weight:bold;margin:18px 0 6px">${esc(info.heading)}</p>
+    <p style="margin:0 0 22px;color:#444">${esc(info.body)}</p>
+    <p style="margin:24px 0">
+      <a href="${trackingUrl}" style="background:#C9A24B;color:#14100D;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:bold">Track your order</a>
+    </p>
+    <p style="color:#888;font-size:12px;margin-top:32px">Annapurna Oakland · 948 Clay Street, Oakland, CA 94607</p>
+  </td></tr></table>
+</body></html>`;
+}
+
+/**
+ * Emails the customer when their order status changes. Best-effort; never throws.
+ * No-op for non-customer-facing statuses or when email isn't configured.
+ */
+export async function sendOrderStatusUpdate(orderId: string, status: string): Promise<void> {
+  if (!isEmailEnabled()) return;
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order || !order.customerEmail) return;
+  const info = statusEmailContent(status, order.orderType);
+  if (!info) return;
+
+  const trackingUrl = `${env.baseUrl()}/order/${order.id}?t=${order.accessToken}`;
+  const emailCfg = env.sendgrid();
+  const from = parseFrom(emailCfg.from);
+  try {
+    const sg = (await import("@sendgrid/mail")).default;
+    sg.setApiKey(emailCfg.apiKey);
+    await sg.send({
+      from,
+      to: order.customerEmail,
+      subject: `Annapurna — order #${order.orderNumber}: ${info.short}`,
+      html: buildStatusHtml(order as OrderRow, info, trackingUrl),
+    });
+  } catch (e) {
+    console.error("[notify] status email failed for order", orderId, e);
+  }
+}
