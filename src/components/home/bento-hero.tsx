@@ -37,31 +37,41 @@ const dishItems = DISH_IDS.map((id) => dish(id)).filter(
   (m): m is NonNullable<typeof m> => Boolean(m),
 );
 
-const videoItem: Omit<MediaItemType, "span"> = {
-  id: 999,
+const tandoorVideo: Omit<MediaItemType, "span"> = {
+  id: 901,
   type: "video",
   title: "Live tandoor",
   desc: "650°C clay oven, fired since 2010.",
   url: "/video/live-tandoor.mp4",
 };
 
+const kitchenVideo: Omit<MediaItemType, "span"> = {
+  id: 902,
+  type: "video",
+  title: "Annapurna, Oakland",
+  desc: "Dine in · pickup · delivery.",
+  url: "/video/hero-clip.mp4",
+};
+
+const dishMedia: Omit<MediaItemType, "span">[] = dishItems.map((m, i) => ({
+  id: i + 1,
+  type: "image",
+  title: m.name,
+  desc: m.description,
+  url: m.image,
+}));
+
+// 7 tiles: 5 dishes + 2 videos, arranged for the bento mosaic. The portrait
+// kitchen clip sits in a tall slot (SPANS[4] is row-span-3 on desktop).
 const ordered: Omit<MediaItemType, "span">[] = [
-  ...dishItems.slice(0, 1).map((m, i) => ({
-    id: i + 1,
-    type: "image",
-    title: m.name,
-    desc: m.description,
-    url: m.image,
-  })),
-  videoItem,
-  ...dishItems.slice(1).map((m, i) => ({
-    id: i + 2,
-    type: "image",
-    title: m.name,
-    desc: m.description,
-    url: m.image,
-  })),
-];
+  dishMedia[0],
+  tandoorVideo,
+  dishMedia[1],
+  dishMedia[2],
+  kitchenVideo,
+  dishMedia[3],
+  dishMedia[4],
+].filter(Boolean) as Omit<MediaItemType, "span">[];
 
 const mediaItems: MediaItemType[] = ordered
   .slice(0, SPANS.length)

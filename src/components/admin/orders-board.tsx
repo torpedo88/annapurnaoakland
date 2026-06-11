@@ -8,20 +8,42 @@ import { RefundModal } from "./refund-modal";
 type Lane = "active" | "completed" | "cancelled";
 const SOUND_KEY = "annapurna:admin:sound";
 
+// Loud two-note chime for new orders (much louder than the old single beep).
 function beep() {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new Ctx();
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.value = 880;
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    gain.gain.setValueAtTime(0.15, ctx.currentTime);
-    osc.start();
-    osc.stop(ctx.currentTime + 0.18);
-    osc.onended = () => ctx.close();
+    const note = (freq: number, start: number, dur: number) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = "sine";
+      osc.frequency.value = freq;
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      const t = ctx.currentTime + start;
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.exponentialRampToValueAtTime(0.8, t + 0.02);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+      osc.start(t);
+      osc.stop(t + dur + 0.02);
+    };
+    note(880, 0, 0.22);
+    note(1175, 0.16, 0.3);
+    setTimeout(() => ctx.close(), 900);
   } catch { /* audio not available */ }
+}
+
+// Spoken announcement so staff hear the order type across the kitchen.
+function announce(text: string) {
+  try {
+    if (typeof window === "undefined" || !("speechSynthesis" in window)) return;
+    const u = new SpeechSynthesisUtterance(text);
+    u.volume = 1;
+    u.rate = 1;
+    u.pitch = 1;
+    window.speechSynthesis.cancel();
+    window.speechSynthesis.speak(u);
+  } catch { /* TTS not available */ }
 }
 
 export function OrdersBoard() {
@@ -48,9 +70,23 @@ export function OrdersBoard() {
     const data = (await res.json()) as { orders: AdminOrder[] };
     if (l === "active") {
       const incoming = data.orders.filter((o) => o.status === "received");
-      const fresh = incoming.some((o) => !seenRef.current.has(o.id));
+      const freshOrders = incoming.filter((o) => !seenRef.current.has(o.id));
       data.orders.forEach((o) => seenRef.current.add(o.id));
-      if (fresh && !firstLoadRef.current && soundOn) beep();
+      if (freshOrders.length && !firstLoadRef.current && soundOn) {
+        beep();
+        const delivery = freshOrders.filter((o) => o.orderType === "delivery").length;
+        const pickup = freshOrders.length - delivery;
+        let msg: string;
+        if (freshOrders.length === 1) {
+          msg = `New ${delivery ? "delivery" : "pickup"} order received`;
+        } else {
+          const parts: string[] = [];
+          if (pickup) parts.push(`${pickup} pickup`);
+          if (delivery) parts.push(`${delivery} delivery`);
+          msg = `${freshOrders.length} new orders received: ${parts.join(", ")}`;
+        }
+        announce(msg);
+      }
       firstLoadRef.current = false;
     }
     setOrders(data.orders);
