@@ -27,6 +27,7 @@ const TERRACOTTA = "#B9603F";
 export type DailyPoint = { day: string; orders: number; revenue: number };
 export type TypeSlice = { type: string; count: number };
 export type TopItem = { name: string; qty: number };
+export type HeatCell = { dow: number; hour: number; count: number };
 
 function dayLabel(day: string): string {
   const parts = day.split("-");
@@ -57,10 +58,12 @@ export function DashboardCharts({
   daily,
   typeSplit,
   topItems,
+  heat,
 }: {
   daily: DailyPoint[];
   typeSplit: TypeSlice[];
   topItems: TopItem[];
+  heat: HeatCell[];
 }) {
   const data = daily.map((d) => ({ ...d, label: dayLabel(d.day) }));
   const pieColors = [GOLD, TERRACOTTA, "#6FA8A0", "#8A8276"];
@@ -150,6 +153,91 @@ export function DashboardCharts({
           )}
         </ChartCard>
       </div>
+
+      {/* Order-time heatmap */}
+      <ChartCard title="Busiest Times — Last 90 Days (PT)">
+        <OrderHeatmap data={heat} />
+      </ChartCard>
     </div>
+  );
+}
+
+const DAYS = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 10); // 10:00 → 22:00
+
+function OrderHeatmap({ data }: { data: HeatCell[] }) {
+  const map = new Map<string, number>();
+  let max = 0;
+  for (const d of data) {
+    map.set(`${d.dow}-${d.hour}`, d.count);
+    if (d.count > max) max = d.count;
+  }
+  const cellColor = (n: number) => {
+    if (!n) return "rgba(201,162,75,0.05)";
+    const a = max > 0 ? 0.15 + 0.8 * (n / max) : 0.15;
+    return `rgba(201,162,75,${a.toFixed(3)})`;
+  };
+  const hourLabel = (h: number) => (h === 12 ? "12p" : h < 12 ? `${h}a` : `${h - 12}p`);
+
+  if (data.length === 0) {
+    return <div style={{ color: MUTED, fontSize: 14 }}>No orders yet</div>;
+  }
+
+  return (
+    <div style={{ overflowX: "auto" }}>
+      <div
+        style={{
+          display: "grid",
+          gridTemplateColumns: `40px repeat(${HOURS.length}, 1fr)`,
+          gap: 3,
+          minWidth: 520,
+        }}
+      >
+        <div />
+        {HOURS.map((h) => (
+          <div key={h} style={{ color: MUTED, fontSize: 10, textAlign: "center" }}>
+            {hourLabel(h)}
+          </div>
+        ))}
+        {DAYS.map((day, dow) => (
+          <Row key={day} day={day} dow={dow} map={map} cellColor={cellColor} hourLabel={hourLabel} />
+        ))}
+      </div>
+      <div style={{ display: "flex", alignItems: "center", gap: 8, marginTop: 12, color: MUTED, fontSize: 11 }}>
+        <span>Fewer</span>
+        <span style={{ display: "inline-flex", gap: 2 }}>
+          {[0.1, 0.3, 0.5, 0.7, 0.95].map((a) => (
+            <span key={a} style={{ width: 16, height: 10, borderRadius: 2, background: `rgba(201,162,75,${a})` }} />
+          ))}
+        </span>
+        <span>More</span>
+      </div>
+    </div>
+  );
+}
+
+function Row({
+  day, dow, map, cellColor, hourLabel,
+}: {
+  day: string;
+  dow: number;
+  map: Map<string, number>;
+  cellColor: (n: number) => string;
+  hourLabel: (h: number) => string;
+}) {
+  return (
+    <>
+      <div style={{ color: MUTED, fontSize: 11, display: "flex", alignItems: "center" }}>{day}</div>
+      {HOURS.map((h) => {
+        const n = map.get(`${dow}-${h}`) ?? 0;
+        return (
+          <div
+            key={h}
+            title={`${day} ${hourLabel(h)} — ${n} order${n === 1 ? "" : "s"}`}
+            style={{ height: 26, borderRadius: 3, background: cellColor(n) }}
+          />
+        );
+      })}
+    </>
   );
 }

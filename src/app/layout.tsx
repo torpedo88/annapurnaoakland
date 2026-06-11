@@ -3,6 +3,8 @@ import { Jost, Inter } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/preview-cart";
 import { TerracottaShell } from "@/components/preview/terracotta/shell";
+import { RestaurantJsonLd } from "@/components/seo/restaurant-jsonld";
+import { Analytics } from "@/components/analytics/analytics";
 
 const display = Jost({
   subsets: ["latin"],
@@ -17,19 +19,45 @@ const body = Inter({
   display: "swap",
 });
 
+const DESCRIPTION =
+  "Family-run Himalayan & Nepali kitchen at 948 Clay Street, Oakland, since 2010. Momos, butter chicken, biryani, tandoori. Order pickup or delivery. Open daily 11:00–21:30.";
+
 export const metadata: Metadata = {
-  title: "Annapurna — A tasting of the Himalayas · Oakland",
-  description:
-    "Family-run Himalayan kitchen at 948 Clay Street, Oakland, since 2010. Order pickup or delivery. Open daily 11:00–21:30.",
+  metadataBase: new URL("https://annapurnaoakland.com"),
+  title: {
+    default: "Annapurna — Himalayan & Nepali Restaurant · Oakland",
+    template: "%s · Annapurna Oakland",
+  },
+  description: DESCRIPTION,
   keywords: [
     "Nepali food Oakland",
     "Himalayan restaurant Oakland",
+    "Nepali restaurant Oakland",
+    "momos Oakland",
     "Annapurna",
-    "momos",
     "butter chicken",
     "biryani",
+    "tandoori Oakland",
     "948 Clay Street",
+    "Oakland delivery",
   ],
+  alternates: { canonical: "/" },
+  robots: { index: true, follow: true },
+  openGraph: {
+    type: "website",
+    siteName: "Annapurna Oakland",
+    title: "Annapurna — Himalayan & Nepali Restaurant · Oakland",
+    description: DESCRIPTION,
+    url: "https://annapurnaoakland.com",
+    locale: "en_US",
+    images: [{ url: "/images/annapurna-logo.png", width: 1200, height: 1200, alt: "Annapurna Restaurant & Bar" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Annapurna — Himalayan & Nepali Restaurant · Oakland",
+    description: DESCRIPTION,
+    images: ["/images/annapurna-logo.png"],
+  },
 };
 
 export default function RootLayout({
@@ -53,6 +81,8 @@ export default function RootLayout({
         <CartProvider>
           <TerracottaShell>{children}</TerracottaShell>
         </CartProvider>
+        <RestaurantJsonLd />
+        <Analytics />
       </body>
     </html>
   );

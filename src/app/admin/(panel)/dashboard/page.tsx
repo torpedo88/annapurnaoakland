@@ -160,6 +160,16 @@ export default async function DashboardPage() {
 
   const topItemsChart = topItems.map((t) => ({ name: t.itemName ?? "—", qty: Number(t.qty) }));
 
+  const heatRows = (await db.execute(sql`
+    SELECT extract(dow from (created_at AT TIME ZONE 'America/Los_Angeles'))::int AS dow,
+           extract(hour from (created_at AT TIME ZONE 'America/Los_Angeles'))::int AS hour,
+           count(*)::int AS count
+    FROM orders
+    WHERE created_at >= now() - interval '90 days'
+    GROUP BY 1, 2
+  `)) as unknown as { dow: number; hour: number; count: number }[];
+  const heat = heatRows.map((r) => ({ dow: Number(r.dow), hour: Number(r.hour), count: Number(r.count) }));
+
   return (
     <div style={{ background: PAGE_BG, minHeight: "100%", padding: "24px" }}>
       <h1
@@ -183,7 +193,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ─── Charts: trends + market mix ───────────────────────────────── */}
-      <DashboardCharts daily={daily} typeSplit={typeSplit} topItems={topItemsChart} />
+      <DashboardCharts daily={daily} typeSplit={typeSplit} topItems={topItemsChart} heat={heat} />
 
       {/* ─── Today by status + Top items ───────────────────────────────── */}
       <div className="grid lg:grid-cols-2 gap-4" style={{ marginTop: 16 }}>

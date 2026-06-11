@@ -8,6 +8,7 @@ type Tab = { href: string; label: string; roles: Role[] };
 const TABS: Tab[] = [
   { href: "/admin", label: "Orders", roles: ["owner", "manager", "staff"] },
   { href: "/admin/dashboard", label: "Dashboard", roles: ["owner", "manager"] },
+  { href: "/admin/analytics", label: "Analytics", roles: ["owner", "manager"] },
   { href: "/admin/menu", label: "Menu", roles: ["owner", "manager"] },
   { href: "/admin/settings", label: "Settings", roles: ["owner", "manager"] },
   { href: "/admin/promos", label: "Promos", roles: ["owner", "manager"] },
