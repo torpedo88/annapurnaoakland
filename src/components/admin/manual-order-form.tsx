@@ -1,12 +1,19 @@
 "use client";
 
-import { useState } from "react";
-import { menu } from "@/data/menu";
+import { useEffect, useState } from "react";
 
 type Line = { id: string; qty: number };
+type MenuOpt = { id: string; name: string; price: number; isCatering: boolean };
 
 export function ManualOrderForm({ onCreated, onClose }: { onCreated: () => void; onClose: () => void }) {
   const [lines, setLines] = useState<Line[]>([]);
+  const [menu, setMenu] = useState<MenuOpt[]>([]);
+  useEffect(() => {
+    fetch("/api/menu", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { items: MenuOpt[] } | null) => setMenu(d?.items ?? []))
+      .catch(() => { /* empty list */ });
+  }, []);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [phone, setPhone] = useState("");

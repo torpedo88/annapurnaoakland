@@ -8,6 +8,7 @@ import {
   cleanString,
   type RawLine,
 } from "@/lib/orders/pricing";
+import { getPriceCatalog } from "@/lib/menu/catalog";
 import { getSettings } from "@/lib/settings";
 
 export interface NewOrderInput {
@@ -40,13 +41,13 @@ export async function createOrder(
   const contact = validateContact(input);
   const firstName = cleanString(input.firstName, 60) || null;
   const lastName = cleanString(input.lastName, 60) || null;
-  const settings = await getSettings();
+  const [settings, catalog] = await Promise.all([getSettings(), getPriceCatalog()]);
   const totals = priceOrder(input.items, {
     tipCents: input.tipCents,
     deliveryFeeCents: input.deliveryFeeCents,
     discountCents: input.discountCents,
     taxRate: settings.tax_rate,
-  });
+  }, catalog);
   const address =
     input.fulfillment === "delivery" ? cleanString(input.address, 200) : "";
   const accessToken = randomUUID();

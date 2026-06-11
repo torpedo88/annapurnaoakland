@@ -7,6 +7,7 @@ import {
   priceOrder, validateContact, cleanString,
   isValidExternalDeliveryId, httpsUrlOrNull, PricingError,
 } from "@/lib/orders/pricing";
+import { getPriceCatalog, type PriceCatalog } from "@/lib/menu/catalog";
 import { validatePromo, redeemPromo } from "@/lib/orders/promo";
 import { getSettings, type Settings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
@@ -37,8 +38,9 @@ export interface PlaceOrderInput {
 async function resolveDiscount(
   input: PlaceOrderInput,
   settings: Settings,
+  catalog: PriceCatalog,
 ): Promise<{ discountCents: number; promoCode: string | null }> {
-  const totals = priceOrder(input.items);
+  const totals = priceOrder(input.items, {}, catalog);
   let discountCents = 0;
   let promoCode: string | null = null;
 
@@ -71,7 +73,7 @@ async function resolveDiscount(
 export async function placeOrder(
   input: PlaceOrderInput,
 ): Promise<{ orderId: string; accessToken: string }> {
-  const settings = await getSettings();
+  const [settings, catalog] = await Promise.all([getSettings(), getPriceCatalog()]);
   if (settings.ordering_paused) {
     throw new OrderError("Online ordering is paused. Please call the restaurant.", 503);
   }
@@ -85,7 +87,7 @@ export async function placeOrder(
   // 1) Validate contact + items before any external dispatch.
   try {
     validateContact(input);
-    priceOrder(input.items, { tipCents: input.tipCents });
+    priceOrder(input.items, { tipCents: input.tipCents }, catalog);
     if (input.fulfillment === "delivery" && !cleanString(input.address, 200)) {
       throw new OrderError("Delivery address is required", 400);
     }
@@ -117,7 +119,7 @@ export async function placeOrder(
   let accepted: Awaited<ReturnType<typeof acceptQuote>> | null = null;
   let deliveryFeeCents = 0;
   if (input.fulfillment === "delivery") {
-    const subtotalCents = priceOrder(input.items).subtotalCents;
+    const subtotalCents = priceOrder(input.items, {}, catalog).subtotalCents;
     try {
       assertDeliverable({ subtotalCents }, settings.delivery);
     } catch (e) {
@@ -160,7 +162,7 @@ export async function placeOrder(
   }
 
   // 3) Resolve promo discount (server-authoritative; client amount never trusted).
-  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings);
+  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings, catalog);
 
   // 4) Persist (createOrder recomputes money server-side incl. DB tax).
   let result: { orderId: string; accessToken: string };
@@ -220,14 +222,14 @@ export async function placeOrder(
 export async function createPendingOrder(
   input: PlaceOrderInput,
 ): Promise<{ orderId: string; accessToken: string; totalCents: number; deliveryFeeCents: number; promoCode: string | null }> {
-  const settings = await getSettings();
+  const [settings, catalog] = await Promise.all([getSettings(), getPriceCatalog()]);
   if (settings.ordering_paused) throw new OrderError("Online ordering is paused. Please call the restaurant.", 503);
   if (input.fulfillment === "delivery" && !settings.delivery_enabled) throw new OrderError("Delivery is currently unavailable.", 503);
   if (input.fulfillment === "pickup" && !settings.pickup_enabled) throw new OrderError("Pickup is currently unavailable.", 503);
 
   try {
     validateContact(input);
-    priceOrder(input.items, { tipCents: input.tipCents });
+    priceOrder(input.items, { tipCents: input.tipCents }, catalog);
   } catch (e) {
     if (e instanceof OrderError) throw e;
     throw new OrderError(e instanceof PricingError ? e.message : "Invalid order", 400);
@@ -246,7 +248,7 @@ export async function createPendingOrder(
   let deliveryFeeCents = 0;
   if (input.fulfillment === "delivery") {
     if (!cleanString(input.address, 200)) throw new OrderError("Delivery address is required", 400);
-    const subtotalCents = priceOrder(input.items).subtotalCents;
+    const subtotalCents = priceOrder(input.items, {}, catalog).subtotalCents;
     try { assertDeliverable({ subtotalCents }, settings.delivery); }
     catch (e) {
       if (e instanceof MinOrderError) throw new OrderError(`Delivery minimum is $${(e.minOrderCents / 100).toFixed(2)}.`, 400);
@@ -284,7 +286,7 @@ export async function createPendingOrder(
   }
 
   // Resolve promo discount server-side (client-supplied amount is never trusted).
-  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings);
+  const { discountCents, promoCode: resolvedPromoCode } = await resolveDiscount(input, settings, catalog);
 
   const { orderId, accessToken } = await createOrder({
     name: input.name, firstName: input.firstName, lastName: input.lastName,
@@ -297,7 +299,7 @@ export async function createPendingOrder(
   });
 
   // Recompute the persisted total so the Stripe amount matches the DB exactly.
-  const totals = priceOrder(input.items, { tipCents: input.tipCents, deliveryFeeCents, discountCents, taxRate: settings.tax_rate });
+  const totals = priceOrder(input.items, { tipCents: input.tipCents, deliveryFeeCents, discountCents, taxRate: settings.tax_rate }, catalog);
   return { orderId, accessToken, totalCents: totals.totalCents, deliveryFeeCents, promoCode: resolvedPromoCode };
 }
 

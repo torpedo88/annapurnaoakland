@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { quoteDelivery } from "@/lib/doordash/client";
 import { priceOrder, cleanString, PricingError } from "@/lib/orders/pricing";
+import { getPriceCatalog } from "@/lib/menu/catalog";
 import { getSettings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
 import { assertWithinDeliveryRadius, OutOfRangeError } from "@/lib/orders/geofence";
@@ -25,7 +26,7 @@ export async function POST(req: Request) {
   // Order value comes from the catalog, never the client.
   let orderValueCents: number;
   try {
-    orderValueCents = priceOrder((body?.items as { id: unknown; qty: unknown }[]) ?? []).subtotalCents;
+    orderValueCents = priceOrder((body?.items as { id: unknown; qty: unknown }[]) ?? [], {}, await getPriceCatalog()).subtotalCents;
   } catch (e) {
     const msg = e instanceof PricingError ? e.message : "Invalid cart";
     return NextResponse.json({ error: msg }, { status: 400 });

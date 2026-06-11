@@ -3,43 +3,43 @@
 import { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
-import { menu, categories, type MenuItem } from "@/data/menu";
+import type { MenuItem, MenuCategory } from "@/data/menu";
 import { useCart } from "@/lib/preview-cart";
 import { hasSpiceOptions, SPICE_LEVELS, DEFAULT_SPICE } from "@/lib/spice";
 
 type Mode = "regular" | "catering";
+type LiveItem = MenuItem & { available: boolean };
 
 export default function MenuPage() {
   const [mode, setMode] = useState<Mode>("regular");
   const [q, setQ] = useState("");
   const [vegOnly, setVegOnly] = useState(false);
   const [activeCat, setActiveCat] = useState<string | null>(null);
-  // Item availability ("86"/unavailable) is managed in the admin panel and
-  // lives in the DB; the static menu has no availability, so overlay it here.
-  const [unavailable, setUnavailable] = useState<Set<string>>(new Set());
-  // Admin-uploaded photos (menu_items.imageUrl) override the static catalog image.
-  const [imageOverrides, setImageOverrides] = useState<Record<string, string>>({});
+  // Live menu from the DB (admin-managed): items, categories, prices, images,
+  // and availability ("86") all come from /api/menu.
+  const [items, setItems] = useState<LiveItem[]>([]);
+  const [cats, setCats] = useState<MenuCategory[]>([]);
   useEffect(() => {
     let on = true;
-    fetch("/api/menu/availability", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { unavailable: [], images: {} }))
-      .then((d) => {
-        if (!on) return;
-        setUnavailable(new Set<string>(d.unavailable ?? []));
-        setImageOverrides((d.images ?? {}) as Record<string, string>);
+    fetch("/api/menu", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { categories: MenuCategory[]; items: LiveItem[] } | null) => {
+        if (!on || !d) return;
+        setCats(d.categories ?? []);
+        setItems(d.items ?? []);
       })
-      .catch(() => { /* keep everything available on failure */ });
+      .catch(() => { /* empty menu on failure */ });
     return () => { on = false; };
   }, []);
 
   const visibleCategories = useMemo(
-    () => categories.filter((c) => c.isCatering === (mode === "catering")),
-    [mode]
+    () => cats.filter((c) => c.isCatering === (mode === "catering")),
+    [mode, cats]
   );
 
   const filteredMenu = useMemo(() => {
     const query = q.trim().toLowerCase();
-    return menu.filter((m) => {
+    return items.filter((m) => {
       if (m.isCatering !== (mode === "catering")) return false;
       if (vegOnly && !m.tags.includes("vegetarian")) return false;
       if (!query) return true;
@@ -48,10 +48,10 @@ export default function MenuPage() {
         m.description.toLowerCase().includes(query)
       );
     });
-  }, [mode, q, vegOnly]);
+  }, [mode, q, vegOnly, items]);
 
   const grouped = useMemo(() => {
-    const groups = new Map<string, MenuItem[]>();
+    const groups = new Map<string, LiveItem[]>();
     visibleCategories.forEach((c) => groups.set(c.slug, []));
     filteredMenu.forEach((m) => {
       const arr = groups.get(m.category);
@@ -234,7 +234,7 @@ export default function MenuPage() {
                 </div>
                 <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
                   {g.items.map((item) => (
-                    <MenuCard key={item.id} item={item} unavailable={unavailable.has(item.id)} imageSrc={imageOverrides[item.id] || "/images/annapurna-logo.png"} />
+                    <MenuCard key={item.id} item={item} unavailable={!item.available} imageSrc={item.image} />
                   ))}
                 </div>
               </div>

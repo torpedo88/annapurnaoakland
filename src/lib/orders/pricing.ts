@@ -1,12 +1,10 @@
-import { menu } from "@/data/menu";
-import { toCents } from "@/lib/orders/money";
+import type { PriceCatalog } from "@/lib/menu/catalog";
 
 // Server-authoritative pricing. The client payload is untrusted: we accept only
-// item ids + quantities and recompute every figure from the menu catalog.
+// item ids + quantities and recompute every figure from the DB menu catalog
+// (passed in by the caller — see getPriceCatalog()).
 
 export const DEFAULT_TAX_RATE = 0.0925; // fallback only; authoritative rate comes from settings
-
-const MENU_BY_ID = new Map(menu.map((m) => [m.id, m]));
 
 export interface RawLine {
   id: unknown;
@@ -53,6 +51,7 @@ function clampMoney(cents: number, maxCents: number): number {
 export function priceOrder(
   rawItems: RawLine[],
   opts: { tipCents?: number; deliveryFeeCents?: number; taxRate?: number; discountCents?: number } = {},
+  catalog: PriceCatalog,
 ): OrderTotals {
   if (!Array.isArray(rawItems) || rawItems.length === 0) {
     throw new PricingError("Cart is empty");
@@ -60,10 +59,10 @@ export function priceOrder(
   if (rawItems.length > 100) throw new PricingError("Too many items");
 
   const lines: PricedLine[] = rawItems.map((it) => {
-    const item = typeof it?.id === "string" ? MENU_BY_ID.get(it.id) : undefined;
+    const item = typeof it?.id === "string" ? catalog.get(it.id) : undefined;
     if (!item) throw new PricingError("Unknown menu item");
     const qty = asPositiveInt(it.qty, 99);
-    return { id: item.id, name: item.name, priceCents: toCents(item.price), qty };
+    return { id: it.id as string, name: item.name, priceCents: item.priceCents, qty };
   });
 
   const subtotalCents = lines.reduce((s, l) => s + l.priceCents * l.qty, 0);

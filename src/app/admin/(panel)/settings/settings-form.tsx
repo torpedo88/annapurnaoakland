@@ -1,14 +1,23 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type { Settings } from "@/lib/settings";
-import { menu } from "@/data/menu";
+
+type MenuOption = { id: string; name: string; isCatering: boolean };
 
 export function SettingsForm({ initial, role }: { initial: Settings; role: "owner" | "manager" | "staff" }) {
   const [s, setS] = useState<Settings>(initial);
   const [saving, setSaving] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [menuOptions, setMenuOptions] = useState<MenuOption[]>([]);
   const isOwner = role === "owner";
+
+  useEffect(() => {
+    fetch("/api/menu", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { items: MenuOption[] } | null) => setMenuOptions(d?.items ?? []))
+      .catch(() => { /* dropdown stays empty */ });
+  }, []);
 
   async function save(patch: Record<string, unknown>) {
     setSaving(true);
@@ -109,7 +118,7 @@ export function SettingsForm({ initial, role }: { initial: Settings; role: "owne
             }
           >
             <option value="">— None —</option>
-            {menu
+            {menuOptions
               .filter((m) => !m.isCatering)
               .map((m) => (
                 <option key={m.id} value={m.id}>
