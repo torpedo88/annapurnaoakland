@@ -591,7 +591,7 @@ export default function CheckoutPage() {
                 className="mt-3 text-center text-[11px] uppercase tracking-widest"
                 style={{ color: "#8A8276" }}
               >
-                Orders saved to database
+                Secure card payment · Apple Pay &amp; Google Pay
               </p>
             </div>
           </aside>

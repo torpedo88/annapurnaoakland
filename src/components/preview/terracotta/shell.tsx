@@ -275,7 +275,7 @@ function CartDrawer() {
                 <span>${subtotal.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm" style={{ color: "#8A8276" }}>
-                <span>Est. tax (9.25%)</span>
+                <span>Est. tax</span>
                 <span>${tax.toFixed(2)}</span>
               </div>
               <div
@@ -303,7 +303,7 @@ function CartDrawer() {
                 className="text-center text-[10px] uppercase tracking-widest"
                 style={{ color: "#8A8276" }}
               >
-                Demo mode · no real charge
+                Secure checkout · powered by Stripe
               </p>
             </div>
           </>

@@ -174,7 +174,15 @@ export default function MenuPage() {
         }}
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-3">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6 lg:-mx-10 lg:px-10">
+          <div
+            className="flex gap-2 overflow-x-auto no-scrollbar -mx-6 px-6 lg:-mx-10 lg:px-10"
+            style={{
+              // Fade the right edge so it's clear the pills scroll horizontally.
+              maskImage: "linear-gradient(to right, #000 calc(100% - 32px), transparent)",
+              WebkitMaskImage: "linear-gradient(to right, #000 calc(100% - 32px), transparent)",
+              scrollSnapType: "x proximity",
+            }}
+          >
             <button
               onClick={() => setActiveCat(null)}
               className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition"
