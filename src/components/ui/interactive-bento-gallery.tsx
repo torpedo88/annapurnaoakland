@@ -2,7 +2,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { motion, AnimatePresence, useReducedMotion } from "motion/react";
 import Image from "next/image";
-import { X } from "lucide-react";
+import { X, Play } from "lucide-react";
 
 // MediaItemType defines the structure of a media item
 export interface MediaItemType {
@@ -490,6 +490,11 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
                   priority={index < 2}
                   onClick={() => !isDragging && setSelectedItem(item)}
                 />
+                {item.type === "video" && (
+                  <span className="pointer-events-none absolute top-2 left-2 z-10 inline-flex items-center gap-1 rounded-full bg-black/55 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-white backdrop-blur-sm">
+                    <Play className="h-3 w-3 fill-current" aria-hidden="true" /> Video
+                  </span>
+                )}
                 <motion.div
                   className="absolute inset-0 flex flex-col justify-end p-2 sm:p-3 md:p-4"
                   initial={{ opacity: 0 }}

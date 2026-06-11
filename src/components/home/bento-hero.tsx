@@ -61,14 +61,14 @@ const dishMedia: Omit<MediaItemType, "span">[] = dishItems.map((m, i) => ({
   url: m.image,
 }));
 
-// 7 tiles: 5 dishes + 2 videos, arranged for the bento mosaic. The portrait
-// kitchen clip sits in a tall slot (SPANS[4] is row-span-3 on desktop).
+// 7 tiles: 5 dishes + 2 videos. The portrait kitchen clip leads top-left in a
+// tall slot (SPANS[0] is row-span-3 on desktop) so it's seen first.
 const ordered: Omit<MediaItemType, "span">[] = [
+  kitchenVideo,
   dishMedia[0],
   tandoorVideo,
   dishMedia[1],
   dishMedia[2],
-  kitchenVideo,
   dishMedia[3],
   dishMedia[4],
 ].filter(Boolean) as Omit<MediaItemType, "span">[];

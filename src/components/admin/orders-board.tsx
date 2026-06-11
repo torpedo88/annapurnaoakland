@@ -57,7 +57,8 @@ export function OrdersBoard() {
   const firstLoadRef = useRef(true);
 
   useEffect(() => {
-    setSoundOn(localStorage.getItem(SOUND_KEY) === "on");
+    // Sound is ON by default; only off if the user explicitly turned it off.
+    setSoundOn(localStorage.getItem(SOUND_KEY) !== "off");
     if (new URLSearchParams(window.location.search).get("new") === "1") {
       setShowForm(true);
       window.history.replaceState(null, "", "/admin");
