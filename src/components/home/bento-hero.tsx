@@ -8,14 +8,16 @@ import InteractiveBentoGallery, {
 } from "@/components/ui/interactive-bento-gallery";
 
 // Bento layout spans, ordered. Position 2 (wide) is reserved for the tandoor video.
+// Base (no-prefix) spans are the MOBILE 2-col mosaic — without them tiles collapse
+// to a single 60px row and the hero images become unreadable slivers.
 const SPANS = [
-  "md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2",
-  "md:col-span-2 md:row-span-2 col-span-1 sm:col-span-2 sm:row-span-2",
-  "md:col-span-1 md:row-span-3 sm:col-span-2 sm:row-span-2",
-  "md:col-span-2 md:row-span-2 sm:col-span-1 sm:row-span-2",
-  "md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2",
-  "md:col-span-2 md:row-span-2 sm:col-span-1 sm:row-span-2",
-  "md:col-span-1 md:row-span-3 sm:col-span-1 sm:row-span-2",
+  "col-span-1 row-span-2 sm:col-span-1 sm:row-span-2 md:col-span-1 md:row-span-3",
+  "col-span-2 row-span-2 sm:col-span-2 sm:row-span-2 md:col-span-2 md:row-span-2",
+  "col-span-1 row-span-3 sm:col-span-2 sm:row-span-2 md:col-span-1 md:row-span-3",
+  "col-span-1 row-span-2 sm:col-span-1 sm:row-span-2 md:col-span-2 md:row-span-2",
+  "col-span-1 row-span-2 sm:col-span-1 sm:row-span-2 md:col-span-1 md:row-span-3",
+  "col-span-1 row-span-3 sm:col-span-1 sm:row-span-2 md:col-span-2 md:row-span-2",
+  "col-span-1 row-span-2 sm:col-span-1 sm:row-span-2 md:col-span-1 md:row-span-3",
 ];
 
 // Dishes pulled from the live menu so titles/images/descriptions stay in sync.
