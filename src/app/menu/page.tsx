@@ -128,7 +128,7 @@ export default function MenuPage() {
 
         {/* Search + filters */}
         <div className="relative mx-auto max-w-7xl px-6 lg:px-10 pb-6 flex flex-wrap items-center gap-3">
-          <div className="relative flex-1 min-w-0 max-w-md">
+          <div className="relative w-full sm:flex-1 min-w-0 sm:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#8A8276" }} />
             <input
               value={q}
@@ -185,7 +185,7 @@ export default function MenuPage() {
           >
             <button
               onClick={() => setActiveCat(null)}
-              className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition"
+              className="shrink-0 rounded-full px-4 py-2.5 min-h-[38px] text-xs font-bold uppercase tracking-wider transition"
               style={
                 !activeCat
                   ? { backgroundColor: "#C9A24B", color: "#14100D" }
@@ -202,7 +202,7 @@ export default function MenuPage() {
                   const el = document.getElementById(`cat-${g.slug}`);
                   el?.scrollIntoView({ behavior: "smooth", block: "start" });
                 }}
-                className="shrink-0 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider transition"
+                className="shrink-0 rounded-full px-4 py-2.5 min-h-[38px] text-xs font-bold uppercase tracking-wider transition"
                 style={
                   activeCat === g.slug
                     ? { backgroundColor: "#C9A24B", color: "#14100D" }

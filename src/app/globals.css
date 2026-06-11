@@ -161,4 +161,47 @@
       scroll-behavior: auto !important;
     }
   }
+
+  /* ── UI/UX baseline (accessibility + mobile polish) ───────────────────────── */
+
+  /* Keyboard-only focus ring — visible gold outline for keyboard/AT users. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+    border-radius: 3px;
+  }
+
+  /* Clickability affordance on web; disabled clearly not interactive. */
+  button:not(:disabled),
+  [role="button"],
+  label[for],
+  summary,
+  a {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+  }
+
+  /* Remove the legacy 300ms tap delay for snappier mobile taps. */
+  a,
+  button,
+  [role="button"],
+  input,
+  select,
+  textarea,
+  label {
+    touch-action: manipulation;
+  }
+
+}
+
+/* Prevent iOS Safari from auto-zooming when a <16px input gains focus.
+   Unlayered (outside @layer) so it beats Tailwind's text-sm utility. */
+@media (max-width: 640px) {
+  input:not([type="checkbox"]):not([type="radio"]),
+  select,
+  textarea {
+    font-size: 16px;
+  }
 }

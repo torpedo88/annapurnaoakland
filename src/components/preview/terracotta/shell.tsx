@@ -241,7 +241,7 @@ function CartDrawer() {
                       >
                         <button
                           onClick={() => decrement(l.id)}
-                          className="h-8 w-8 flex items-center justify-center hover:text-[#C9A24B] transition"
+                          className="h-9 w-9 flex items-center justify-center hover:text-[#C9A24B] transition"
                           style={{ color: "#F3E9D6" }}
                           aria-label="Decrease"
                         >
@@ -250,7 +250,7 @@ function CartDrawer() {
                         <span className="w-7 text-center text-sm font-semibold" style={{ color: "#F3E9D6" }}>{l.qty}</span>
                         <button
                           onClick={() => increment(l.id)}
-                          className="h-8 w-8 flex items-center justify-center hover:text-[#C9A24B] transition"
+                          className="h-9 w-9 flex items-center justify-center hover:text-[#C9A24B] transition"
                           style={{ color: "#F3E9D6" }}
                           aria-label="Increase"
                         >
