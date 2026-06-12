@@ -1,5 +1,6 @@
 import "server-only";
 import { env } from "@/lib/env";
+import { haversineMiles, type Coords } from "@/lib/orders/distance";
 
 export class OutOfRangeError extends Error {
   constructor(public miles: number, public maxMiles: number) {
@@ -7,8 +8,6 @@ export class OutOfRangeError extends Error {
     this.name = "OutOfRangeError";
   }
 }
-
-type Coords = { lat: number; lng: number };
 
 /** Geocode a US address via the server-side Google Geocoding key. Null on any failure. */
 async function geocode(address: string): Promise<Coords | null> {
@@ -31,19 +30,6 @@ async function geocode(address: string): Promise<Coords | null> {
   } catch {
     return null;
   }
-}
-
-/** Great-circle distance in miles. */
-function haversineMiles(a: Coords, b: Coords): number {
-  const R = 3958.7613; // earth radius, miles
-  const toRad = (d: number) => (d * Math.PI) / 180;
-  const dLat = toRad(b.lat - a.lat);
-  const dLng = toRad(b.lng - a.lng);
-  const lat1 = toRad(a.lat);
-  const lat2 = toRad(b.lat);
-  const h =
-    Math.sin(dLat / 2) ** 2 + Math.cos(lat1) * Math.cos(lat2) * Math.sin(dLng / 2) ** 2;
-  return 2 * R * Math.asin(Math.min(1, Math.sqrt(h)));
 }
 
 // Geocode the restaurant once per server instance.

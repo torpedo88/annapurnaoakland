@@ -1,38 +1,28 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { menu } from "@/data/menu";
 import { useCart } from "@/lib/preview-cart";
 import { hasSpiceOptions, DEFAULT_SPICE } from "@/lib/spice";
 import { luxe } from "@/lib/theme";
+import type { MenuItem } from "@/data/menu";
 
 const LOGO = "/images/annapurna-logo.png";
 
-const BASE_POPULAR = menu.filter((m) => !m.isCatering && m.tags.includes("popular"));
-
 export function Popular() {
   const { add } = useCart();
-  const [imageOverrides, setImageOverrides] = useState<Record<string, string>>({});
-  const [unavailableSlugs, setUnavailableSlugs] = useState<Set<string>>(new Set());
+  const [items, setItems] = useState<MenuItem[]>([]);
   const [loaded, setLoaded] = useState(false);
 
   useEffect(() => {
     let on = true;
-    fetch("/api/menu/availability", { cache: "no-store" })
-      .then((r) => (r.ok ? r.json() : { unavailable: [], images: {} }))
-      .then((d) => {
-        if (!on) return;
-        setUnavailableSlugs(new Set<string>(d.unavailable ?? []));
-        setImageOverrides((d.images ?? {}) as Record<string, string>);
-      })
-      .catch(() => { /* keep all available on failure */ })
+    fetch("/api/menu/popular", { cache: "no-store" })
+      .then((r) => (r.ok ? r.json() : null))
+      .then((d: { items: MenuItem[] } | null) => { if (on) setItems(d?.items ?? []); })
+      .catch(() => { /* keep empty */ })
       .finally(() => { if (on) setLoaded(true); });
     return () => { on = false; };
   }, []);
 
-  const items = BASE_POPULAR.filter((m) => !unavailableSlugs.has(m.id)).slice(0, 8);
-
-  // Don't render until we've resolved availability, and skip if nothing to show
   if (!loaded || items.length === 0) return null;
 
   return (
@@ -57,24 +47,17 @@ export function Popular() {
         </h2>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
-          {items.map((item) => {
-            const resolvedSrc = imageOverrides[item.id] || LOGO;
-            return (
-              <PopularCard
-                key={item.id}
-                name={item.name}
-                price={item.price}
-                imageSrc={resolvedSrc}
-                onAdd={() =>
-                  add(
-                    item,
-                    1,
-                    hasSpiceOptions(item.category) ? DEFAULT_SPICE : undefined
-                  )
-                }
-              />
-            );
-          })}
+          {items.map((item) => (
+            <PopularCard
+              key={item.id}
+              name={item.name}
+              price={item.price}
+              imageSrc={item.image || LOGO}
+              onAdd={() =>
+                add(item, 1, hasSpiceOptions(item.category) ? DEFAULT_SPICE : undefined)
+              }
+            />
+          ))}
         </div>
       </div>
     </section>
@@ -93,11 +76,7 @@ function PopularCard({
   onAdd: () => void;
 }) {
   const [src, setSrc] = useState(imageSrc || LOGO);
-
-  // Sync if parent resolves a new URL after mount (e.g. imageOverrides loaded)
-  useEffect(() => {
-    setSrc(imageSrc || LOGO);
-  }, [imageSrc]);
+  useEffect(() => { setSrc(imageSrc || LOGO); }, [imageSrc]);
 
   return (
     <article
@@ -111,9 +90,7 @@ function PopularCard({
           alt={name}
           className={`w-full h-44 ${src.endsWith(LOGO) ? "object-contain p-6 opacity-90" : "object-cover"}`}
           onError={(e) => {
-            if (!e.currentTarget.src.endsWith(LOGO)) {
-              e.currentTarget.src = LOGO;
-            }
+            if (!e.currentTarget.src.endsWith(LOGO)) e.currentTarget.src = LOGO;
           }}
         />
       </div>

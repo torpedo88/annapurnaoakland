@@ -2,39 +2,49 @@
 
 import { luxe } from "@/lib/theme";
 import { OrderCTA } from "@/components/home/luxe/order-cta";
-import { HeroCarousel, type Frame } from "@/components/home/hero-carousel";
+import InteractiveBentoGallery, {
+  type MediaItemType,
+} from "@/components/ui/interactive-bento-gallery";
 
-// Three rotating hero frames — two kitchen videos + the restaurant interior.
-const FRAMES: Frame[] = [
-  { type: "video", src: "/video/live-tandoor.mp4" },
-  { type: "image", src: "/images/visit-bg.jpg", alt: "Annapurna Restaurant & Bar" },
-  { type: "video", src: "/video/hero-clip.mp4" },
+// Three bento tiles: one big + two stacked on desktop, full-width stacked on
+// mobile/tablet. Two kitchen videos + the restaurant interior.
+const SPANS = [
+  "col-span-2 row-span-3 sm:col-span-3 sm:row-span-3 md:col-span-2 md:row-span-2",
+  "col-span-2 row-span-2 sm:col-span-3 sm:row-span-2 md:col-span-2 md:row-span-1",
+  "col-span-2 row-span-2 sm:col-span-3 sm:row-span-2 md:col-span-2 md:row-span-1",
 ];
+
+const ordered: Omit<MediaItemType, "span">[] = [
+  { id: 1, type: "video", title: "Live tandoor", desc: "650°C clay oven, fired since 2010.", url: "/video/live-tandoor.mp4" },
+  { id: 2, type: "image", title: "Annapurna, Oakland", desc: "Dine in · pickup · delivery.", url: "/images/visit-bg.jpg" },
+  { id: 3, type: "video", title: "In our kitchen", desc: "Fresh, made to order — every day.", url: "/video/hero-clip.mp4" },
+];
+
+const mediaItems: MediaItemType[] = ordered.map((item, i) => ({
+  ...item,
+  span: SPANS[i] ?? SPANS[SPANS.length - 1]!,
+}));
 
 export function BentoHero() {
   return (
     <section
-      className="relative overflow-hidden pt-28 pb-16 lg:pt-32"
+      className="relative overflow-hidden pt-28 pb-14 lg:pt-32"
       style={{ backgroundColor: luxe.bg }}
     >
-      <div className="mx-auto max-w-4xl px-6 text-center mb-8">
-        <p className="text-[10px] uppercase tracking-[0.34em] mb-4" style={{ color: luxe.gold }}>
-          A Himalayan Kitchen · Oakland
-        </p>
-        <h1
-          className="uppercase leading-[0.95] text-[2.75rem] sm:text-6xl md:text-7xl"
-          style={{ color: luxe.ink, fontFamily: "var(--font-display)", fontWeight: 200, letterSpacing: "0.14em" }}
-        >
-          Annapurna
-        </h1>
-        <p className="mx-auto mt-4 max-w-xl text-sm sm:text-base" style={{ color: luxe.muted }}>
-          Momo, live tandoor, and slow-cooked biryani — by the family that has run the kitchen since 2010.
-        </p>
-      </div>
+      <p
+        className="text-center text-[10px] uppercase tracking-[0.34em]"
+        style={{ color: luxe.gold }}
+      >
+        A Himalayan Kitchen · Oakland
+      </p>
 
-      <HeroCarousel frames={FRAMES} />
+      <InteractiveBentoGallery
+        mediaItems={mediaItems}
+        title="Annapurna"
+        description="Momo, live tandoor, and slow-cooked biryani — by the family that has run the kitchen since 2010. Drag a tile, tap to open."
+      />
 
-      <div className="mt-8 px-6">
+      <div className="mt-2 px-6">
         <OrderCTA align="center" />
       </div>
     </section>
