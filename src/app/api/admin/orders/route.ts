@@ -6,6 +6,8 @@ import { requireRole, AuthError } from "@/lib/auth/session";
 import { toCents } from "@/lib/orders/money";
 import { placeOrder, OrderError } from "@/lib/orders/place-order";
 import { getSettings } from "@/lib/settings";
+import { after } from "next/server";
+import { syncActiveUberDeliveries } from "@/lib/orders/sync-delivery";
 
 export const runtime = "nodejs";
 
@@ -15,11 +17,25 @@ const LANES: Record<string, string[]> = {
   cancelled: ["cancelled"],
 };
 
+// Uber's delivery webhooks are unreliable, so we poll Uber's GET-delivery API to
+// keep statuses correct. Piggyback on the board's existing polling, throttled so
+// it runs at most once per interval per warm instance (not on every lane fetch).
+let lastDeliverySync = 0;
+const SYNC_INTERVAL_MS = 20_000;
+
 export async function GET(req: Request) {
   try {
     await requireRole(["owner", "manager", "staff"]);
   } catch (e) {
     return NextResponse.json({ error: "Unauthorized" }, { status: e instanceof AuthError ? 401 : 500 });
+  }
+
+  // Fire-and-forget Uber status sync (throttled), so the board reflects real
+  // courier progress even though webhooks aren't landing.
+  const now = Date.now();
+  if (now - lastDeliverySync > SYNC_INTERVAL_MS) {
+    lastDeliverySync = now;
+    after(() => syncActiveUberDeliveries().catch((e) => console.error("[sync] uber delivery sync failed:", e)));
   }
 
   const lane = new URL(req.url).searchParams.get("lane") ?? "active";

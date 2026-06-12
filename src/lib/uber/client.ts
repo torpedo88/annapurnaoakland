@@ -122,6 +122,12 @@ export async function createUberDelivery(input: {
   };
 }
 
+/** Fetch a delivery's current status + tracking url (webhook-independent poll). */
+export async function getUberDelivery(deliveryId: string): Promise<{ status: string; trackingUrl: string | null; complete: boolean }> {
+  const r = await uberFetch(`/deliveries/${encodeURIComponent(deliveryId)}`, { method: "GET" });
+  return { status: r.status ?? "pending", trackingUrl: r.tracking_url ?? null, complete: Boolean(r.complete) };
+}
+
 /** Cancel a delivery (only valid before the courier picks up). */
 export async function cancelUberDelivery(deliveryId: string): Promise<void> {
   await uberFetch(`/deliveries/${encodeURIComponent(deliveryId)}/cancel`, {
