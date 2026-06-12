@@ -343,6 +343,30 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
   }
 }
 
+/**
+ * Resend the branded customer receipt + restaurant alert to specific recipients,
+ * using the production templates. For re-notifying or previewing a receipt
+ * without emailing the actual customer. Email-config-gated.
+ */
+export async function resendBrandedEmails(orderId: string, recipients: string[]): Promise<void> {
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order) { console.error("[notify] resend: order not found", orderId); return; }
+  const to = recipients.map((s) => s.trim()).filter(Boolean);
+  if (!isEmailEnabled() || to.length === 0) return;
+  const items = await db
+    .select({ itemName: orderItems.itemName, itemPrice: orderItems.itemPrice, quantity: orderItems.quantity, spiceLevel: orderItems.spiceLevel })
+    .from(orderItems)
+    .where(eq(orderItems.orderId, orderId));
+  const trackingUrl = `${env.baseUrl()}/order/${order.id}?t=${order.accessToken}`;
+  const emailCfg = env.sendgrid();
+  const from = parseFrom(emailCfg.from);
+  const dest = to.length > 1 ? to : to[0];
+  const sg = (await import("@sendgrid/mail")).default;
+  sg.setApiKey(emailCfg.apiKey);
+  await sg.send({ from, to: dest, subject: `Annapurna — order #${order.orderNumber} receipt`, html: buildCustomerHtml(order as OrderRow, items, trackingUrl) });
+  await sg.send({ from, to: dest, subject: `Order #${order.orderNumber} — ${fulfillmentLabel(order as OrderRow)}`, html: buildRestaurantHtml(order as OrderRow, items) });
+}
+
 // ─── Status updates (email) ─────────────────────────────────────────────────────
 
 interface StatusInfo { short: string; heading: string; body: string }
