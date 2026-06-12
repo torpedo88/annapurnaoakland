@@ -22,9 +22,9 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
       <header
         className="sticky top-0 z-30 backdrop-blur-md"
         style={{
-          background: "linear-gradient(180deg, rgba(20,16,13,0.97) 0%, rgba(20,16,13,0.84) 100%)",
-          borderBottom: "1px solid rgba(201,162,75,0.18)",
-          boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+          background: "linear-gradient(180deg, #1f120c 0%, #2c1610 55%, #3a1b14 100%)",
+          borderBottom: "1px solid rgba(201,162,75,0.22)",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.40)",
         }}
       >
         <div className="mx-auto max-w-7xl px-5 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
