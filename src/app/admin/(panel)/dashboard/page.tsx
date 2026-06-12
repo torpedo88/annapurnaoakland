@@ -33,15 +33,29 @@ function fmtDate(d: Date | string | null | undefined): string {
 
 // Statuses considered "completed" / cancelled — everything else is in-flight.
 const STATUS_LABELS: Record<string, string> = {
+  pending_payment: "Pending payment",
   received: "Received",
   preparing: "Preparing",
   ready: "Ready",
   courier_picked_up: "Picked up",
   en_route: "En route",
+  out_for_delivery: "Out for delivery",
   completed: "Completed",
   delivered: "Delivered",
   cancelled: "Cancelled",
 };
+
+// Payment state overrides the fulfillment status in the list when money was
+// refunded — a "received" order that's been fully refunded should read as such.
+const PAYMENT_LABELS: Record<string, string> = {
+  refunded: "Refunded",
+  partially_refunded: "Partially refunded",
+};
+
+function orderStatusLabel(status: string | null, paymentStatus: string | null): string {
+  if (paymentStatus && PAYMENT_LABELS[paymentStatus]) return PAYMENT_LABELS[paymentStatus];
+  return STATUS_LABELS[status ?? ""] ?? status ?? "—";
+}
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -120,6 +134,7 @@ export default async function DashboardPage() {
         customerName: orders.customerName,
         total: orders.total,
         status: orders.status,
+        paymentStatus: orders.paymentStatus,
         createdAt: orders.createdAt,
       })
       .from(orders)
@@ -280,7 +295,7 @@ export default async function DashboardPage() {
                       <td style={{ padding: "10px 12px" }}>{o.customerName || "—"}</td>
                       <td style={{ padding: "10px 12px" }}>{money(o.total)}</td>
                       <td style={{ padding: "10px 12px", color: MUTED }}>
-                        {STATUS_LABELS[o.status ?? ""] ?? o.status ?? "—"}
+                        {orderStatusLabel(o.status, o.paymentStatus)}
                       </td>
                       <td style={{ padding: "10px 0 10px 12px", color: MUTED }}>
                         {fmtDate(o.createdAt)}
