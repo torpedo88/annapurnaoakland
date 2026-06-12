@@ -21,16 +21,21 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
     <>
       <header
         className="sticky top-0 z-30 backdrop-blur-md"
-        style={{ backgroundColor: "rgba(20,16,13,0.85)", borderBottom: "1px solid rgba(201,162,75,0.15)" }}
+        style={{
+          background: "linear-gradient(180deg, rgba(20,16,13,0.97) 0%, rgba(20,16,13,0.84) 100%)",
+          borderBottom: "1px solid rgba(201,162,75,0.18)",
+          boxShadow: "0 8px 30px rgba(0,0,0,0.35)",
+        }}
       >
-        <div className="mx-auto max-w-7xl px-6 lg:px-10 h-20 flex items-center justify-between gap-4">
-          {/* Left: brand — logo + name */}
-          <Link href="/" className="flex items-center gap-3">
+        <div className="mx-auto max-w-7xl px-5 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
+          {/* Left: brand — logo + name (far left) */}
+          <Link href="/" className="flex items-center gap-3 justify-self-start">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/annapurna-logo.png"
               alt="Annapurna Restaurant & Bar"
               className="h-14 w-auto object-contain shrink-0"
+              style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
             />
             <span
               className="hidden sm:inline uppercase tracking-[0.16em] text-2xl"
@@ -40,25 +45,31 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             </span>
           </Link>
 
-          {/* Center: nav */}
-          <nav className="hidden md:flex items-center gap-7 text-[12px] uppercase tracking-[0.14em]">
+          {/* Center: nav (bigger, centered) */}
+          <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-[0.2em] justify-self-center">
             {nav.map((n) => {
               const active = pathname === n.href;
               return (
                 <Link
                   key={n.href}
                   href={n.href}
-                  className="transition"
-                  style={{ color: active ? "#C9A24B" : "#8A8276" }}
+                  className="relative transition py-1"
+                  style={{ color: active ? "#C9A24B" : "#C9C2B5", fontWeight: active ? 600 : 400 }}
                 >
                   {n.label}
+                  {active && (
+                    <span
+                      className="absolute -bottom-0.5 left-0 right-0 mx-auto h-0.5 w-5 rounded-full"
+                      style={{ backgroundColor: "#C9A24B" }}
+                    />
+                  )}
                 </Link>
               );
             })}
           </nav>
 
-          {/* Right: Order Now + cart */}
-          <div className="flex items-center gap-3">
+          {/* Right: Order Now + cart (far right) */}
+          <div className="flex items-center gap-3 justify-self-end">
             <Link
               href="/menu"
               className="inline-flex rounded-[2px] px-3.5 sm:px-5 py-2 sm:py-2.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-[0.16em] font-semibold transition whitespace-nowrap"
