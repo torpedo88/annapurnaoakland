@@ -37,6 +37,7 @@ export default function CheckoutPage() {
   const [phone, setPhone] = useState("");
   const [email, setEmail] = useState("");
   const [address, setAddress] = useState("");
+  const [addressUnit, setAddressUnit] = useState("");
   const [notes, setNotes] = useState("");
   const [tipPct, setTipPct] = useState<number>(0.18);
   const [customTip, setCustomTip] = useState<string>("");
@@ -255,6 +256,7 @@ export default function CheckoutPage() {
           email: email.trim(),
           fulfillment,
           address: fulfillment === "delivery" ? address.trim() : undefined,
+          addressUnit: fulfillment === "delivery" ? addressUnit.trim() || undefined : undefined,
           items: lines.map((l) => ({ id: l.id, qty: l.qty, spiceLevel: l.spiceLevel })),
           tip,
           externalDeliveryId: quote.externalDeliveryId ?? undefined,
@@ -352,6 +354,18 @@ export default function CheckoutPage() {
                       onChange={setAddress}
                       placeholder="Start typing your address…"
                       className="w-full rounded-full px-5 py-3 text-sm focus:outline-none transition"
+                      style={{
+                        backgroundColor: "#1C1712",
+                        border: "1px solid rgba(201,162,75,0.2)",
+                        color: "#F3E9D6",
+                      }}
+                    />
+                    <input
+                      value={addressUnit}
+                      onChange={(e) => setAddressUnit(e.target.value)}
+                      placeholder="Apt / Suite / Unit (optional)"
+                      maxLength={30}
+                      className="mt-2 w-full rounded-full px-5 py-3 text-sm focus:outline-none transition"
                       style={{
                         backgroundColor: "#1C1712",
                         border: "1px solid rgba(201,162,75,0.2)",

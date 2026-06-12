@@ -10,6 +10,7 @@ import {
 } from "@/lib/orders/pricing";
 import { getPriceCatalog } from "@/lib/menu/catalog";
 import { getSettings } from "@/lib/settings";
+import { parseAddress, formatAddress } from "@/lib/orders/address";
 
 export interface NewOrderInput {
   name: unknown;
@@ -19,6 +20,7 @@ export interface NewOrderInput {
   email: unknown;
   fulfillment: "pickup" | "delivery";
   address?: unknown;
+  addressUnit?: unknown;
   items: RawLine[];
   tipCents?: number;
   deliveryFeeCents?: number;
@@ -50,6 +52,14 @@ export async function createOrder(
   }, catalog);
   const address =
     input.fulfillment === "delivery" ? cleanString(input.address, 200) : "";
+  // Structured address (delivery only): parse the Google line, fold in the
+  // manually-entered unit, recompose a canonical single line for display/dispatch.
+  const addrParts = input.fulfillment === "delivery" ? parseAddress(address) : null;
+  if (addrParts) {
+    const unit = cleanString(input.addressUnit, 30);
+    if (unit) addrParts.unit = unit;
+  }
+  const fullAddress = addrParts ? formatAddress(addrParts) || address : "";
   const accessToken = randomUUID();
 
   return db.transaction(async (tx) => {
@@ -73,7 +83,12 @@ export async function createOrder(
         deliveryFee: toDollars(totals.deliveryFeeCents),
         discount: toDollars(totals.discountCents),
         total: toDollars(totals.totalCents),
-        deliveryAddress: address || null,
+        deliveryAddress: fullAddress || null,
+        addressStreet: addrParts?.street || null,
+        addressUnit: addrParts?.unit || null,
+        addressCity: addrParts?.city || null,
+        addressState: addrParts?.state || null,
+        addressZip: addrParts?.zip || null,
       })
       .returning({ id: orders.id });
     if (!order) throw new Error("Order insert failed");

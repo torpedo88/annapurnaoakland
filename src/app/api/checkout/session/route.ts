@@ -43,7 +43,7 @@ export async function POST(req: Request) {
   try {
     pending = await createPendingOrder({
       name: composedName, firstName, lastName, phone: body.phone, email: body.email,
-      fulfillment, address: body.address,
+      fulfillment, address: body.address, addressUnit: body.addressUnit,
       items: (body?.items as { id: unknown; qty: unknown }[]) ?? [],
       tipCents: toCents(Number(body?.tip) || 0),
       externalDeliveryId: body.externalDeliveryId,

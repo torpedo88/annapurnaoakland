@@ -27,6 +27,7 @@ export interface PlaceOrderInput {
   name: unknown; firstName?: unknown; lastName?: unknown; phone: unknown; email: unknown;
   fulfillment: "pickup" | "delivery";
   address?: unknown;
+  addressUnit?: unknown;
   items: { id: unknown; qty: unknown; spiceLevel?: unknown }[];
   tipCents: number;
   externalDeliveryId?: unknown;
@@ -200,7 +201,7 @@ export async function placeOrder(
     result = await createOrder({
       name: input.name, firstName: input.firstName, lastName: input.lastName,
       phone: input.phone, email: input.email,
-      fulfillment: input.fulfillment, address: input.address,
+      fulfillment: input.fulfillment, address: input.address, addressUnit: input.addressUnit,
       items: input.items, tipCents: input.tipCents, deliveryFeeCents,
       discountCents,
       source: input.source, paymentStatus: input.paymentStatus, paymentMethod: input.paymentMethod,
@@ -341,7 +342,7 @@ export async function createPendingOrder(
   const { orderId, accessToken } = await createOrder({
     name: input.name, firstName: input.firstName, lastName: input.lastName,
     phone: input.phone, email: input.email,
-    fulfillment: input.fulfillment, address: input.address,
+    fulfillment: input.fulfillment, address: input.address, addressUnit: input.addressUnit,
     items: input.items, tipCents: input.tipCents, deliveryFeeCents,
     discountCents,
     source: "online", paymentStatus: "unpaid", paymentMethod: "online",

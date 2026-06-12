@@ -103,7 +103,14 @@ export const orders = pgTable("orders", {
   stripePaymentIntentId: text("stripe_payment_intent_id"),
   stripeCheckoutSessionId: text("stripe_checkout_session_id"),
   scheduledTime: timestamp("scheduled_time", { withTimezone: true }),
+  // Full single-line address kept for display/geocoding; the structured parts
+  // below are parsed from Google Places components (+ a manual unit field).
   deliveryAddress: text("delivery_address"),
+  addressStreet: text("address_street"),
+  addressUnit: text("address_unit"),
+  addressCity: text("address_city"),
+  addressState: text("address_state"),
+  addressZip: text("address_zip"),
   specialInstructions: text("special_instructions"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),

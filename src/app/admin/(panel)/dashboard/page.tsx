@@ -4,6 +4,7 @@ import { getSession } from "@/lib/auth/session";
 import { db } from "@/db";
 import { orders, orderItems } from "@/db/schema";
 import { DashboardCharts } from "./dashboard-charts";
+import { RecentOrders } from "./recent-orders";
 
 export const dynamic = "force-dynamic";
 
@@ -45,17 +46,6 @@ const STATUS_LABELS: Record<string, string> = {
   cancelled: "Cancelled",
 };
 
-// Payment state overrides the fulfillment status in the list when money was
-// refunded — a "received" order that's been fully refunded should read as such.
-const PAYMENT_LABELS: Record<string, string> = {
-  refunded: "Refunded",
-  partially_refunded: "Partially refunded",
-};
-
-function orderStatusLabel(status: string | null, paymentStatus: string | null): string {
-  if (paymentStatus && PAYMENT_LABELS[paymentStatus]) return PAYMENT_LABELS[paymentStatus];
-  return STATUS_LABELS[status ?? ""] ?? status ?? "—";
-}
 
 export default async function DashboardPage() {
   const session = await getSession();
@@ -127,9 +117,10 @@ export default async function DashboardPage() {
       .orderBy(desc(sql`sum(${orderItems.quantity})`))
       .limit(5),
 
-    // 5. Recent orders (latest 8)
+    // 5. Recent orders (latest 100, paginated 10/page client-side)
     db
       .select({
+        id: orders.id,
         orderNumber: orders.orderNumber,
         customerName: orders.customerName,
         total: orders.total,
@@ -139,7 +130,7 @@ export default async function DashboardPage() {
       })
       .from(orders)
       .orderBy(desc(orders.createdAt))
-      .limit(8),
+      .limit(100),
   ]);
 
   const today = todayAgg[0] ?? { count: 0, revenue: "0" };
@@ -269,43 +260,7 @@ export default async function DashboardPage() {
       {/* ─── Recent orders ─────────────────────────────────────────────── */}
       <div style={{ marginTop: 16 }}>
         <Card title="Recent Orders">
-          {recent.length === 0 ? (
-            <Empty>No orders yet</Empty>
-          ) : (
-            <div style={{ overflowX: "auto" }}>
-              <table style={{ width: "100%", borderCollapse: "collapse", color: CREAM }}>
-                <thead>
-                  <tr style={{ textAlign: "left", color: MUTED, fontSize: 13 }}>
-                    <th style={{ padding: "8px 12px 8px 0", fontWeight: 500 }}>#</th>
-                    <th style={{ padding: "8px 12px", fontWeight: 500 }}>Customer</th>
-                    <th style={{ padding: "8px 12px", fontWeight: 500 }}>Total</th>
-                    <th style={{ padding: "8px 12px", fontWeight: 500 }}>Status</th>
-                    <th style={{ padding: "8px 0 8px 12px", fontWeight: 500 }}>Placed</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {recent.map((o) => (
-                    <tr
-                      key={o.orderNumber ?? Math.random()}
-                      style={{ borderTop: "1px solid rgba(201,162,75,0.10)" }}
-                    >
-                      <td style={{ padding: "10px 12px 10px 0", color: GOLD }}>
-                        {o.orderNumber ?? "—"}
-                      </td>
-                      <td style={{ padding: "10px 12px" }}>{o.customerName || "—"}</td>
-                      <td style={{ padding: "10px 12px" }}>{money(o.total)}</td>
-                      <td style={{ padding: "10px 12px", color: MUTED }}>
-                        {orderStatusLabel(o.status, o.paymentStatus)}
-                      </td>
-                      <td style={{ padding: "10px 0 10px 12px", color: MUTED }}>
-                        {fmtDate(o.createdAt)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          )}
+          <RecentOrders rows={recent} />
         </Card>
       </div>
     </div>

@@ -89,7 +89,7 @@ export async function POST(req: Request) {
     const { orderId } = await placeOrder({
       name: composedName, firstName, lastName, phone: body.phone, email: body.email,
       fulfillment,
-      address: body.address,
+      address: body.address, addressUnit: body.addressUnit,
       items: (body?.items as { id: unknown; qty: unknown }[]) ?? [],
       tipCents: toCents(Number(body?.tip) || 0),
       externalDeliveryId: body.externalDeliveryId,

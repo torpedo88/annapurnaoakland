@@ -378,7 +378,7 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
   const reduce = useReducedMotion();
 
   return (
-    <div className="w-full px-3 sm:px-4 py-6">
+    <div className="w-full max-w-5xl mx-auto px-3 sm:px-4 py-6">
       <div className="mb-6 text-center">
         <motion.h1
           className="uppercase leading-[0.95] text-[2.75rem] sm:text-6xl md:text-7xl"
@@ -414,7 +414,7 @@ const InteractiveBentoGallery: React.FC<InteractiveBentoGalleryProps> = ({
           />
         ) : (
           <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 auto-rows-[clamp(96px,26vw,150px)] sm:auto-rows-[clamp(78px,15vw,120px)] md:auto-rows-[clamp(100px,8.2vw,176px)] grid-flow-dense sm:grid-flow-row"
+            className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 sm:gap-3 auto-rows-[clamp(96px,26vw,150px)] sm:auto-rows-[clamp(78px,15vw,120px)] md:auto-rows-[clamp(84px,5.6vw,118px)] grid-flow-dense sm:grid-flow-row"
             initial="hidden"
             animate="visible"
             exit="hidden"
