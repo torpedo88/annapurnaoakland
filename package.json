@@ -13,7 +13,8 @@
     "db:push": "npx drizzle-kit push",
     "test": "vitest run",
     "test:watch": "vitest",
-    "db:studio": "npx drizzle-kit studio"
+    "db:studio": "npx drizzle-kit studio",
+    "deploy:dev": "bash scripts/deploy-dev.sh"
   },
   "dependencies": {
     "@base-ui/react": "^1.4.0",
