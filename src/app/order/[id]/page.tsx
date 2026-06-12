@@ -273,37 +273,52 @@ export default function OrderStatusPage({ params }: { params: Promise<{ id: stri
             className="mt-6 rounded-[1.75rem] p-6"
             style={{ backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.3)" }}
           >
-            <div className="flex items-center justify-between flex-wrap gap-4">
-              <div>
-                <p className="font-bold text-lg" style={{ color: "#F3E9D6" }}>Track your driver</p>
-                <p className="text-sm mt-0.5" style={{ color: "#8A8276" }}>
-                  Live driver location via DoorDash
-                </p>
-              </div>
-              <a
-                href={delivery.trackingUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-sm transition"
-                style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
-              >
-                Open fullscreen <ExternalLink className="h-4 w-4" />
-              </a>
-            </div>
-            {/* Embedded live DoorDash tracking map (frame-ancestors * allows iframing). */}
-            <div
-              className="mt-4 overflow-hidden rounded-[1.25rem]"
-              style={{ border: "1px solid rgba(201,162,75,0.2)" }}
-            >
-              <iframe
-                src={delivery.trackingUrl}
-                title="Live delivery tracking"
-                className="w-full block"
-                style={{ height: 480, border: 0, backgroundColor: "#14100D" }}
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
+            {/* DoorDash tracking pages allow iframing; Uber's (delivery.uber.com)
+                sends X-Frame-Options DENY, so we link out instead of embedding. */}
+            {(() => {
+              const isUber = delivery.trackingUrl.includes("uber.com");
+              const provider = isUber ? "Uber" : "DoorDash";
+              return (
+                <>
+                  <div className="flex items-center justify-between flex-wrap gap-4">
+                    <div>
+                      <p className="font-bold text-lg" style={{ color: "#F3E9D6" }}>Track your driver</p>
+                      <p className="text-sm mt-0.5" style={{ color: "#8A8276" }}>
+                        Live driver location via {provider}
+                      </p>
+                    </div>
+                    <a
+                      href={delivery.trackingUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 rounded-full px-6 py-3 font-bold text-sm transition"
+                      style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+                    >
+                      {isUber ? "Open live tracking" : "Open fullscreen"} <ExternalLink className="h-4 w-4" />
+                    </a>
+                  </div>
+                  {isUber ? (
+                    <p className="mt-4 text-sm" style={{ color: "#8A8276" }}>
+                      Tap “Open live tracking” to follow your courier on Uber’s map in real time.
+                    </p>
+                  ) : (
+                    <div
+                      className="mt-4 overflow-hidden rounded-[1.25rem]"
+                      style={{ border: "1px solid rgba(201,162,75,0.2)" }}
+                    >
+                      <iframe
+                        src={delivery.trackingUrl}
+                        title="Live delivery tracking"
+                        className="w-full block"
+                        style={{ height: 480, border: 0, backgroundColor: "#14100D" }}
+                        loading="lazy"
+                        referrerPolicy="no-referrer-when-downgrade"
+                      />
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
 
