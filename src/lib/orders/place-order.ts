@@ -1,8 +1,9 @@
 import { and, eq, inArray, ne } from "drizzle-orm";
 import { db } from "@/db";
-import { deliveries, menuItems, orders } from "@/db/schema";
+import { deliveries, menuItems, orderItems, orders } from "@/db/schema";
 import { createOrder } from "@/lib/orders/create-order";
 import { acceptQuote, quoteDelivery } from "@/lib/doordash/client";
+import { createUberQuote, createUberDelivery, type UberDelivery } from "@/lib/uber/client";
 import {
   priceOrder, validateContact, cleanString,
   isValidExternalDeliveryId, httpsUrlOrNull, PricingError,
@@ -117,6 +118,7 @@ export async function placeOrder(
 
   // 2) Delivery: accept the server-issued quote -> authoritative fee + admin config.
   let accepted: Awaited<ReturnType<typeof acceptQuote>> | null = null;
+  let uberDelivery: UberDelivery | null = null;
   let deliveryFeeCents = 0;
   if (input.fulfillment === "delivery") {
     const subtotalCents = priceOrder(input.items, {}, catalog).subtotalCents;
@@ -142,6 +144,34 @@ export async function placeOrder(
       deliveryFeeCents = computeDeliveryFee(
         { doordashFeeCents: 0, subtotalCents },
         { ...settings.delivery, mode: "flat" },
+      ).feeCents;
+    } else if (settings.delivery.dispatchMode === "uber") {
+      // Uber Direct: quote + dispatch a courier immediately (manual orders are paid).
+      try {
+        const q = await createUberQuote({
+          dropoffAddress: cleanString(input.address, 200),
+          dropoffPhone: cleanString(input.phone, 30),
+          orderValueCents: subtotalCents,
+        });
+        const dropoffName =
+          [input.firstName, input.lastName].filter(Boolean).map(String).join(" ").trim() ||
+          cleanString(input.name, 80) || "Customer";
+        uberDelivery = await createUberDelivery({
+          quoteId: q.quoteId,
+          dropoffName,
+          dropoffAddress: cleanString(input.address, 200),
+          dropoffPhone: cleanString(input.phone, 30),
+          items: input.items.map((i) => ({ name: catalog.get(String(i.id))?.name ?? "Item", quantity: Number(i.qty) || 1 })),
+          orderValueCents: subtotalCents,
+          tipCents: input.tipCents,
+        });
+      } catch (e) {
+        console.error("[placeOrder] Uber dispatch failed:", e);
+        throw new OrderError("Could not arrange delivery right now. Please try again.", 502);
+      }
+      deliveryFeeCents = computeDeliveryFee(
+        { doordashFeeCents: uberDelivery.feeCents ?? 0, subtotalCents },
+        settings.delivery,
       ).feeCents;
     } else {
       // DoorDash path: require a valid externalDeliveryId and accept the quote.
@@ -176,8 +206,9 @@ export async function placeOrder(
       source: input.source, paymentStatus: input.paymentStatus, paymentMethod: input.paymentMethod,
     });
   } catch (e) {
-    if (accepted) {
-      console.error("[placeOrder] persist failed AFTER dispatch; orphaned delivery:", accepted.externalDeliveryId, e);
+    const orphan = accepted?.externalDeliveryId ?? uberDelivery?.id;
+    if (orphan) {
+      console.error("[placeOrder] persist failed AFTER dispatch; orphaned delivery:", orphan, e);
     } else {
       console.error("[placeOrder] persist failed:", e);
     }
@@ -192,14 +223,19 @@ export async function placeOrder(
   }
 
   // 5) Record the delivery row (non-fatal).
-  if (accepted) {
+  const deliveryRow = accepted
+    ? { externalDeliveryId: accepted.externalDeliveryId, status: accepted.status, feeCents: accepted.feeCents, trackingUrl: accepted.trackingUrl }
+    : uberDelivery
+      ? { externalDeliveryId: uberDelivery.id, status: uberDelivery.status, feeCents: uberDelivery.feeCents, trackingUrl: uberDelivery.trackingUrl }
+      : null;
+  if (deliveryRow) {
     try {
       await db.insert(deliveries).values({
         orderId: result.orderId,
-        externalDeliveryId: accepted.externalDeliveryId,
-        status: accepted.status,
-        feeCents: accepted.feeCents,
-        trackingUrl: httpsUrlOrNull(accepted.trackingUrl),
+        externalDeliveryId: deliveryRow.externalDeliveryId,
+        status: deliveryRow.status,
+        feeCents: deliveryRow.feeCents,
+        trackingUrl: httpsUrlOrNull(deliveryRow.trackingUrl),
         dropoffAddress: cleanString(input.address, 200),
       });
     } catch (e) {
@@ -267,6 +303,20 @@ export async function createPendingOrder(
         { doordashFeeCents: 0, subtotalCents },
         { ...settings.delivery, mode: "flat" },
       ).feeCents;
+    } else if (settings.delivery.dispatchMode === "uber") {
+      // Uber Direct: authoritative server quote. The courier is dispatched after
+      // payment (dispatchPaidOrder), re-quoting fresh — Uber quotes expire fast.
+      try {
+        const q = await createUberQuote({
+          dropoffAddress: cleanString(input.address, 200),
+          dropoffPhone: cleanString(input.phone, 30),
+          orderValueCents: subtotalCents,
+        });
+        deliveryFeeCents = computeDeliveryFee({ doordashFeeCents: q.feeCents, subtotalCents }, settings.delivery).feeCents;
+      } catch (e) {
+        console.error("[createPendingOrder] Uber quote failed:", e);
+        throw new OrderError("Could not price delivery right now. Please try again.", 502);
+      }
     } else {
       // DoorDash path: require a valid externalDeliveryId and re-quote.
       if (!isValidExternalDeliveryId(input.externalDeliveryId)) throw new OrderError("Invalid delivery reference", 400);
@@ -350,6 +400,49 @@ export async function dispatchPaidOrder(args: {
 
   const [existing] = await db.select({ id: deliveries.id }).from(deliveries).where(eq(deliveries.orderId, args.orderId)).limit(1);
   if (existing) return; // already dispatched
+
+  // Uber Direct: re-quote fresh (the checkout quote has long expired) and
+  // dispatch a courier. Best-effort — on failure the order stays paid+received
+  // and staff coordinate manually (mirrors the DoorDash failure handling).
+  if (settings.delivery.dispatchMode === "uber") {
+    try {
+      const orderValueCents = Math.round(Number(order.subtotal ?? 0) * 100);
+      const items = await db
+        .select({ itemName: orderItems.itemName, quantity: orderItems.quantity })
+        .from(orderItems)
+        .where(eq(orderItems.orderId, args.orderId));
+      const q = await createUberQuote({
+        dropoffAddress: order.deliveryAddress ?? "",
+        dropoffPhone: order.customerPhone ?? "",
+        orderValueCents,
+      });
+      const dropoffName =
+        [order.firstName, order.lastName].filter(Boolean).join(" ").trim() ||
+        order.customerName || "Customer";
+      const d = await createUberDelivery({
+        quoteId: q.quoteId,
+        dropoffName,
+        dropoffAddress: order.deliveryAddress ?? "",
+        dropoffPhone: order.customerPhone ?? "",
+        items: items.length
+          ? items.map((i) => ({ name: i.itemName ?? "Item", quantity: i.quantity ?? 1 }))
+          : [{ name: "Food order", quantity: 1 }],
+        orderValueCents,
+        externalId: args.orderId,
+      });
+      await db.insert(deliveries).values({
+        orderId: args.orderId,
+        externalDeliveryId: d.id,
+        status: d.status,
+        feeCents: d.feeCents,
+        trackingUrl: httpsUrlOrNull(d.trackingUrl),
+        dropoffAddress: order.deliveryAddress ?? null,
+      });
+    } catch (e) {
+      console.error("[dispatchPaidOrder] Uber dispatch failed for paid order", args.orderId, e);
+    }
+    return;
+  }
 
   const edi = args.externalDeliveryId;
   if (!edi || !isValidExternalDeliveryId(edi)) { console.error("[dispatchPaidOrder] missing/invalid externalDeliveryId for", args.orderId); return; }

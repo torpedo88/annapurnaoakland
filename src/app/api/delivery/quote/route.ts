@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { randomUUID } from "node:crypto";
 import { quoteDelivery } from "@/lib/doordash/client";
+import { createUberQuote } from "@/lib/uber/client";
 import { priceOrder, cleanString, PricingError } from "@/lib/orders/pricing";
 import { getPriceCatalog } from "@/lib/menu/catalog";
 import { getSettings } from "@/lib/settings";
@@ -73,6 +74,23 @@ export async function POST(req: Request) {
       freeApplied,
       durationSeconds: null,
     });
+  }
+
+  // Uber Direct mode: live quote via Uber. No client-held delivery id — the
+  // delivery is created fresh (re-quoted) after payment, so we return null like
+  // self-delivery. The fee shown is authoritative.
+  if (settings.delivery.dispatchMode === "uber") {
+    try {
+      const q = await createUberQuote({ dropoffAddress: address, dropoffPhone: phone, orderValueCents });
+      const { feeCents, freeApplied } = computeDeliveryFee(
+        { doordashFeeCents: q.feeCents, subtotalCents: orderValueCents },
+        settings.delivery,
+      );
+      return NextResponse.json({ externalDeliveryId: null, feeCents, freeApplied, durationSeconds: q.durationSeconds });
+    } catch (e) {
+      console.error("[quote] Uber quote failed:", e);
+      return NextResponse.json({ error: "Could not get a delivery quote" }, { status: 502 });
+    }
   }
 
   const externalDeliveryId = `anp-${randomUUID()}`;

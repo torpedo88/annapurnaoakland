@@ -59,7 +59,7 @@ export async function PATCH(req: Request) {
       freeThresholdCents: asCents(d.freeThresholdCents),
       minOrderCents: asCents(d.minOrderCents),
       maxRadiusMiles: Number.isFinite(Number(d.maxRadiusMiles)) ? Math.max(0, Number(d.maxRadiusMiles)) : 0,
-      dispatchMode: d.dispatchMode === "self" ? "self" : "doordash",
+      dispatchMode: d.dispatchMode === "self" ? "self" : d.dispatchMode === "uber" ? "uber" : "doordash",
     };
     await updateSetting("delivery", clean);
   }

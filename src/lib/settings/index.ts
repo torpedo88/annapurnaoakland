@@ -11,7 +11,7 @@ export interface DeliverySettings {
   freeThresholdCents: number; // 0 = disabled
   minOrderCents: number;
   maxRadiusMiles: number;
-  dispatchMode: "doordash" | "self";
+  dispatchMode: "doordash" | "self" | "uber";
 }
 
 export interface DishOfDay {
@@ -79,7 +79,7 @@ export function mergeSettings(rows: Row[]): Settings {
               d[k] = val;
             }
           }
-          if (v.dispatchMode === "doordash" || v.dispatchMode === "self") {
+          if (v.dispatchMode === "doordash" || v.dispatchMode === "self" || v.dispatchMode === "uber") {
             d.dispatchMode = v.dispatchMode;
           }
         }

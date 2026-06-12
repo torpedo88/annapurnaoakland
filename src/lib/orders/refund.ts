@@ -4,6 +4,7 @@ import { db } from "@/db";
 import { orders, orderItems, orderRefunds, deliveries } from "@/db/schema";
 import { stripe } from "@/lib/stripe/client";
 import { cancelDelivery } from "@/lib/doordash/client";
+import { cancelUberDelivery } from "@/lib/uber/client";
 
 export class RefundError extends Error {
   constructor(message: string, public status: number) {
@@ -118,8 +119,12 @@ export async function processRefund(orderId: string, req: RefundRequest): Promis
   if (isFull && order.orderType === "delivery") {
     const [d] = await db.select().from(deliveries).where(eq(deliveries.orderId, orderId)).limit(1);
     if (d && !PICKED_UP.has(d.status ?? "")) {
-      try { await cancelDelivery(d.externalDeliveryId); cancelledDelivery = true; }
-      catch (e) { console.error("[refund] delivery cancel failed (continuing):", e); }
+      // DoorDash delivery ids are our-issued ("anp-…"); anything else is an Uber id.
+      try {
+        if (d.externalDeliveryId.startsWith("anp-")) await cancelDelivery(d.externalDeliveryId);
+        else await cancelUberDelivery(d.externalDeliveryId);
+        cancelledDelivery = true;
+      } catch (e) { console.error("[refund] delivery cancel failed (continuing):", e); }
     }
   }
 

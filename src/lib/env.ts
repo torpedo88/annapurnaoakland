@@ -18,6 +18,12 @@ export const env = {
     pickupAddress: required("RESTAURANT_PICKUP_ADDRESS"),
     pickupPhone: required("RESTAURANT_PICKUP_PHONE"),
   }),
+  uber: () => ({
+    clientId: process.env.UBER_CLIENT_ID ?? "",
+    clientSecret: process.env.UBER_CLIENT_SECRET ?? "",
+    customerId: process.env.UBER_CUSTOMER_ID ?? "",
+    signingKey: process.env.UBER_SIGNING_KEY ?? "",
+  }),
   baseUrl: () => process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
   geocoding: () => ({ apiKey: process.env.GOOGLE_GEOCODING_API_KEY ?? "" }),
   staffSessionSecret: () => required("STAFF_SESSION_SECRET"),
