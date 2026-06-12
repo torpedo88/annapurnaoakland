@@ -405,10 +405,13 @@ function buildStatusHtml(order: OrderRow, info: StatusInfo, trackingUrl: string)
  * Emails the customer when their order status changes. Best-effort; never throws.
  * No-op for non-customer-facing statuses or when email isn't configured.
  */
-export async function sendOrderStatusUpdate(orderId: string, status: string): Promise<void> {
+export async function sendOrderStatusUpdate(orderId: string, status: string, recipientsOverride?: string[]): Promise<void> {
   if (!isEmailEnabled()) return;
   const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
-  if (!order || !order.customerEmail) return;
+  if (!order) return;
+  const override = recipientsOverride?.map((s) => s.trim()).filter(Boolean) ?? [];
+  const to = override.length ? (override.length > 1 ? override : override[0]) : order.customerEmail;
+  if (!to) return;
   const info = statusEmailContent(status, order.orderType);
   if (!info) return;
 
@@ -420,7 +423,7 @@ export async function sendOrderStatusUpdate(orderId: string, status: string): Pr
     sg.setApiKey(emailCfg.apiKey);
     await sg.send({
       from,
-      to: order.customerEmail,
+      to,
       subject: `Annapurna — order #${order.orderNumber}: ${info.short}`,
       html: buildStatusHtml(order as OrderRow, info, trackingUrl),
     });
