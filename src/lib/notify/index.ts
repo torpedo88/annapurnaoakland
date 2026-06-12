@@ -112,69 +112,98 @@ function fulfillmentLabel(order: OrderRow): string {
 
 // ─── Email HTML ───────────────────────────────────────────────────────────────
 
+function totalLine(label: string, value: string, opts: { bold?: boolean; accent?: boolean } = {}): string {
+  const labelColor = opts.bold ? "#14100D" : "#8A8276";
+  const valueColor = opts.accent ? "#C9A24B" : "#14100D";
+  const size = opts.bold ? "15px" : "14px";
+  const weight = opts.bold ? "700" : "400";
+  return `<tr>
+    <td style="padding:5px 0;color:${labelColor};font-size:${size};font-weight:${weight}">${label}</td>
+    <td style="padding:5px 0;text-align:right;color:${valueColor};font-size:${size};font-weight:${weight}">${value}</td>
+  </tr>`;
+}
+
 function buildCustomerHtml(
   order: OrderRow,
   items: ItemRow[],
   trackingUrl: string,
 ): string {
-  const fulfillment = fulfillmentLabel(order);
+  const isDelivery = order.orderType === "delivery";
+  const firstName = esc((order.customerName ?? "").trim().split(/\s+/)[0] || "there");
+
   const itemRows = items
     .map((it) => {
       const qty = it.quantity ?? 1;
-      const name = it.itemName ?? "Item";
-      const spice = it.spiceLevel ? ` <span style="color:#888">· ${esc(it.spiceLevel)}</span>` : "";
-      const price = `$${(Number(it.itemPrice ?? 0) * qty).toFixed(2)}`;
+      const name = esc(it.itemName ?? "Item");
+      const spice = it.spiceLevel ? ` <span style="color:#8A8276;font-size:12px">· ${esc(it.spiceLevel)}</span>` : "";
+      const line = `$${(Number(it.itemPrice ?? 0) * qty).toFixed(2)}`;
       return `<tr>
-        <td style="padding:4px 8px 4px 0">${qty}× ${esc(name)}${spice}</td>
-        <td style="padding:4px 0;text-align:right">${price}</td>
+        <td style="padding:12px 0;border-bottom:1px solid #efe9dc;color:#14100D;font-size:15px">
+          <span style="display:inline-block;min-width:26px;color:#C9A24B;font-weight:700">${qty}×</span> ${name}${spice}
+        </td>
+        <td style="padding:12px 0;border-bottom:1px solid #efe9dc;text-align:right;color:#14100D;font-size:15px;white-space:nowrap">${line}</td>
       </tr>`;
     })
     .join("\n");
 
-  const totalsRows: string[] = [];
-  totalsRows.push(`<tr><td>Subtotal</td><td style="text-align:right">${fmt(order.subtotal)}</td></tr>`);
-  totalsRows.push(`<tr><td>Tax</td><td style="text-align:right">${fmt(order.tax)}</td></tr>`);
-  if (Number(order.deliveryFee ?? 0) > 0) {
-    totalsRows.push(`<tr><td>Delivery fee</td><td style="text-align:right">${fmt(order.deliveryFee)}</td></tr>`);
-  }
-  if (Number(order.discount ?? 0) > 0) {
-    totalsRows.push(`<tr><td>Discount</td><td style="text-align:right">-${fmt(order.discount)}</td></tr>`);
-  }
-  if (Number(order.tip ?? 0) > 0) {
-    totalsRows.push(`<tr><td>Tip</td><td style="text-align:right">${fmt(order.tip)}</td></tr>`);
-  }
-  totalsRows.push(`<tr style="font-weight:bold"><td>Total</td><td style="text-align:right">${fmt(order.total)}</td></tr>`);
+  let totals = totalLine("Subtotal", fmt(order.subtotal));
+  totals += totalLine("Tax", fmt(order.tax));
+  if (Number(order.deliveryFee ?? 0) > 0) totals += totalLine("Delivery", fmt(order.deliveryFee));
+  if (Number(order.discount ?? 0) > 0) totals += totalLine("Discount", "−" + fmt(order.discount));
+  if (Number(order.tip ?? 0) > 0) totals += totalLine("Tip", fmt(order.tip));
+
+  const fulfillmentBlock = isDelivery
+    ? `<strong style="color:#14100D">Delivery</strong><br><span style="color:#8A8276;font-size:14px">${order.deliveryAddress ? esc(order.deliveryAddress) : "Address on file"}</span>`
+    : `<strong style="color:#14100D">Pickup</strong><br><span style="color:#8A8276;font-size:14px">948 Clay Street, Oakland, CA 94607</span>`;
 
   return `<!DOCTYPE html>
-<html lang="en">
-<head><meta charset="utf-8"><title>Order Confirmed</title></head>
-<body style="font-family:sans-serif;color:#111;background:#fff;margin:0;padding:0">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:32px auto;padding:0 16px">
-    <tr><td>
-      <h1 style="font-size:22px;margin-bottom:4px">Annapurna Oakland</h1>
-      <h2 style="font-size:18px;font-weight:normal;margin-top:0;color:#444">
-        Order #${order.orderNumber} confirmed
-      </h2>
-      <p style="margin:8px 0"><strong>${esc(fulfillment)}</strong></p>
-      <table width="100%" cellpadding="0" cellspacing="0" style="margin:16px 0;border-top:1px solid #ddd">
-        ${itemRows}
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Order #${order.orderNumber} confirmed</title></head>
+<body style="margin:0;padding:0;background:#f4f1ea;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;padding:24px 12px">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <tr><td style="background:#14100D;padding:24px 28px" align="center">
+          <img src="https://annapurnaoakland.com/images/annapurna-logo.png" width="56" height="56" alt="Annapurna" style="display:block;margin:0 auto 8px">
+          <div style="color:#C9A24B;font-size:13px;letter-spacing:3px;text-transform:uppercase">Annapurna Oakland</div>
+        </td></tr>
+        <tr><td style="padding:28px 28px 8px">
+          <div style="color:#C9A24B;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Order Confirmed</div>
+          <h1 style="margin:0;color:#14100D;font-size:24px;font-weight:600">Thank you, ${firstName}!</h1>
+          <p style="margin:8px 0 0;color:#8A8276;font-size:15px">Order <strong style="color:#14100D">#${order.orderNumber}</strong> is confirmed and moving through our kitchen.</p>
+        </td></tr>
+        <tr><td style="padding:18px 28px 0">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6ef;border:1px solid #efe9dc;border-radius:10px">
+            <tr>
+              <td style="padding:16px 18px;font-size:15px">${fulfillmentBlock}</td>
+              <td style="padding:16px 18px;text-align:right" align="right">
+                <a href="${trackingUrl}" style="background:#C9A24B;color:#14100D;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14px;display:inline-block">Track order →</a>
+              </td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:24px 28px 0">
+          <div style="color:#14100D;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:6px">Your order</div>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px">${totals}</table>
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:10px;border-top:2px solid #14100D">
+            <tr>
+              <td style="padding:12px 0;color:#14100D;font-size:16px;font-weight:700">Total</td>
+              <td style="padding:12px 0;text-align:right;color:#C9A24B;font-size:22px;font-weight:700">${fmt(order.total)}</td>
+            </tr>
+          </table>
+        </td></tr>
+        <tr><td style="padding:24px 28px 28px">
+          <div style="border-top:1px solid #efe9dc;padding-top:18px;color:#8A8276;font-size:13px;line-height:1.6">
+            <strong style="color:#14100D">Annapurna Restaurant &amp; Bar</strong><br>
+            948 Clay Street, Oakland, CA 94607<br>
+            Questions about your order? Just reply to this email.
+          </div>
+        </td></tr>
       </table>
-      <table width="100%" cellpadding="4" cellspacing="0" style="border-top:1px solid #ddd;margin-bottom:24px">
-        ${totalsRows.join("\n")}
-      </table>
-      <p style="margin:24px 0">
-        <a href="${trackingUrl}"
-           style="background:#b91c1c;color:#fff;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:bold">
-          Track your order
-        </a>
-      </p>
-      <p style="color:#888;font-size:12px;margin-top:32px">
-        Annapurna Oakland · 948 Clay Street, Oakland, CA 94607
-      </p>
+      <div style="color:#b8b0a0;font-size:11px;margin-top:14px">A Himalayan kitchen in Oakland since 2010</div>
     </td></tr>
   </table>
-</body>
-</html>`;
+</body></html>`;
 }
 
 function buildRestaurantHtml(
