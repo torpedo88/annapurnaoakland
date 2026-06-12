@@ -6,18 +6,15 @@ import InteractiveBentoGallery, {
   type MediaItemType,
 } from "@/components/ui/interactive-bento-gallery";
 
-// Three bento tiles: one big + two stacked on desktop, full-width stacked on
-// mobile/tablet. Two kitchen videos + the restaurant interior.
+// Two bento tiles: side-by-side on desktop, stacked full-width on mobile/tablet.
 const SPANS = [
-  "col-span-2 row-span-3 sm:col-span-3 sm:row-span-3 md:col-span-2 md:row-span-2",
-  "col-span-2 row-span-2 sm:col-span-3 sm:row-span-2 md:col-span-2 md:row-span-1",
-  "col-span-2 row-span-2 sm:col-span-3 sm:row-span-2 md:col-span-2 md:row-span-1",
+  "col-span-2 row-span-3 sm:col-span-3 sm:row-span-3 md:col-span-2 md:row-span-3",
+  "col-span-2 row-span-3 sm:col-span-3 sm:row-span-3 md:col-span-2 md:row-span-3",
 ];
 
 const ordered: Omit<MediaItemType, "span">[] = [
   { id: 1, type: "video", title: "Live tandoor", desc: "650°C clay oven, fired since 2010.", url: "/video/live-tandoor.mp4" },
-  { id: 2, type: "image", title: "Annapurna, Oakland", desc: "Dine in · pickup · delivery.", url: "/images/visit-bg.jpg" },
-  { id: 3, type: "video", title: "In our kitchen", desc: "Fresh, made to order — every day.", url: "/video/hero-clip.mp4" },
+  { id: 2, type: "video", title: "In our kitchen", desc: "Fresh, made to order — every day.", url: "/video/hero-clip.mp4" },
 ];
 
 const mediaItems: MediaItemType[] = ordered.map((item, i) => ({
