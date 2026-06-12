@@ -48,14 +48,20 @@ const TERMINAL = new Set(["completed", "delivered", "cancelled"]);
 
 function statusLabel(s: string | null): string {
   switch (s) {
+    case "received": return "Received";
     case "confirmed": return "Confirmed";
+    case "preparing": return "Preparing";
+    case "ready": return "Ready";
+    case "out_for_delivery": return "Out for Delivery";
     case "completed": return "Completed";
     case "cancelled": return "Cancelled";
     // delivery-specific
     case "created": return "Driver Assigned";
     case "enroute_to_pickup": return "Driver En Route";
     case "picked_up": return "Picked Up";
+    case "courier_picked_up": return "Picked Up";
     case "enroute_to_dropoff": return "On the Way";
+    case "en_route": return "On the Way";
     case "delivered": return "Delivered";
     default: return s ?? "Unknown";
   }
@@ -70,24 +76,30 @@ function statusColor(s: string | null): { badge: string; dot: string } {
 // ─── Pickup progress steps ──────────────────────────────────────────────────
 
 const PICKUP_STEPS = [
-  { key: "confirmed", label: "Received", Icon: CheckCircle2 },
+  { key: "received", label: "Received", Icon: CheckCircle2 },
   { key: "preparing", label: "Preparing", Icon: ChefHat },
   { key: "ready", label: "Ready", Icon: PackageCheck },
 ];
 
 const DELIVERY_STEPS = [
-  { key: "confirmed", label: "Confirmed", Icon: CheckCircle2 },
-  { key: "enroute_to_pickup", label: "Driver En Route", Icon: Truck },
-  { key: "picked_up", label: "Picked Up", Icon: PackageCheck },
+  { key: "received", label: "Received", Icon: CheckCircle2 },
+  { key: "preparing", label: "Preparing", Icon: ChefHat },
+  { key: "out_for_delivery", label: "On the Way", Icon: Truck },
   { key: "delivered", label: "Delivered", Icon: CheckCircle2 },
 ];
 
-const PICKUP_ORDER = ["confirmed", "preparing", "ready", "completed"];
-const DELIVERY_ORDER = ["confirmed", "created", "enroute_to_pickup", "picked_up", "enroute_to_dropoff", "delivered"];
+// Map a status to the index of its step in the arrays above.
+const PICKUP_STEP_FOR: Record<string, number> = {
+  received: 0, confirmed: 0, preparing: 1, ready: 2, completed: 2,
+};
+const DELIVERY_STEP_FOR: Record<string, number> = {
+  received: 0, confirmed: 0, preparing: 1, ready: 1,
+  out_for_delivery: 2, courier_picked_up: 2, en_route: 2, picked_up: 2, enroute_to_dropoff: 2,
+  delivered: 3, completed: 3,
+};
 
-function activeStepIndex(status: string | null, order: string[]): number {
-  const idx = status ? order.indexOf(status) : -1;
-  return idx === -1 ? 0 : idx;
+function activeStepIndex(status: string | null, map: Record<string, number>): number {
+  return (status && map[status] !== undefined) ? map[status] : 0;
 }
 
 // ─── Component ─────────────────────────────────────────────────────────────────
@@ -161,8 +173,8 @@ export default function OrderStatusPage({ params }: { params: Promise<{ id: stri
   const customerFirstName = (order.customerName ?? "").split(" ")[0] ?? "there";
 
   const steps = isDelivery ? DELIVERY_STEPS : PICKUP_STEPS;
-  const stepOrder = isDelivery ? DELIVERY_ORDER : PICKUP_ORDER;
-  const activeIdx = activeStepIndex(displayStatus, stepOrder);
+  const stepMap = isDelivery ? DELIVERY_STEP_FOR : PICKUP_STEP_FOR;
+  const activeIdx = activeStepIndex(displayStatus, stepMap);
 
   return (
     <section className="py-12 lg:py-16 relative overflow-hidden">

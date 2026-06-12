@@ -112,6 +112,40 @@ function fulfillmentLabel(order: OrderRow): string {
 
 // ─── Email HTML ───────────────────────────────────────────────────────────────
 
+// Shared branded shell: dark header w/ logo + footer. `inner` = body table rows.
+function emailShell(title: string, inner: string): string {
+  return `<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>${esc(title)}</title></head>
+<body style="margin:0;padding:0;background:#f4f1ea;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;padding:24px 12px">
+    <tr><td align="center">
+      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
+        <tr><td style="background:#14100D;padding:24px 28px" align="center">
+          <img src="https://annapurnaoakland.com/images/annapurna-logo.png" width="56" height="56" alt="Annapurna" style="display:block;margin:0 auto 8px">
+          <div style="color:#C9A24B;font-size:13px;letter-spacing:3px;text-transform:uppercase">Annapurna Oakland</div>
+        </td></tr>
+        ${inner}
+        <tr><td style="padding:24px 28px 28px">
+          <div style="border-top:1px solid #efe9dc;padding-top:18px;color:#8A8276;font-size:13px;line-height:1.6">
+            <strong style="color:#14100D">Annapurna Restaurant &amp; Bar</strong><br>
+            948 Clay Street, Oakland, CA 94607<br>
+            Questions about your order? Just reply to this email.
+          </div>
+        </td></tr>
+      </table>
+      <div style="color:#b8b0a0;font-size:11px;margin-top:14px">A Himalayan kitchen in Oakland since 2010</div>
+    </td></tr>
+  </table>
+</body></html>`;
+}
+
+// Prominent full-width "Track your order" button.
+function trackButton(trackingUrl: string): string {
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+    <a href="${trackingUrl}" style="display:block;background:#C9A24B;color:#14100D;padding:16px 22px;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;text-align:center">Track your order →</a>
+  </td></tr></table>`;
+}
+
 function totalLine(label: string, value: string, opts: { bold?: boolean; accent?: boolean } = {}): string {
   const labelColor = opts.bold ? "#14100D" : "#8A8276";
   const valueColor = opts.accent ? "#C9A24B" : "#14100D";
@@ -156,16 +190,7 @@ function buildCustomerHtml(
     ? `<strong style="color:#14100D">Delivery</strong><br><span style="color:#8A8276;font-size:14px">${order.deliveryAddress ? esc(order.deliveryAddress) : "Address on file"}</span>`
     : `<strong style="color:#14100D">Pickup</strong><br><span style="color:#8A8276;font-size:14px">948 Clay Street, Oakland, CA 94607</span>`;
 
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Order #${order.orderNumber} confirmed</title></head>
-<body style="margin:0;padding:0;background:#f4f1ea;font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif">
-  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f4f1ea;padding:24px 12px">
-    <tr><td align="center">
-      <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="max-width:600px;width:100%;background:#ffffff;border-radius:14px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,0.06)">
-        <tr><td style="background:#14100D;padding:24px 28px" align="center">
-          <img src="https://annapurnaoakland.com/images/annapurna-logo.png" width="56" height="56" alt="Annapurna" style="display:block;margin:0 auto 8px">
-          <div style="color:#C9A24B;font-size:13px;letter-spacing:3px;text-transform:uppercase">Annapurna Oakland</div>
-        </td></tr>
+  const inner = `
         <tr><td style="padding:28px 28px 8px">
           <div style="color:#C9A24B;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:6px">Order Confirmed</div>
           <h1 style="margin:0;color:#14100D;font-size:24px;font-weight:600">Thank you, ${firstName}!</h1>
@@ -173,15 +198,11 @@ function buildCustomerHtml(
         </td></tr>
         <tr><td style="padding:18px 28px 0">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f9f6ef;border:1px solid #efe9dc;border-radius:10px">
-            <tr>
-              <td style="padding:16px 18px;font-size:15px">${fulfillmentBlock}</td>
-              <td style="padding:16px 18px;text-align:right" align="right">
-                <a href="${trackingUrl}" style="background:#C9A24B;color:#14100D;padding:12px 22px;border-radius:999px;text-decoration:none;font-weight:700;font-size:14px;display:inline-block">Track order →</a>
-              </td>
-            </tr>
+            <tr><td style="padding:16px 18px;font-size:15px">${fulfillmentBlock}</td></tr>
           </table>
         </td></tr>
-        <tr><td style="padding:24px 28px 0">
+        <tr><td style="padding:18px 28px 4px">${trackButton(trackingUrl)}</td></tr>
+        <tr><td style="padding:20px 28px 0">
           <div style="color:#14100D;font-size:13px;letter-spacing:1px;text-transform:uppercase;font-weight:700;margin-bottom:6px">Your order</div>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0">${itemRows}</table>
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin-top:14px">${totals}</table>
@@ -191,19 +212,8 @@ function buildCustomerHtml(
               <td style="padding:12px 0;text-align:right;color:#C9A24B;font-size:22px;font-weight:700">${fmt(order.total)}</td>
             </tr>
           </table>
-        </td></tr>
-        <tr><td style="padding:24px 28px 28px">
-          <div style="border-top:1px solid #efe9dc;padding-top:18px;color:#8A8276;font-size:13px;line-height:1.6">
-            <strong style="color:#14100D">Annapurna Restaurant &amp; Bar</strong><br>
-            948 Clay Street, Oakland, CA 94607<br>
-            Questions about your order? Just reply to this email.
-          </div>
-        </td></tr>
-      </table>
-      <div style="color:#b8b0a0;font-size:11px;margin-top:14px">A Himalayan kitchen in Oakland since 2010</div>
-    </td></tr>
-  </table>
-</body></html>`;
+        </td></tr>`;
+  return emailShell(`Order #${order.orderNumber} confirmed`, inner);
 }
 
 function buildRestaurantHtml(
@@ -339,42 +349,30 @@ interface StatusInfo { short: string; heading: string; body: string }
 function statusEmailContent(status: string, orderType: string | null): StatusInfo | null {
   const delivery = orderType === "delivery";
   switch (status) {
-    case "preparing":
-      return { short: "Preparing", heading: "We're preparing your order", body: "Our kitchen is on it — we'll let you know the moment it's ready." };
+    // Only "ready" (and the cancelled exception) email the customer. All other
+    // statuses (preparing, out-for-delivery, delivered, completed) are visible
+    // on the "Track your order" page — we don't email those to avoid spam.
     case "ready":
       return delivery
-        ? { short: "Ready", heading: "Your order is ready", body: "It's packed and about to head out for delivery." }
-        : { short: "Ready for pickup", heading: "Your order is ready for pickup", body: "Come grab it at 948 Clay Street, Oakland. See you soon!" };
-    case "courier_picked_up":
-    case "out_for_delivery":
-    case "en_route":
-      return { short: "Out for delivery", heading: "Your order is on the way", body: "Your driver is heading to you now — track it below." };
-    case "delivered":
-      return { short: "Delivered", heading: "Delivered — enjoy!", body: "Your order has been delivered. Thank you for ordering from Annapurna." };
-    case "completed":
-      return { short: "Completed", heading: "Thanks for your order", body: "Hope you enjoyed it. We'd love to see you again soon." };
+        ? { short: "Ready", heading: "Your order is ready", body: "It's packed and heading out for delivery — track it below." }
+        : { short: "Ready for pickup", heading: "Your order is ready for pickup!", body: "Come grab it at 948 Clay Street, Oakland. See you soon!" };
     case "cancelled":
       return { short: "Cancelled", heading: "Your order was cancelled", body: "If this is unexpected, please call the restaurant." };
     default:
-      return null; // received / pending_payment / unknown — no status email
+      return null; // not a customer-facing email status — track via the link
   }
 }
 
 function buildStatusHtml(order: OrderRow, info: StatusInfo, trackingUrl: string): string {
-  return `<!DOCTYPE html>
-<html lang="en"><head><meta charset="utf-8"><title>Order update</title></head>
-<body style="font-family:sans-serif;color:#111;background:#fff;margin:0;padding:0">
-  <table width="100%" cellpadding="0" cellspacing="0" style="max-width:560px;margin:32px auto;padding:0 16px"><tr><td>
-    <h1 style="font-size:22px;margin-bottom:4px">Annapurna Oakland</h1>
-    <h2 style="font-size:16px;font-weight:normal;margin-top:0;color:#444">Order #${order.orderNumber} · ${esc(info.short)}</h2>
-    <p style="font-size:19px;font-weight:bold;margin:18px 0 6px">${esc(info.heading)}</p>
-    <p style="margin:0 0 22px;color:#444">${esc(info.body)}</p>
-    <p style="margin:24px 0">
-      <a href="${trackingUrl}" style="background:#C9A24B;color:#14100D;padding:12px 24px;border-radius:4px;text-decoration:none;font-weight:bold">Track your order</a>
-    </p>
-    <p style="color:#888;font-size:12px;margin-top:32px">Annapurna Oakland · 948 Clay Street, Oakland, CA 94607</p>
-  </td></tr></table>
-</body></html>`;
+  const inner = `
+        <tr><td style="padding:34px 28px 6px" align="center">
+          <div style="color:#C9A24B;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">${esc(info.short)}</div>
+          <h1 style="margin:0;color:#14100D;font-size:26px;font-weight:600">${esc(info.heading)}</h1>
+          <p style="margin:10px 0 0;color:#8A8276;font-size:15px">${esc(info.body)}</p>
+        </td></tr>
+        <tr><td style="padding:22px 28px 4px">${trackButton(trackingUrl)}</td></tr>
+        <tr><td style="padding:6px 28px 0" align="center"><span style="color:#b8b0a0;font-size:12px">Order #${order.orderNumber}</span></td></tr>`;
+  return emailShell(`Order #${order.orderNumber}: ${info.short}`, inner);
 }
 
 /**
