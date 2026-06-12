@@ -1,16 +1,12 @@
 "use client";
 
-import { menu } from "@/data/menu";
 import { luxe } from "@/lib/theme";
 import { OrderCTA } from "@/components/home/luxe/order-cta";
 import { HeroCarousel, type Frame } from "@/components/home/hero-carousel";
 
-const signature = menu.find((m) => m.id === "chicken-dish-chicken-nauni-butter-chicken");
-
-// Three rotating hero frames: two kitchen videos + one signature plate.
+// Two rotating hero frames — the kitchen videos.
 const FRAMES: Frame[] = [
   { type: "video", src: "/video/live-tandoor.mp4" },
-  ...(signature ? [{ type: "image" as const, src: signature.image, alt: signature.name }] : []),
   { type: "video", src: "/video/hero-clip.mp4" },
 ];
 
