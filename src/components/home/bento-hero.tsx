@@ -4,9 +4,10 @@ import { luxe } from "@/lib/theme";
 import { OrderCTA } from "@/components/home/luxe/order-cta";
 import { HeroCarousel, type Frame } from "@/components/home/hero-carousel";
 
-// Two rotating hero frames — the kitchen videos.
+// Three rotating hero frames — two kitchen videos + the restaurant interior.
 const FRAMES: Frame[] = [
   { type: "video", src: "/video/live-tandoor.mp4" },
+  { type: "image", src: "/images/visit-bg.jpg", alt: "Annapurna Restaurant & Bar" },
   { type: "video", src: "/video/hero-clip.mp4" },
 ];
 
