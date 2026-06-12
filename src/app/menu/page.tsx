@@ -84,19 +84,21 @@ export default function MenuPage() {
             The Menu
           </p>
           <h1
-            className="text-5xl lg:text-7xl leading-[0.95] tracking-tight mb-6"
+            className="leading-[0.95] mb-6"
             style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 200,
+              fontFamily: "var(--font-serif-display), Georgia, serif",
+              fontStyle: "italic",
+              fontWeight: 500,
+              fontSize: "clamp(2.8rem, 8vw, 5rem)",
               color: "#F3E9D6",
             }}
           >
             The full menu.
           </h1>
           <p className="max-w-2xl text-[17px] leading-relaxed" style={{ color: "#8A8276" }}>
-            178 dishes across 12 categories. Every momo pleated by hand; every naan
-            tandoor-baked to order. Need to feed a crowd? Switch to the catering menu for
-            half and full tray pricing.
+            Hand-pleated momos, tandoor-fired naan, and slow-cooked classics — made to order
+            every day. Feeding a crowd? Switch to the catering menu for half &amp; full tray
+            pricing.
           </p>
         </div>
 
@@ -245,8 +247,8 @@ export default function MenuPage() {
               <div key={g.slug} id={`cat-${g.slug}`} className="scroll-mt-36">
                 <div className="flex items-baseline justify-between mb-6">
                   <h2
-                    className="text-3xl lg:text-4xl leading-none tracking-tight"
-                    style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
+                    className="text-3xl lg:text-4xl leading-none"
+                    style={{ fontFamily: "var(--font-serif-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, color: "#F3E9D6" }}
                   >
                     {g.label}
                   </h2>

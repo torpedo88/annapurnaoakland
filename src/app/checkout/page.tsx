@@ -286,8 +286,8 @@ export default function CheckoutPage() {
             Almost there
           </p>
           <h1
-            className="text-5xl lg:text-6xl leading-[0.95] tracking-tight"
-            style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: "#F3E9D6" }}
+            className="leading-[0.95]"
+            style={{ fontFamily: "var(--font-serif-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, fontSize: "clamp(2.6rem, 7vw, 3.75rem)", color: "#F3E9D6" }}
           >
             Checkout.
           </h1>
