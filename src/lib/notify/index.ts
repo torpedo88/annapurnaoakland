@@ -299,9 +299,11 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
     try {
       const sg = (await import("@sendgrid/mail")).default;
       sg.setApiKey(emailCfg.apiKey);
+      // RESTAURANT_NOTIFY_EMAIL may be a comma-separated list — alert several inboxes.
+      const recipients = emailCfg.restaurantEmail.split(",").map((s) => s.trim()).filter(Boolean);
       await sg.send({
         from,
-        to: emailCfg.restaurantEmail,
+        to: recipients.length > 1 ? recipients : recipients[0],
         subject: `New order #${order.orderNumber} — ${fulfillment}`,
         html: buildRestaurantHtml(order as OrderRow, items),
       });
