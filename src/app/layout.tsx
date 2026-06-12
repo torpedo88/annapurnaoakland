@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Jost, Inter } from "next/font/google";
+import { Jost, Inter, Cormorant_Garamond } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/preview-cart";
 import { TerracottaShell } from "@/components/preview/terracotta/shell";
@@ -16,6 +16,13 @@ const body = Inter({
   subsets: ["latin"],
   weight: ["300", "400", "500"],
   variable: "--font-body",
+  display: "swap",
+});
+const serifDisplay = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-serif-display",
   display: "swap",
 });
 
@@ -68,7 +75,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable}`}
+      className={`${display.variable} ${body.variable} ${serifDisplay.variable}`}
     >
       <body
         style={{

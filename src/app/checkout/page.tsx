@@ -54,6 +54,14 @@ export default function CheckoutPage() {
 
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Preselect pickup/delivery from the homepage CTA the customer clicked.
+  useEffect(() => {
+    try {
+      const pref = localStorage.getItem("annapurna:fulfillment");
+      if (pref === "delivery" || pref === "pickup") setFulfillment(pref);
+    } catch { /* default pickup */ }
+  }, []);
+
   useEffect(() => {
     let on = true;
     fetch("/api/settings/public")

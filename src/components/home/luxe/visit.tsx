@@ -7,18 +7,18 @@ export function Visit() {
     <section className="relative py-28 lg:py-36 overflow-hidden">
       <div className="absolute inset-0">
         <Image
-          src="https://www.themealdb.com/images/media/meals/xrttsx1487339558.jpg"
-          alt="Biryani"
+          src="/images/visit-bg.jpg"
+          alt="Annapurna Restaurant & Bar"
           fill
           sizes="100vw"
           className="object-cover"
-          style={{ opacity: 0.4 }}
+          style={{ opacity: 0.34 }}
         />
         <div
           className="absolute inset-0"
           style={{
             background:
-              "linear-gradient(90deg, #14100D 0%, rgba(20,16,13,0.85) 50%, rgba(20,16,13,0.7) 100%)",
+              "linear-gradient(90deg, #14100D 0%, rgba(20,16,13,0.82) 45%, rgba(20,16,13,0.6) 100%)",
           }}
         />
       </div>
@@ -31,12 +31,13 @@ export function Visit() {
             Come See Us
           </p>
           <h2
-            className="leading-[1.05] mb-10"
+            className="leading-[1.02] mb-10"
             style={{
               color: luxe.ink,
-              fontFamily: "var(--font-display)",
-              fontWeight: 200,
-              fontSize: "clamp(2rem, 6vw, 4rem)",
+              fontFamily: "var(--font-serif-display), Georgia, serif",
+              fontWeight: 500,
+              fontStyle: "italic",
+              fontSize: "clamp(2.4rem, 7vw, 4.6rem)",
             }}
           >
             Ten minutes from Lake Merritt BART.
@@ -55,16 +56,16 @@ export function Visit() {
                   {c.k}
                 </p>
                 {c.href ? (
-                  <a href={c.href} className="text-[15px]" style={{ color: luxe.ink }}>
+                  <a href={c.href} className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-serif-display), Georgia, serif" }}>
                     {c.a}
                   </a>
                 ) : (
-                  <p className="text-[15px]" style={{ color: luxe.ink }}>
+                  <p className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-serif-display), Georgia, serif" }}>
                     {c.a}
                   </p>
                 )}
                 {c.b && (
-                  <p className="text-[15px]" style={{ color: luxe.ink }}>
+                  <p className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-serif-display), Georgia, serif" }}>
                     {c.b}
                   </p>
                 )}
