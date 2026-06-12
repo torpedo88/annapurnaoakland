@@ -52,7 +52,7 @@ export function Testimonials() {
   data.reviews.forEach((r, i) => cols[i % 3]!.push(toTestimonial(r)));
 
   return (
-    <section className="py-20 relative" style={{ borderTop: `1px solid ${luxe.line}` }}>
+    <section className="py-24 lg:py-28 relative" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="container z-10 mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -61,15 +61,17 @@ export function Testimonials() {
           viewport={{ once: true }}
           className="flex flex-col items-center justify-center max-w-[600px] mx-auto text-center"
         >
+          <div className="mx-auto mb-6 h-px w-9" style={{ backgroundColor: luxe.gold }} />
           <p className="text-[10px] uppercase tracking-[0.34em]" style={{ color: luxe.gold }}>
             Loved in Oakland
           </p>
           <h2
             className="mt-5"
             style={{
-              fontFamily: "var(--font-display)",
-              fontWeight: 200,
-              fontSize: "clamp(1.8rem, 5vw, 3rem)",
+              fontFamily: "var(--font-serif-display), Georgia, serif",
+              fontWeight: 500,
+              fontStyle: "italic",
+              fontSize: "clamp(2rem, 5vw, 3.2rem)",
               color: luxe.ink,
             }}
           >

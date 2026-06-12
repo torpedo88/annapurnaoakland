@@ -24,6 +24,7 @@ export function Visit() {
       </div>
       <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
         <div className="max-w-2xl">
+          <div className="mb-5 h-px w-9" style={{ backgroundColor: luxe.gold }} />
           <p
             className="text-[10px] uppercase tracking-[0.34em] mb-5"
             style={{ color: luxe.gold }}

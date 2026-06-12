@@ -18,13 +18,13 @@ export function KitchenStatement() {
           The Kitchen
         </p>
         <h2
-          className="leading-[1.15]"
+          className="leading-[1.12]"
           style={{
             color: luxe.ink,
-            fontFamily: "var(--font-display)",
-            fontWeight: 200,
-            letterSpacing: "0.02em",
-            fontSize: "clamp(1.6rem, 4vw, 2.6rem)",
+            fontFamily: "var(--font-serif-display), Georgia, serif",
+            fontWeight: 500,
+            fontStyle: "italic",
+            fontSize: "clamp(2rem, 5vw, 3.2rem)",
           }}
         >
           A tasting of the Himalayas, plated with patience.

@@ -26,8 +26,9 @@ export function Popular() {
   if (!loaded || items.length === 0) return null;
 
   return (
-    <section className="py-16" style={{ borderTop: `1px solid ${luxe.line}` }}>
+    <section className="py-24 lg:py-28" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="mx-auto max-w-7xl px-6">
+        <div className="mx-auto mb-6 h-px w-9" style={{ backgroundColor: luxe.gold }} />
         <p
           className="text-[10px] uppercase tracking-[0.34em] mb-5 text-center"
           style={{ color: luxe.gold }}
@@ -37,9 +38,10 @@ export function Popular() {
         <h2
           className="text-center mb-12"
           style={{
-            fontFamily: "var(--font-display)",
-            fontWeight: 200,
-            fontSize: "clamp(1.6rem, 4vw, 2.6rem)",
+            fontFamily: "var(--font-serif-display), Georgia, serif",
+            fontWeight: 500,
+            fontStyle: "italic",
+            fontSize: "clamp(2rem, 5vw, 3.2rem)",
             color: luxe.ink,
           }}
         >

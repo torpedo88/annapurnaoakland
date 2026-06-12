@@ -37,12 +37,12 @@ export async function GET() {
     if (it && !seen.has(slug)) { picked.push(it); seen.add(slug); }
   }
   for (const it of orderable) {
-    if (picked.length >= 8) break;
+    if (picked.length >= 4) break;
     if (!seen.has(it.id)) { picked.push(it); seen.add(it.id); }
   }
 
   return NextResponse.json(
-    { items: picked.slice(0, 8) },
+    { items: picked.slice(0, 4) },
     { headers: { "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600" } },
   );
 }
