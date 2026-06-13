@@ -69,6 +69,14 @@ export default async function FlyerPage() {
         }}
       >
         {/* Brand */}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src="/images/annapurna-logo.png"
+          alt="Annapurna logo"
+          width={72}
+          height={63}
+          style={{ display: "block", objectFit: "contain", marginBottom: 8 }}
+        />
         <p style={{ fontSize: 9, letterSpacing: "0.34em", textTransform: "uppercase", color: GOLD, margin: 0 }}>
           A Himalayan Kitchen · Oakland
         </p>
@@ -77,14 +85,14 @@ export default async function FlyerPage() {
             fontFamily: "var(--font-serif-display), Georgia, serif",
             fontStyle: "italic",
             fontWeight: 500,
-            fontSize: 34,
-            margin: "6px 0 0",
+            fontSize: 30,
+            margin: "4px 0 0",
             color: CREAM,
           }}
         >
           Annapurna
         </h1>
-        <div style={{ width: 36, height: 1, background: GOLD, margin: "10px 0 0" }} />
+        <div style={{ width: 36, height: 1, background: GOLD, margin: "9px 0 0" }} />
 
         {/* Hook */}
         <h2
