@@ -6,6 +6,7 @@ import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/data/menu";
 import { useCart } from "@/lib/preview-cart";
 import { hasSpiceOptions, SPICE_LEVELS, DEFAULT_SPICE } from "@/lib/spice";
+import { OrderingStatusBanner } from "@/components/ordering-status-banner";
 
 type Mode = "regular" | "catering";
 type LiveItem = MenuItem & { available: boolean };
@@ -100,6 +101,10 @@ export default function MenuPage() {
             every day. Feeding a crowd? Switch to the catering menu for half &amp; full tray
             pricing.
           </p>
+        </div>
+
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-10">
+          <OrderingStatusBanner />
         </div>
 
         {/* Mode switch */}
