@@ -100,30 +100,54 @@ export default async function FlyerPage() {
             fontFamily: "var(--font-serif-display), Georgia, serif",
             fontStyle: "italic",
             fontWeight: 500,
-            fontSize: 23,
-            lineHeight: 1.15,
-            margin: "16px 0 4px",
+            fontSize: 22,
+            lineHeight: 1.12,
+            margin: "12px 0 0",
             color: CREAM,
           }}
         >
           Loved it? Order again.
         </h2>
-        <p style={{ fontSize: 12, color: MUTED, margin: 0, maxWidth: "2.8in" }}>
+
+        {/* Promo */}
+        <div
+          style={{
+            marginTop: 10,
+            background: "rgba(201,162,75,0.12)",
+            border: `1px solid rgba(201,162,75,0.45)`,
+            borderRadius: 10,
+            padding: "7px 16px",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <span style={{ fontSize: 17, fontWeight: 800, color: GOLD, letterSpacing: "0.01em" }}>
+            10% OFF your next order
+          </span>
+          <span style={{ fontSize: 11, color: CREAM }}>
+            use code{" "}
+            <strong style={{ color: GOLD, letterSpacing: "0.06em" }}>REORDER10</strong>
+          </span>
+        </div>
+
+        <p style={{ fontSize: 11, color: MUTED, margin: "9px 0 0", maxWidth: "2.8in" }}>
           Scan to reorder pickup or delivery in seconds.
         </p>
 
         {/* QR */}
         <div
           style={{
-            marginTop: 14,
+            marginTop: 10,
             background: CREAM,
             borderRadius: 12,
-            padding: 10,
+            padding: 9,
             lineHeight: 0,
           }}
         >
           {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={qr} alt="Scan to order from Annapurna" width={150} height={150} style={{ display: "block" }} />
+          <img src={qr} alt="Scan to order from Annapurna" width={132} height={132} style={{ display: "block" }} />
         </div>
         <p style={{ fontSize: 13, fontWeight: 700, color: GOLD, margin: "10px 0 0", letterSpacing: "0.02em" }}>
           annapurnaoakland.com
