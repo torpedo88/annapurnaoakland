@@ -96,11 +96,16 @@ src/
   data/menu.ts               Static catalog (178 items) — source of truth for /menu
   db/
     index.ts schema.ts seed.ts seed-staff.ts
+  components/
+    admin/orders-board.tsx   Polling orders board: chime + voice + auto-print
+    admin/kitchen-receipt.tsx 80mm thermal kitchen ticket (print-only; see §10)
+    home/luxe/footer.tsx     Site footer (incl. embedded location map)
   proxy.ts                   Next 16 route guard for /admin + /api/admin
+next.config.ts               Image remotePatterns + /order→/menu redirect (§17)
 drizzle/migrations/          Drizzle-kit SQL migrations
 public/images/dishes/        Self-hosted dish photos
 scripts/                     One-off + ops scripts (images, doordash tests)
-docs/                        This guide + DoorDash runbook + specs/plans
+docs/                        This guide + DoorDash + kitchen-printing + specs/plans
 ```
 
 ---
@@ -384,7 +389,24 @@ Full detail + production cutover in [`docs/DOORDASH.md`](./DOORDASH.md). In brie
 - **Admin pages** = server component (auth + data) rendering a `"use client"`
   component that fetches `/api/admin/...` for data and mutations. Match the
   existing card/input/button styles when adding pages.
-- The orders board polls every 10s and plays a WebAudio chime on new orders.
+- The orders board polls every 10s and, on new orders, plays a WebAudio chime,
+  a spoken announcement (Web Speech), and **auto-prints a kitchen ticket**.
+
+### Kitchen ticket printing
+
+`src/components/admin/kitchen-receipt.tsx` renders an 80mm thermal ticket into a
+hidden `#kitchen-receipt` element; `globals.css` `@media print` isolates it and
+sets `@page { size: 80mm auto }`. The orders board queues each new `received`
+order and prints it via `window.print()`, one at a time (`afterprint`-driven).
+
+- A persistent `localStorage` set (`annapurna:admin:printed`, capped 800) makes
+  each ticket print **once** — reloads / second tabs never reprint. The first
+  poll after load seeds existing orders as "printed" so the backlog isn't dumped.
+- Auto-print is **off by default**, toggled per device (so staff phones don't
+  pop print dialogs). Each card also has a manual **Print** (reprint) button.
+- Silent printing needs Chrome `--kiosk-printing` on the on-site machine with
+  the Star TSP100 as the default printer. Full setup + troubleshooting:
+  [`docs/KITCHEN-PRINTING.md`](./KITCHEN-PRINTING.md).
 
 ---
 
@@ -453,7 +475,9 @@ Node.js runtime (`export const runtime = "nodejs"`).
 - Push env vars with `vercel env add <NAME> production` (and `preview`).
   Preview in CLI v53 may need a branch arg.
 - **New env vars require a redeploy** to reach functions: `npx vercel --prod`.
-- Active dev branch: `feat/admin-panel-p0-p1`.
+- **Branch flow:** `main` → production (`annapurnaoakland.com`), `dev` →
+  staging (`dev.annapurnaoakland.com`, Preview env). Feature branches merge to
+  `main` fast-forward. Full staging setup in [`../DEV.md`](../DEV.md).
 
 ---
 
@@ -481,6 +505,8 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 | P5 | Promos / discounts (new `promos` table) | ✅ (CRUD; not yet applied at checkout) |
 | P6 | Stripe payments + refunds | ❌ (greenfield, separate track) |
 | — | DoorDash Drive dispatch + tracking | ✅ (sandbox verified; prod cutover pending) |
+| — | Kitchen ticket auto-printing (80mm thermal) | ✅ (browser kiosk-printing; §10) |
+| — | Footer location map + `/order`→`/menu` SEO redirect | ✅ |
 
 ---
 
@@ -500,3 +526,23 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 8. **Order reads need `?t=<accessToken>`** — no token, no order.
 9. **DoorDash sandbox doesn't move drivers** — status only advances in prod or
    via manually POSTed webhook events.
+10. **`/order` is not a page** — only `/order/[id]` (tracking) exists. The bare
+    `/order` URL is 308-redirected to `/menu` in `next.config.ts` (§17); don't
+    add an `order/page.tsx` without removing that redirect.
+
+---
+
+## 17. Redirects & SEO
+
+`next.config.ts` holds non-image platform config:
+
+- **`/order` → `/menu`** (permanent 308). Google had indexed the bare `/order`
+  URL, which 404s (no index page — only `/order/[id]` tracking exists). The
+  redirect reclaims that traffic. Exact match, so `/order/[id]` is untouched.
+- Add future path redirects to the same `redirects()` array. Redirects run
+  before the filesystem and need a build/deploy to take effect.
+
+Other SEO surfaces: `src/app/sitemap.ts`, `src/app/robots.ts`, JSON-LD in
+`src/components/seo/restaurant-jsonld.tsx`, and metadata in `src/app/layout.tsx`.
+The **home footer** (`src/components/home/luxe/footer.tsx`) shows the address +
+a keyless Google Maps embed (`output=embed`, no API key) linking to directions.

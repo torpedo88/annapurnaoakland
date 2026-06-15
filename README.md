@@ -4,8 +4,9 @@ Online ordering site, kitchen/admin panel, and DoorDash delivery dispatch for
 Annapurna restaurant — a Himalayan/Nepali-Indian kitchen in Oakland, CA.
 
 - **Public site** — menu, cart, checkout, live order tracking.
-- **Admin panel** (`/admin`) — live orders board, menu/promos/reservations/
-  catering/staff management, settings. Role-gated (owner / manager / staff).
+- **Admin panel** (`/admin`) — live orders board (auto-prints 80mm kitchen
+  tickets to a thermal printer), menu/promos/reservations/catering/staff
+  management, settings. Role-gated (owner / manager / staff).
 - **Delivery** — DoorDash Drive: quote → dispatch a driver → status webhooks →
   embedded live tracking map.
 
@@ -52,6 +53,8 @@ Postgres · Tailwind · Vercel · DoorDash Drive.
   model, auth/RBAC, ordering pipeline, pricing/settings, env vars, gotchas.
 - **[docs/DOORDASH.md](./docs/DOORDASH.md)** — DoorDash Drive integration +
   production cutover runbook.
+- **[docs/KITCHEN-PRINTING.md](./docs/KITCHEN-PRINTING.md)** — auto-printing
+  kitchen tickets to the Star TSP100 (kiosk setup + troubleshooting).
 - `docs/superpowers/specs|plans/` — historical design specs and build plans.
 
 ## Deployment
