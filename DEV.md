@@ -74,7 +74,37 @@ Reuse prod values for SendGrid, DoorDash sandbox, Google server keys.
 - Add `dev.annapurnaoakland.com` to the **Google Maps browser key** allowed
   referrers (else autocomplete won't load on staging).
 
+## ⚠️ Database isolation (read this)
+
+The dev site **must** talk to the dev Supabase project, never prod. Two things
+have to be true — both bit us on 2026-06-15 (dev was writing to prod; a staff
+user created on dev appeared in prod):
+
+1. **The `dev`-branch Preview env DB vars must point to the dev project.** They
+   are *branch-scoped*, so add them with the branch arg:
+   ```bash
+   printf '%s' "<dev-value>" | npx vercel env add DATABASE_URL preview dev
+   # same for NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_ANON_KEY, SUPABASE_SERVICE_ROLE_KEY
+   ```
+   Dev project ref is `gyycwhafohhgtsfmzknh`; prod is `zfnhcuvgvnflduqeiyin`.
+   If a `DATABASE_URL` for branch `dev` resolves to the prod ref, the dev site
+   reads/writes **prod**.
+
+2. **`dev.annapurnaoakland.com` is a manual alias** — it does **not** auto-follow
+   pushes to `dev`. A `git push origin dev` builds a new deployment and updates
+   `…-git-dev-….vercel.app`, but the custom domain keeps pointing at the *old*
+   deployment until you re-alias:
+   ```bash
+   npx vercel alias set <new-dev-deploy-url> dev.annapurnaoakland.com   # or: npm run deploy:dev
+   ```
+   A stale alias is why an "env fix" can look like it didn't work.
+
+**Verify isolation** quickly: 86 one item in the **dev** DB only
+(`update menu_items set is_available=false where slug=…`), then check
+`https://dev.annapurnaoakland.com/api/menu` shows that item `available:false`
+while prod shows `true`. Revert after. (The public `/api/menu` reads the DB.)
+
 ## Notes
 - Test-mode Stripe card: `4242 4242 4242 4242`, any future expiry / CVC.
 - Preview env vars do **not** affect production. Verify scope with
-  `npx vercel env ls preview`.
+  `npx vercel env ls preview`. Branch-scoped vars: `npx vercel env ls preview dev`.
