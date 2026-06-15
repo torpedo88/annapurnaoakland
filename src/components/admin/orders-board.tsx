@@ -4,9 +4,15 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { OrderCard, type AdminOrder } from "./order-card";
 import { ManualOrderForm } from "./manual-order-form";
 import { RefundModal } from "./refund-modal";
+import { KitchenReceipt } from "./kitchen-receipt";
 
 type Lane = "active" | "completed" | "cancelled";
 const SOUND_KEY = "annapurna:admin:sound";
+const PRINT_KEY = "annapurna:admin:print";
+// Persisted set of order ids already sent to the printer, so a page reload /
+// second tab never reprints the same ticket. Capped to the most recent ids.
+const PRINTED_KEY = "annapurna:admin:printed";
+const PRINTED_CAP = 800;
 
 // Loud two-note chime for new orders (much louder than the old single beep).
 function beep() {
@@ -51,14 +57,38 @@ export function OrdersBoard() {
   const [orders, setOrders] = useState<AdminOrder[]>([]);
   const [busyId, setBusyId] = useState<string | null>(null);
   const [soundOn, setSoundOn] = useState(false);
+  const [printOn, setPrintOn] = useState(false);
+  const [printQueue, setPrintQueue] = useState<AdminOrder[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [refunding, setRefunding] = useState<AdminOrder | null>(null);
   const seenRef = useRef<Set<string>>(new Set());
+  const printedRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
 
+  // Mark an order as printed and persist (bounded) so reloads don't reprint it.
+  const rememberPrinted = useCallback((ids: string[]) => {
+    ids.forEach((id) => printedRef.current.add(id));
+    try {
+      const kept = [...printedRef.current].slice(-PRINTED_CAP);
+      printedRef.current = new Set(kept);
+      localStorage.setItem(PRINTED_KEY, JSON.stringify(kept));
+    } catch { /* storage full / unavailable */ }
+  }, []);
+
+  // Queue a ticket for printing (manual reprint or auto on new order).
+  const enqueuePrint = useCallback((order: AdminOrder) => {
+    setPrintQueue((q) => [...q, order]);
+  }, []);
+
   useEffect(() => {
-    // Sound is ON by default; only off if the user explicitly turned it off.
+    // Sound is ON by default. Auto-print is OFF by default and enabled per
+    // device (tap it once on the kiosk) so staff phones don't get print dialogs.
     setSoundOn(localStorage.getItem(SOUND_KEY) !== "off");
+    setPrintOn(localStorage.getItem(PRINT_KEY) === "on");
+    try {
+      const raw = localStorage.getItem(PRINTED_KEY);
+      if (raw) printedRef.current = new Set(JSON.parse(raw) as string[]);
+    } catch { /* ignore malformed */ }
     if (new URLSearchParams(window.location.search).get("new") === "1") {
       setShowForm(true);
       window.history.replaceState(null, "", "/admin");
@@ -88,10 +118,22 @@ export function OrdersBoard() {
         }
         announce(msg);
       }
+      // Auto-print: received orders not yet sent to the printer. On the first
+      // poll we only seed the printed-set (so we don't dump the existing
+      // backlog); after that, genuinely new orders each print once.
+      if (printOn) {
+        const toPrint = incoming.filter((o) => !printedRef.current.has(o.id));
+        if (firstLoadRef.current) {
+          rememberPrinted(toPrint.map((o) => o.id));
+        } else if (toPrint.length) {
+          rememberPrinted(toPrint.map((o) => o.id));
+          setPrintQueue((q) => [...q, ...toPrint]);
+        }
+      }
       firstLoadRef.current = false;
     }
     setOrders(data.orders);
-  }, [soundOn]);
+  }, [soundOn, printOn, rememberPrinted]);
 
   useEffect(() => {
     firstLoadRef.current = true;
@@ -101,6 +143,26 @@ export function OrdersBoard() {
     window.addEventListener("focus", onFocus);
     return () => { clearInterval(t); window.removeEventListener("focus", onFocus); };
   }, [lane, load]);
+
+  // Process the print queue one ticket at a time. The head ticket renders into
+  // #kitchen-receipt (below); once printed we drop it so the next one renders.
+  // Keyed on the head id so appending more tickets mid-print never reprints it.
+  const printHeadId = printQueue[0]?.id;
+  useEffect(() => {
+    if (!printHeadId) return;
+    let advanced = false;
+    const advance = () => {
+      if (advanced) return;
+      advanced = true;
+      setPrintQueue((q) => q.slice(1));
+    };
+    const t = setTimeout(() => {
+      window.addEventListener("afterprint", advance, { once: true });
+      try { window.print(); } catch { /* no print context */ }
+      setTimeout(advance, 2000); // fallback if afterprint never fires
+    }, 150);
+    return () => clearTimeout(t);
+  }, [printHeadId]);
 
   const patchStatus = async (id: string, to: string) => {
     setBusyId(id);
@@ -128,6 +190,16 @@ export function OrdersBoard() {
     localStorage.setItem(SOUND_KEY, next ? "on" : "off");
     if (next) beep(); // unlock audio on the user gesture
   };
+  const togglePrint = () => {
+    const next = !printOn;
+    setPrintOn(next);
+    localStorage.setItem(PRINT_KEY, next ? "on" : "off");
+  };
+  // Manual reprint from an order card (ticket jam, lost copy, etc.).
+  const reprint = (id: string) => {
+    const o = orders.find((x) => x.id === id);
+    if (o) enqueuePrint(o);
+  };
 
   const tab = (l: Lane, label: string) => (
     <button onClick={() => setLane(l)}
@@ -146,6 +218,10 @@ export function OrdersBoard() {
             style={{ border: "1px solid rgba(201,162,75,0.3)", color: soundOn ? "#C9A24B" : "#8A8276" }}>
             {soundOn ? "🔔 Sound on" : "🔕 Sound off"}
           </button>
+          <button onClick={togglePrint} className="text-xs px-3 py-1.5 rounded-full"
+            style={{ border: "1px solid rgba(201,162,75,0.3)", color: printOn ? "#C9A24B" : "#8A8276" }}>
+            {printOn ? "🖨 Auto-print on" : "🖨 Auto-print off"}
+          </button>
           <button onClick={() => setShowForm((s) => !s)} className="text-xs px-3 py-1.5 rounded-full font-semibold"
             style={{ backgroundColor: "#C9A24B", color: "#14100D" }}>+ New order</button>
         </div>
@@ -155,11 +231,13 @@ export function OrdersBoard() {
       )}
       {orders.length === 0 && <p style={{ color: "#8A8276" }}>No orders in this lane.</p>}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={openRefund} />
+        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={openRefund} onPrint={reprint} />
       ))}
       {refunding && (
         <RefundModal order={refunding} onClose={() => setRefunding(null)} onDone={() => load(lane)} />
       )}
+      {/* Hidden on screen; revealed only by the @media print rules in globals.css. */}
+      {printQueue[0] && <KitchenReceipt order={printQueue[0]} />}
     </div>
   );
 }

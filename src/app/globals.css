@@ -220,3 +220,28 @@ body::after {
 @media (prefers-reduced-motion: reduce) {
   body::after { display: none; }
 }
+
+/* Kitchen ticket printing. The receipt is hidden on screen and revealed ONLY
+   while printing, where everything else is hidden. The on-site machine runs
+   Chrome with --kiosk-printing so window.print() fires silently to the Star
+   TSP100. */
+#kitchen-receipt { display: none; }
+@media print {
+  body * { visibility: hidden; }
+  body::after { display: none; }
+  #kitchen-receipt,
+  #kitchen-receipt * { visibility: visible; }
+  #kitchen-receipt {
+    display: block;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 80mm;
+    padding: 4mm 3mm;
+    background: #fff;
+  }
+}
+@page {
+  size: 80mm auto;
+  margin: 0;
+}
