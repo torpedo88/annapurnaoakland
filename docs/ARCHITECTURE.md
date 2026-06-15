@@ -5,8 +5,27 @@ restaurant (Oakland, CA). This document is for developers who will maintain or
 extend the system. It explains how the pieces fit, why key decisions were made,
 and where the sharp edges are.
 
-> DoorDash Drive has its own deep-dive + production cutover runbook:
-> [`docs/DOORDASH.md`](./DOORDASH.md).
+This is the **single source of truth** — architecture, how-to, onboarding, and
+support are all here. New to the project? Jump to **§18 Developer Onboarding**.
+On call / something's broken? Go to **§19 Support & Operations Runbook**.
+
+> `docs/DOORDASH.md` is an optional deep-dive on the DoorDash provider (not the
+> active courier — prod runs Uber, §9). Everything you need day-to-day is below.
+
+## Contents
+
+**Understand the system**
+1. Stack · 2. System context · 3. Repository layout · 4. Auth & RBAC ·
+5. Data model · 6. Ordering pipeline · 7. Menu & dish images · 8. Pricing &
+settings · 9. Delivery providers (Uber/DoorDash/self) · 10. Frontend conventions
+
+**Build & ship**
+11. Local development · 12. Environment variables · 13. Deployment ·
+14. Testing · 15. Roadmap · 16. Gotchas · 17. Redirects & SEO
+
+**Operate**
+18. Developer onboarding (day-1 → first PR) · 19. Support & operations runbook ·
+20. Uber Direct go-live runbook
 
 ---
 
@@ -611,3 +630,311 @@ Other SEO surfaces: `src/app/sitemap.ts`, `src/app/robots.ts`, JSON-LD in
 `src/components/seo/restaurant-jsonld.tsx`, and metadata in `src/app/layout.tsx`.
 The **home footer** (`src/components/home/luxe/footer.tsx`) shows the address +
 a keyless Google Maps embed (`output=embed`, no API key) linking to directions.
+
+---
+
+## 18. Developer onboarding (day-1 → first PR)
+
+Welcome. This section takes a new developer from zero to a shipped change. Read
+§1–§10 first for the "why"; this is the "how".
+
+### 18.1 Access you'll need
+
+Ask the owner to grant these before you start. Without them you can read code but
+can't run or ship the app.
+
+| System | Why | How to get it |
+|--------|-----|---------------|
+| **GitHub** repo (`torpedo88/annapurnaoakland`) | Code + PRs | Repo collaborator invite |
+| **Vercel** project | Deploys, logs, env vars | Team member invite |
+| **Supabase** (prod + dev projects) | Database, SQL editor | Org invite (prod ref + dev ref) |
+| **Stripe** dashboard | Payments, refunds, webhook secret | Account invite (use **Test mode** for dev) |
+| **Uber Direct** (developer + Direct dashboard) | Live courier (primary), test mode | Org invite |
+| **DoorDash** developer portal | Fallback courier (optional) | Org invite |
+| **Domain DNS** (Wix) | `dev.` subdomain, mail | Owner adds records for you |
+| **Google Cloud** | Maps/geocoding API key | Owner shares key + adds referrers |
+| **Secrets** (`.env` values) | Local + Vercel config | Pull from Vercel (`vercel env pull`) or owner's secret store — **never** paste secrets into chat, commits, or this doc |
+
+### 18.2 Local setup (≈15 min)
+
+Prereqs: **Node.js 20+**, **git**, and the **Vercel CLI** (`npm i -g vercel`).
+
+```bash
+git clone git@github.com:torpedo88/annapurnaoakland.git
+cd annapurnaoakland
+npm install
+
+# Get env values. Easiest: pull the dev/preview set from Vercel.
+vercel link                       # select the annapurnaoakland project
+vercel env pull .env.local        # writes the linked env into .env.local
+# …or copy .env.example → .env.local and fill from the owner's secret store.
+
+npm run db:seed:staff             # creates the first owner (needs ADMIN_BOOTSTRAP_* set)
+npm run dev                       # http://localhost:3000
+```
+
+- Public site: <http://localhost:3000>  ·  Admin: <http://localhost:3000/admin>
+- Log in with `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD`.
+- **Point local at the dev DB + test keys**, never prod (see [`../DEV.md`](../DEV.md)).
+  Use Stripe **test mode** (card `4242 4242 4242 4242`) and Uber **test** creds
+  (simulated "robocourier"). You should never trigger a real charge or driver
+  from a laptop.
+
+If the app throws `Missing required env var: X` on boot, that accessor in
+`src/lib/env.ts` needs `X` set — fill it in `.env.local` (see §12).
+
+### 18.3 The 5-minute mental model
+
+- **Two front-ends, one API, one DB** (§2). Public site (no auth, capability-token
+  order reads) + admin panel (session + RBAC).
+- **Server is authoritative.** Prices come from `src/data/menu.ts` via
+  `priceOrder`; clients send `{id, qty}` only. Settings (tax, delivery, pause)
+  live in the DB and gate every order (§8).
+- **Delivery is pluggable** by `settings.delivery.dispatchMode` — Uber (prod
+  default), DoorDash, or self (§9).
+- **One funnel for orders:** `placeOrder` (immediate) and `createPendingOrder` →
+  Stripe webhook → `dispatchPaidOrder` (online prepay). Same pricing/validation (§6).
+- **The route guard is `src/proxy.ts`**, not `middleware.ts` (Next 16).
+
+### 18.4 Golden paths — how to make common changes
+
+Each lists the files to touch. Match the surrounding style; add/adjust tests.
+
+1. **Edit a menu item's name/price/description** → `src/data/menu.ts` (the
+   public `/menu` is static). Remember the DB `menu_items` table is a *separate*
+   system used only for availability today (§7) — don't expect admin Menu edits
+   to change public text/price yet.
+2. **Change tax, delivery fee, pause ordering, switch courier** → no code:
+   admin **Settings** (`/admin/settings`) writes `restaurant_settings`. Defaults
+   and validation live in `src/lib/settings/index.ts`; the fee math in
+   `src/lib/orders/delivery-pricing.ts` (§8).
+3. **Add an admin page** → create `src/app/admin/(panel)/<name>/page.tsx` as a
+   server component that checks the session/role, rendering a `"use client"`
+   component that talks to `/api/admin/<name>`. Add the tab (role-gated) in
+   `admin/(panel)/layout.tsx`. Copy an existing page (e.g. `promos`) for the
+   pattern (§4, §10).
+4. **Add an admin API route** → `src/app/api/admin/<name>/route.ts`. Start with
+   `await requireRole([...])`, remember **params are async**
+   (`{ params }: { params: Promise<{ id: string }> }`), and never return secrets
+   (the orders list strips `accessToken`, §6).
+5. **Change the order status flow** → `src/lib/orders/status.ts` (state machines
+   + `canTransition`). Staff may advance only to `ready`/`completed`; courier
+   states are webhook-only. Update the colocated `status.test.ts` (§6).
+6. **Add/replace a delivery provider** → follow the `dispatchMode` pattern (§9):
+   a client module under `src/lib/<provider>/` (quote/dispatch/cancel + webhook),
+   a branch in `POST /api/delivery/quote` and in `placeOrder`, and a webhook
+   route mapping statuses through `canTransition(actor="webhook")`.
+7. **Add a new env-backed secret** → add an accessor in `src/lib/env.ts`
+   (`required()` for must-have, `?? ""` for optional), document it in §12, and
+   push it to Vercel (§13 / §19.5).
+
+### 18.5 Definition of done (before you open a PR)
+
+```bash
+npm test            # vitest — add/adjust tests next to the unit you changed
+npx tsc --noEmit    # types clean
+npm run build       # production build + lint pass
+```
+
+- **Update the docs in the same change** — required (see `AGENTS.md`): this file,
+  `README.md`, and any feature doc. Stale docs are treated as a bug.
+- Match existing conventions: inline-hex design tokens (§10), the server-page +
+  client-component admin pattern, async route params.
+- **No secrets** in code, commits, or output. Branch off `main`; never commit to
+  `main` directly without a green build.
+
+### 18.6 Branch & ship workflow
+
+```bash
+git checkout main && git pull
+git checkout -b feat/<short-name>
+# …change code + tests + docs; run the DoD checks above…
+git push -u origin feat/<short-name>
+# open a PR, or fast-forward merge to main when approved:
+git checkout main && git merge --ff-only feat/<short-name> && git push origin main
+```
+
+- **`main` → production** (`annapurnaoakland.com`); **`dev` → staging**
+  (`dev.annapurnaoakland.com`). Vercel auto-deploys on push. Verify on staging
+  before merging to `main` for anything risky (§13, [`../DEV.md`](../DEV.md)).
+
+### 18.7 First-week checklist
+
+- [ ] Local app + admin login working against the **dev** DB.
+- [ ] Placed a **test** pickup order and a **test** delivery order (Uber test mode).
+- [ ] Ran `npm test` green; opened a tiny doc/typo PR end-to-end.
+- [ ] Skimmed §16 Gotchas and §19 Support runbook.
+- [ ] Know how to read prod logs (§19.4) and run a read-only prod DB query (§19.5).
+
+---
+
+## 19. Support & operations runbook
+
+For whoever is on call. **Golden rule: diagnose on staging/logs first; never run
+write queries or experiments against the prod DB.**
+
+### 19.1 Production facts
+
+| | Value |
+|--|--|
+| Public site | `https://annapurnaoakland.com` |
+| Admin | `https://annapurnaoakland.com/admin` |
+| Host | Vercel (project `annapurnaoakland`) |
+| DB | Supabase Postgres (prod project; ref in the Supabase org / Vercel `DATABASE_URL`) |
+| Primary courier | **Uber Direct**, flat **$6.99** customer fee (`dispatchMode: uber`, §9) |
+| Payments | Stripe (live), embedded checkout + webhook (§6/§8) |
+| Kitchen printing | On-site Chrome `--kiosk-printing` → Star TSP100 ([`KITCHEN-PRINTING.md`](./KITCHEN-PRINTING.md)) |
+
+### 19.2 Incident playbooks (symptom → diagnose → fix)
+
+**1. Orders aren't appearing on the kitchen board.**
+- Diagnose: is online ordering paused? Check admin **Settings** →
+  `ordering_paused`, `pickup_enabled`, `delivery_enabled`. Hit
+  `GET /api/admin/orders?lane=active` (logged in). Check the board is on the
+  *Active* lane and the tab actually polls (every 10s).
+- Fix: unpause in Settings (no deploy). If the API 500s, see incident #5.
+
+**2. New orders aren't printing.**
+- Diagnose: confirm **🖨 Auto-print on** is lit on the kiosk; that Chrome was
+  launched with `--kiosk-printing`; the TSP100 is the **default** printer and has
+  paper. A non-kiosk browser shows a dialog instead of printing.
+- Fix / details + flags: [`KITCHEN-PRINTING.md`](./KITCHEN-PRINTING.md). Reprint
+  any order with the per-card **🖨 Print** button.
+
+**3. Delivery orders aren't getting a driver.**
+- Diagnose: Vercel runtime logs for `[placeOrder] Uber dispatch failed` or
+  `[quote] Uber quote failed` (§19.4). Common causes: missing/expired Uber creds,
+  Uber test-mode creds in prod (or vice-versa), address Uber can't service, or an
+  **expired quote** (Uber quotes are short-lived — `dispatchPaidOrder` re-quotes
+  on purpose; a manual flow that reuses a stale quote will fail).
+- Fix: correct the `UBER_*` env (§19.5) + redeploy; or temporarily switch
+  **Settings → dispatch mode** to `self` (flat fee, you deliver) to keep taking
+  orders while the courier issue is resolved. `doordash` is the other fallback.
+
+**4. A customer paid but the order is stuck `pending_payment`.**
+- Diagnose: the Stripe **webhook** didn't reach `dispatchPaidOrder`. Check Stripe
+  Dashboard → Developers → Webhooks for failed deliveries to
+  `/api/stripe/webhook`, and that `STRIPE_WEBHOOK_SECRET` in Vercel matches that
+  endpoint's signing secret. Check Vercel logs for the webhook route.
+- Fix: re-send the event from the Stripe dashboard once the secret is correct.
+  `dispatchPaidOrder` is idempotent (atomic "flip to paid" claim), so replays are
+  safe. Refund from Stripe if the order can't be fulfilled.
+
+**5. The whole site returns 500.**
+- Diagnose: almost always a **missing/incorrect env var** in prod — an
+  `env.ts` `required()` throws at runtime. Check the most recent deploy's build
+  logs and runtime logs (§19.4). (This exact failure has happened before when
+  prod env vars were empty.)
+- Fix: set the missing var (§19.5) and **redeploy** — env changes don't reach
+  running functions until a new deploy. If a bad deploy caused it, **roll back**
+  (§19.6).
+
+**6. One page/route is broken or the build failed.**
+- Diagnose: Vercel deploy → build logs. Reproduce locally with `npm run build`.
+- Fix: patch on a branch, verify build, ship. If prod is broken *now*, roll back
+  to the last good deploy first (§19.6), then fix forward.
+
+**7. Pause ordering (closed early / kitchen slammed / courier outage).**
+- Admin **Settings**: toggle `ordering_paused` (kills all online ordering) or
+  `delivery_enabled` / `pickup_enabled` individually. Takes effect immediately,
+  no deploy. `placeOrder` enforces these server-side.
+
+**8. Refund a customer.**
+- Admin order card → **Refund** (online-paid orders). Backed by
+  `POST /api/admin/orders/[id]/refund` → Stripe refund; a full refund of a
+  not-yet-picked-up delivery also cancels the courier (`src/lib/orders/refund.ts`).
+
+### 19.3 Routine operations
+
+- **Deploy:** push to `main` (auto) or `npx vercel --prod --yes`.
+- **Check status:** `npx vercel ls` (recent deploys) / Vercel dashboard.
+- See §19.4–§19.6 for logs, env, and rollback.
+
+### 19.4 Logs & monitoring
+
+- **Runtime logs** (function errors, our `console.error`): Vercel dashboard →
+  project → Logs, or `npx vercel logs <deployment-url>`. All our handlers log
+  with bracketed prefixes (`[placeOrder]`, `[quote]`, `[dispatchPaidOrder]`).
+- **Build logs:** the deployment's page in the Vercel dashboard.
+- **Stripe / Uber dashboards** have their own webhook delivery + request logs —
+  use them to confirm whether an event ever reached us.
+
+### 19.5 Manage env vars (safely)
+
+```bash
+npx vercel env ls                                   # names + scopes (no values)
+printf '%s' "$VALUE" | npx vercel env add NAME production   # add without echoing
+npx vercel env rm NAME production
+npx vercel --prod --yes                             # redeploy so functions see it
+```
+
+Scope dev values to **preview** only (§13, DEV.md). **Never** paste a secret into
+a commit, PR, this doc, or chat. If a secret is exposed, rotate it at the provider
+and update Vercel + `.env`.
+
+### 19.6 Roll back a bad deploy
+
+- Vercel dashboard → Deployments → pick the last known-good → **Promote to
+  Production** (instant, no rebuild). Or `npx vercel rollback`.
+- Then fix forward on a branch.
+
+### 19.7 Query the prod DB (read-only, no secret leak)
+
+`psql` isn't installed locally; use a throwaway Node script **inside the repo**
+(so `postgres` resolves) and load the URL without printing it:
+
+```bash
+cat > ._q.mjs <<'EOF'
+import postgres from "postgres";
+const sql = postgres(process.env.DBURL, { ssl: "require" });
+console.log(await sql`select key, value from restaurant_settings`);
+await sql.end();
+EOF
+export DBURL=$(grep -E '^DATABASE_URL=' .env.prod | head -1 | cut -d= -f2- | tr -d '"'"'"'')
+node ._q.mjs && rm -f ._q.mjs        # never `echo $DBURL`
+```
+
+Keep it to **read-only** `select`s. Schema lives in `src/db/schema.ts`; for a UI
+use Supabase's SQL editor or `npm run db:studio` against the right DB.
+
+### 19.8 Escalation
+
+App/code/deploy issues → the maintaining developer. Payment disputes → Stripe
+dashboard + owner. Courier/delivery disputes → Uber Direct support + owner.
+Restaurant ops (hours, pause, menu availability) → owner via the admin panel.
+
+---
+
+## 20. Uber Direct go-live runbook
+
+Uber is the **active** courier (§9). Use this to (re)configure it or move a fresh
+environment from test → production.
+
+**Mechanics** (`src/lib/uber/client.ts`): client-credentials OAuth at
+`https://auth.uber.com/oauth/v2/token` (scope `eats.deliveries`, token cached
+~30 days), then `POST https://api.uber.com/v1/customers/{UBER_CUSTOMER_ID}/…` for
+quote → delivery → cancel. Webhooks hit `POST /api/uber/webhook`, verified by the
+`X-Uber-Signature` HMAC (§9).
+
+**Env vars** (§12): `UBER_CLIENT_ID`, `UBER_CLIENT_SECRET`, `UBER_CUSTOMER_ID`,
+`UBER_SIGNING_KEY`, plus `RESTAURANT_PICKUP_ADDRESS` / `RESTAURANT_PICKUP_PHONE`.
+
+**Going live — checklist:**
+
+1. In the Uber Direct dashboard, get **production** Customer ID / Client ID /
+   Client Secret (test mode dispatches a simulated "robocourier"; production
+   dispatches a real driver and charges).
+2. Set the four `UBER_*` vars in Vercel **production** scope (§19.5); keep test
+   creds in **preview**. Redeploy.
+3. Register the webhook URL `https://annapurnaoakland.com/api/uber/webhook` in the
+   Uber dashboard; copy its signing key into `UBER_SIGNING_KEY`.
+4. In admin **Settings**, set dispatch mode to **Uber** and choose the customer
+   fee model (prod uses `mode: flat`, $6.99).
+5. Verify: place one real low-value delivery order; confirm a driver is assigned,
+   the tracking URL works, and webhook status updates land on the order.
+
+**Rollback:** flip **Settings → dispatch mode** to `self` (you deliver, flat fee)
+or `doordash` — instant, no deploy. No code change needed to switch couriers.
+
+**Troubleshooting:** see §19.2 incident #3. Most failures are credential
+mismatch (test vs prod), an unserviceable address, or a stale quote.

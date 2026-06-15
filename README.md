@@ -51,10 +51,12 @@ Postgres · Tailwind · Vercel · DoorDash Drive · Uber Direct.
 
 ## Documentation
 
-- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — full architecture, data
-  model, auth/RBAC, ordering pipeline, pricing/settings, env vars, gotchas.
-- **[docs/DOORDASH.md](./docs/DOORDASH.md)** — DoorDash Drive integration +
-  production cutover runbook.
+- **[docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)** — the single source of
+  truth: architecture, data model, auth/RBAC, ordering + payments, delivery
+  providers, env vars, gotchas, **developer onboarding (§18)**, a **support &
+  operations runbook (§19)**, and the **Uber go-live runbook (§20)**.
+- **[docs/DOORDASH.md](./docs/DOORDASH.md)** — optional deep-dive on the DoorDash
+  provider (fallback courier; prod runs Uber).
 - **[docs/KITCHEN-PRINTING.md](./docs/KITCHEN-PRINTING.md)** — auto-printing
   kitchen tickets to the Star TSP100 (kiosk setup + troubleshooting).
 - `docs/superpowers/specs|plans/` — historical design specs and build plans.
