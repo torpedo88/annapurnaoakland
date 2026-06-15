@@ -21,7 +21,7 @@ and where the sharp edges are.
 | Validation | `zod` (selective), hand-rolled validators in `src/lib/orders/pricing.ts` | |
 | Tests | **Vitest** | `npm test`; needs a `server-only` shim (see §11) |
 | Hosting | **Vercel** | Functions run the Node.js runtime; prod = `annapurnaoakland.vercel.app` |
-| Delivery | **DoorDash Drive API** (Drive v2) | Quote → accept (dispatch) → webhook status |
+| Delivery | **DoorDash Drive** or **Uber Direct** (selectable) + self-delivery | Provider chosen by `settings.delivery.dispatchMode`; quote → dispatch → webhook status (§9) |
 
 > **Read `AGENTS.md` first.** This Next.js version has breaking changes vs.
 > older docs. Route handler params are async (`{ params }: { params: Promise<…> }`),
@@ -84,12 +84,14 @@ src/
       menu/availability/     Public: "86" (unavailable) item slugs
       settings/public/       Public-safe subset of settings
       doordash/webhook/      DoorDash → us: delivery status events
+      uber/webhook/          Uber Direct → us: delivery status events
       admin/                 Auth-gated: orders, menu, promos, reservations,
                              catering, staff, settings
   lib/
     auth/                    password (scrypt), session (signed HMAC cookie)
     orders/                  pricing, status machines, place-order, delivery-pricing
     doordash/                jwt, client, webhook, types
+    uber/                    Uber Direct: client (quote/dispatch/cancel), webhook
     settings/                typed settings folded over DB key/value rows
     dish-images.ts           name → /images/dishes/<key>.jpg matcher
     env.ts                   required() env accessors
@@ -256,8 +258,25 @@ stateDiagram-v2
 
 Orders carry `paymentStatus` (`unpaid|paid|refunded`) and `paymentMethod`
 (`cash|card|online`), independent of fulfillment status. Staff toggle these via
-`PATCH /api/admin/orders/[id]/payment`. **Stripe is not integrated** — payment is
-pay-on-handoff today (P6, future).
+`PATCH /api/admin/orders/[id]/payment` for cash/card at handoff.
+
+**Stripe is integrated** for online prepayment. Public checkout uses Stripe
+**Embedded Checkout** (`@stripe/react-stripe-js`); the order is persisted as
+`pending_payment` and **no courier is dispatched** until Stripe confirms. The
+`POST /api/stripe/webhook` handler (`src/lib/stripe/`) then calls
+`dispatchPaidOrder` — an atomic, idempotent "flip to paid + received" that
+dispatches the courier (re-quoting Uber fresh, since its quotes expire fast).
+Refunds: `src/lib/orders/refund.ts` (+ `/api/admin/orders/[id]/refund`).
+
+### Two entry paths
+
+- **Immediate** (`placeOrder`) — manual/phone orders and pay-on-handoff:
+  validate → price → dispatch courier → persist as `received`.
+- **Online prepay** (`createPendingOrder` → Stripe → `dispatchPaidOrder`) —
+  public card checkout: persist as `pending_payment` with **no** dispatch, then
+  the Stripe webhook flips it to paid + `received` and dispatches the courier.
+
+Both live in `src/lib/orders/place-order.ts` and share the same pricing/validation.
 
 ### Reading an order back (IDOR guard)
 
@@ -333,15 +352,17 @@ interface Settings {
   ordering_paused: boolean;    // kill switch for all online ordering
   pickup_enabled: boolean;
   delivery_enabled: boolean;
+  dish_of_day: { itemId: string | null; discountPercent: number };
 }
 interface DeliverySettings {
-  mode: "live" | "flat";       // live = DoorDash fee + markup; flat = fixed fee
+  mode: "live" | "flat";       // live = courier fee + markup; flat = fixed fee
   flatFeeCents: number;
-  markupCents: number;         // added to the live DoorDash fee
-  markupPercent: number;       // % added to the live DoorDash fee
+  markupCents: number;         // added to the live courier fee
+  markupPercent: number;       // % added to the live courier fee
   freeThresholdCents: number;  // 0 = disabled; free delivery at/above this subtotal
   minOrderCents: number;       // delivery minimum (assertDeliverable)
-  maxRadiusMiles: number;      // enforced via DoorDash undeliverable rejection
+  maxRadiusMiles: number;      // enforced via courier undeliverable rejection
+  dispatchMode: "doordash" | "uber" | "self"; // which courier dispatches (§9)
 }
 ```
 
@@ -358,9 +379,37 @@ Admins edit all of this at **`/admin/settings`** → `PATCH /api/admin/settings`
 
 ---
 
-## 9. DoorDash Drive (summary)
+## 9. Delivery providers
 
-Full detail + production cutover in [`docs/DOORDASH.md`](./DOORDASH.md). In brief:
+Delivery dispatch is **provider-selectable** via `settings.delivery.dispatchMode`
+(admin Settings). One order schema (`deliveries` row) serves all three:
+
+| `dispatchMode` | Behavior |
+|----------------|----------|
+| `doordash` (default) | DoorDash Drive: client holds an `externalDeliveryId` from the quote; `placeOrder` calls `acceptQuote` to dispatch. |
+| `uber` | Uber Direct: `placeOrder` calls `createUberQuote` then `createUberDelivery` to dispatch (no client-held id). |
+| `self` | Restaurant delivers: flat fee only, no courier API call. |
+
+Both the public quote (`POST /api/delivery/quote`) and `placeOrder` branch on
+`dispatchMode`, so pricing and dispatch always agree. `computeDeliveryFee` applies
+the admin markup on top of whichever courier fee comes back (the field is still
+named `doordashFeeCents` for historical reasons — it carries the Uber fee too).
+
+**Uber Direct** (`src/lib/uber/`):
+
+- **Client** `client.ts`: `createUberQuote`, `createUberDelivery` (= dispatch),
+  `getUberDelivery`, `cancelUberDelivery`. OAuth via `UBER_CLIENT_ID` /
+  `UBER_CLIENT_SECRET` / `UBER_CUSTOMER_ID`.
+- **Webhook** `POST /api/uber/webhook`: verifies `X-Uber-Signature`
+  (HMAC-SHA256 of the raw body, keyed by `UBER_SIGNING_KEY`, falling back to the
+  client secret), maps Uber status → order status via `mapUberStatus` +
+  `canTransition(actor="webhook")`.
+- **Refund/cancel** (`src/lib/orders/refund.ts`): on a full refund of a
+  not-yet-picked-up delivery, the provider is inferred from the id —
+  `anp-…` → `cancelDelivery` (DoorDash), otherwise `cancelUberDelivery`.
+
+**DoorDash Drive** — full detail + production cutover in
+[`docs/DOORDASH.md`](./DOORDASH.md). In brief:
 
 - **Auth** — `src/lib/doordash/jwt.ts`: HS256 JWT, `DD-JWT-V1`, 5-min expiry,
   from `DOORDASH_DEVELOPER_ID` / `_KEY_ID` / `_SIGNING_SECRET`.
@@ -449,17 +498,28 @@ NODE_OPTIONS="--require $(pwd)/scripts/_server-only-shim.cjs" \
 | `STAFF_SESSION_SECRET` | ✅ | Session token signing (`session-core.ts`) |
 | `NEXT_PUBLIC_SUPABASE_URL` | ✅ | Client Supabase URL |
 | `NEXT_PUBLIC_SUPABASE_ANON_KEY` | ✅ | Client Supabase anon key |
-| `DOORDASH_DEVELOPER_ID` | ✅ (delivery) | Drive JWT |
-| `DOORDASH_KEY_ID` | ✅ (delivery) | Drive JWT |
-| `DOORDASH_SIGNING_SECRET` | ✅ (delivery) | Drive JWT |
-| `DOORDASH_WEBHOOK_SECRET` | ✅ (delivery) | Webhook auth token / HMAC |
-| `RESTAURANT_PICKUP_ADDRESS` | ✅ (delivery) | Drive pickup |
-| `RESTAURANT_PICKUP_PHONE` | ✅ (delivery) | Drive pickup |
+| `SUPABASE_SERVICE_ROLE_KEY` | ✅ | Server-side Supabase (`env.supabase()`) |
+| `STRIPE_SECRET_KEY` | ✅ | Stripe charges/refunds (`env.stripe()`) |
+| `STRIPE_WEBHOOK_SECRET` | ✅ | Stripe webhook signature verification |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | ✅ | Client Stripe.js (checkout) |
+| `DOORDASH_DEVELOPER_ID` | ✅ (DoorDash) | Drive JWT |
+| `DOORDASH_KEY_ID` | ✅ (DoorDash) | Drive JWT |
+| `DOORDASH_SIGNING_SECRET` | ✅ (DoorDash) | Drive JWT |
+| `DOORDASH_WEBHOOK_SECRET` | ✅ (DoorDash) | Webhook auth token / HMAC |
+| `UBER_CLIENT_ID` / `UBER_CLIENT_SECRET` / `UBER_CUSTOMER_ID` | ✅ (Uber mode) | Uber Direct OAuth + dispatch (`env.uber()`) |
+| `UBER_SIGNING_KEY` | ✅ (Uber mode) | Uber webhook `X-Uber-Signature` HMAC (falls back to client secret) |
+| `RESTAURANT_PICKUP_ADDRESS` | ✅ (delivery) | Courier pickup |
+| `RESTAURANT_PICKUP_PHONE` | ✅ (delivery) | Courier pickup |
+| `GOOGLE_GEOCODING_API_KEY` | optional | Address geocoding (`env.geocoding()`) |
+| `SENDGRID_API_KEY` / `EMAIL_FROM` / `RESTAURANT_NOTIFY_EMAIL` | optional | Order email notifications |
+| `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` / `RESTAURANT_NOTIFY_PHONE` | optional | Order SMS notifications |
 | `NEXT_PUBLIC_BASE_URL` | optional | Absolute URLs (defaults to localhost) |
 | `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` | seed only | `db:seed:staff` |
 
-`env.doordash()` evaluates **all four** DoorDash vars eagerly — any delivery
-code path throws if even one is missing. Set them together.
+`env.doordash()` and `env.stripe()` use `required()` — they throw if any of their
+vars is missing the moment that accessor runs. `env.uber()` reads with `?? ""`
+defaults, so set the Uber vars whenever `dispatchMode` is `uber`. All accessors
+live in `src/lib/env.ts`.
 
 > **Secrets policy:** never commit secrets or print them. To push to Vercel
 > without echoing the value:
@@ -503,8 +563,9 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 | P3 | Menu CRUD + **unify public menu onto the DB** | partial (CRUD ✅, public still static) |
 | P4 | Hours/closures + reservations + catering inbox | ✅ (pages live) |
 | P5 | Promos / discounts (new `promos` table) | ✅ (CRUD; not yet applied at checkout) |
-| P6 | Stripe payments + refunds | ❌ (greenfield, separate track) |
+| P6 | Stripe payments + refunds | ✅ (embedded checkout, webhook → prepay dispatch, refunds; §6/§8) |
 | — | DoorDash Drive dispatch + tracking | ✅ (sandbox verified; prod cutover pending) |
+| — | Uber Direct dispatch + tracking (`dispatchMode: "uber"`) | ✅ (§9) |
 | — | Kitchen ticket auto-printing (80mm thermal) | ✅ (browser kiosk-printing; §10) |
 | — | Footer location map + `/order`→`/menu` SEO redirect | ✅ |
 

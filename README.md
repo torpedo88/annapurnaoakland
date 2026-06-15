@@ -1,14 +1,16 @@
 # Annapurna Oakland
 
-Online ordering site, kitchen/admin panel, and DoorDash delivery dispatch for
-Annapurna restaurant — a Himalayan/Nepali-Indian kitchen in Oakland, CA.
+Online ordering site, kitchen/admin panel, and courier delivery dispatch
+(DoorDash Drive / Uber Direct / self-delivery) for Annapurna restaurant — a
+Himalayan/Nepali-Indian kitchen in Oakland, CA.
 
 - **Public site** — menu, cart, checkout, live order tracking.
 - **Admin panel** (`/admin`) — live orders board (auto-prints 80mm kitchen
   tickets to a thermal printer), menu/promos/reservations/catering/staff
   management, settings. Role-gated (owner / manager / staff).
-- **Delivery** — DoorDash Drive: quote → dispatch a driver → status webhooks →
-  embedded live tracking map.
+- **Delivery** — selectable courier (DoorDash Drive, Uber Direct, or
+  self-delivery) via admin settings: quote → dispatch a driver → status
+  webhooks → live tracking. See ARCHITECTURE §9.
 
 ## Quick start
 
@@ -41,7 +43,7 @@ npm run db:studio    # drizzle studio
 ## Stack
 
 Next.js 16 (App Router) · React 19 · TypeScript · Drizzle ORM · Supabase
-Postgres · Tailwind · Vercel · DoorDash Drive.
+Postgres · Tailwind · Vercel · DoorDash Drive · Uber Direct.
 
 > **Heads-up:** this Next.js version has breaking changes vs. older docs. The
 > middleware/route guard is `src/proxy.ts` (not `middleware.ts`), and route
