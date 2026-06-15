@@ -390,6 +390,10 @@ Delivery dispatch is **provider-selectable** via `settings.delivery.dispatchMode
 | `uber` | Uber Direct: `placeOrder` calls `createUberQuote` then `createUberDelivery` to dispatch (no client-held id). |
 | `self` | Restaurant delivers: flat fee only, no courier API call. |
 
+> **Production currently runs `uber`** with `mode: "flat"` (customer pays a flat
+> $6.99 delivery fee; Uber still dispatches the driver). `doordash` is the code
+> default and stays wired as a fallback. Change both in admin **Settings**.
+
 Both the public quote (`POST /api/delivery/quote`) and `placeOrder` branch on
 `dispatchMode`, so pricing and dispatch always agree. `computeDeliveryFee` applies
 the admin markup on top of whichever courier fee comes back (the field is still
