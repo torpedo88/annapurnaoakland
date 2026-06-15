@@ -9,6 +9,13 @@ const nextConfig: NextConfig = {
       { protocol: "https", hostname: "*.supabase.co", pathname: "/storage/v1/object/public/**" },
     ],
   },
+  async redirects() {
+    return [
+      // /order has no index page (only /order/[id] tracking). Google indexed the
+      // bare /order URL, which 404s. Permanently (308) route it to the menu.
+      { source: "/order", destination: "/menu", permanent: true },
+    ];
+  },
 };
 
 export default nextConfig;
