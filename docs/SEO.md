@@ -37,9 +37,12 @@ Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
 Google shows hours/photos/category in Search & Maps from here, **not** the
 website. This is ~70% of local restaurant SEO.
 
-- [ ] **Hours**: Edit profile → Hours → **Sunday = Closed**, **Mon–Sat 11:00 AM–9:30 PM**.
-- [ ] **Primary category**: "Nepalese restaurant" (secondary: "Himalayan
-      restaurant", "Indian restaurant").
+- [x] **Hours**: verified in GBP — **Sunday Closed**, Mon–Sat 11AM–9:30PM
+      (matches the site).
+- [ ] **Primary category**: keep **"Nepalese restaurant" as PRIMARY** (it
+      already is). Do NOT switch primary to "Indian restaurant" — Nepalese is
+      the accurate, less-competitive niche you rank for. Keep "Indian
+      restaurant" (and optionally "Indian takeaway") as **secondary** only.
 - [ ] Confirm **address** (948 Clay Street, Oakland CA 94607) and **phone**
       ((510) 250-9696) match the website.
 - [ ] Add recent **photos** (food, interior, the tandoor).
