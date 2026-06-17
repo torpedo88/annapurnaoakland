@@ -135,9 +135,7 @@ export default function AboutPage() {
           </div>
 
           <div className="flex flex-col gap-3 sm:flex-row">
-            {/* No public /reservations page yet — reservations are by phone.
-                Pointing at tel: avoids a 404 on this CTA. */}
-            <Button render={<a href="tel:+15102509696" />}>
+            <Button render={<Link href="/reservations" />}>
               Reserve a Table
             </Button>
             <Button variant="outline" render={<Link href="/menu" />}>

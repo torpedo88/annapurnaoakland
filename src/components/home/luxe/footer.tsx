@@ -65,6 +65,8 @@ export function LuxeFooter() {
         <Col
           title="Visit"
           links={[
+            { href: "/reservations", label: "Reservations" },
+            { href: "/catering", label: "Catering" },
             { href: "/about", label: "Our story" },
             {
               href: "https://maps.google.com/?q=948+Clay+Street+Oakland+CA",

@@ -32,13 +32,13 @@ export function BentoHero() {
         className="text-center text-[10px] uppercase tracking-[0.34em]"
         style={{ color: luxe.gold }}
       >
-        A Himalayan Kitchen · Oakland
+        Nepali &amp; Himalayan Restaurant · Oakland
       </p>
 
       <InteractiveBentoGallery
         mediaItems={mediaItems}
         title="Annapurna"
-        description="Momo, live tandoor, and slow-cooked biryani — by the family that has run the kitchen since 2010. Drag a tile, tap to open."
+        description="A Nepali & Himalayan restaurant in Oakland — momos, live tandoor, and slow-cooked biryani, by the family that has run the kitchen since 2010. Drag a tile, tap to open."
       />
 
       <div className="mt-2 px-6">

@@ -10,6 +10,8 @@ import { PromoMarquee } from "./promo-marquee";
 const nav = [
   { href: "/", label: "Home" },
   { href: "/menu", label: "Menu" },
+  { href: "/reservations", label: "Reservations" },
+  { href: "/catering", label: "Catering" },
   { href: "/admin", label: "Kitchen" },
 ];
 

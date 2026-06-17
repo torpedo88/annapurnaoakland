@@ -99,6 +99,8 @@ src/
         menu/ promos/ reservations/ catering/ staff/ settings/
     api/
       orders/                Public: POST place order, GET order-by-token
+      reservations/          Public: POST a table reservation (admin board)
+      catering/              Public: POST a catering request (admin inbox)
       delivery/quote/        Public: DoorDash delivery quote
       menu/availability/     Public: "86" (unavailable) item slugs
       settings/public/       Public-safe subset of settings
@@ -584,7 +586,7 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 | P1 | Settings + pricing-to-DB (tax, delivery) | ✅ |
 | P2 | Live order management (DB board, state machines, manual orders, payments) | ✅ |
 | P3 | Menu CRUD + **unify public menu onto the DB** | partial (CRUD ✅, public still static) |
-| P4 | Hours/closures + reservations + catering inbox | ✅ (pages live) |
+| P4 | Hours/closures + reservations + catering inbox | ✅ (admin + public `/reservations` & `/catering` pages → admin board/inbox) |
 | P5 | Promos / discounts (new `promos` table) | ✅ (CRUD; not yet applied at checkout) |
 | P6 | Stripe payments + refunds | ✅ (embedded checkout, webhook → prepay dispatch, refunds; §6/§8) |
 | — | DoorDash Drive dispatch + tracking | ✅ (sandbox verified; prod cutover pending) |
@@ -626,8 +628,12 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 - Add future path redirects to the same `redirects()` array. Redirects run
   before the filesystem and need a build/deploy to take effect.
 
-Other SEO surfaces: `src/app/sitemap.ts`, `src/app/robots.ts`, JSON-LD in
-`src/components/seo/restaurant-jsonld.tsx`, and metadata in `src/app/layout.tsx`.
+Other SEO surfaces: `src/app/sitemap.ts` (home, menu, reservations, catering,
+about), `src/app/robots.ts` (disallows `/admin`, `/checkout`, `/order/`, `/api/`,
+and `/preview` + `/flyer` — the latter two are non-public / duplicate-design
+content), JSON-LD in `src/components/seo/restaurant-jsonld.tsx` (hours derived
+from `src/lib/orders/hours.ts` so they never drift), and metadata in
+`src/app/layout.tsx`. Per-page `metadata` exports carry local keywords.
 The **home footer** (`src/components/home/luxe/footer.tsx`) shows the address +
 a keyless Google Maps embed (`output=embed`, no API key) linking to directions.
 
