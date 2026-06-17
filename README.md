@@ -60,6 +60,8 @@ Postgres · Tailwind · Vercel · DoorDash Drive · Uber Direct.
   provider (fallback courier; prod runs Uber).
 - **[docs/KITCHEN-PRINTING.md](./docs/KITCHEN-PRINTING.md)** — auto-printing
   kitchen tickets to the Star TSP100 (kiosk setup + troubleshooting).
+- **[docs/SEO.md](./docs/SEO.md)** — SEO status checklist: what's fixed in code
+  vs. owner action items (Google Business Profile + Search Console).
 - `docs/superpowers/specs|plans/` — historical design specs and build plans.
 
 ## Deployment
