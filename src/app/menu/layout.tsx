@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { MenuJsonLd } from "@/components/seo/menu-jsonld";
 
 export const metadata: Metadata = {
   title: "Menu — Nepali & Himalayan Food",
@@ -13,5 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default function MenuLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <MenuJsonLd />
+      {children}
+    </>
+  );
 }

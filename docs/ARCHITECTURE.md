@@ -631,9 +631,14 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 Other SEO surfaces: `src/app/sitemap.ts` (home, menu, reservations, catering,
 about), `src/app/robots.ts` (disallows `/admin`, `/checkout`, `/order/`, `/api/`,
 and `/preview` + `/flyer` — the latter two are non-public / duplicate-design
-content), JSON-LD in `src/components/seo/restaurant-jsonld.tsx` (hours derived
-from `src/lib/orders/hours.ts` so they never drift), and metadata in
-`src/app/layout.tsx`. Per-page `metadata` exports carry local keywords.
+content), JSON-LD in `src/components/seo/restaurant-jsonld.tsx` (Restaurant
+schema; hours derived from `src/lib/orders/hours.ts` so they never drift; real
+`aggregateRating` + reviews from the Google Places API via
+`src/lib/reviews/google.ts` — emitted only when real data exists, and the output
+escapes `<` because review text is third-party) and
+`src/components/seo/menu-jsonld.tsx` (Menu schema with dish prices, on `/menu`),
+plus metadata in `src/app/layout.tsx`. Per-page `metadata` exports carry local
+keywords.
 The **home footer** (`src/components/home/luxe/footer.tsx`) shows the address +
 a keyless Google Maps embed (`output=embed`, no API key) linking to directions.
 
