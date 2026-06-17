@@ -1,5 +1,8 @@
 // Server component: emits schema.org Restaurant structured data for rich
-// results + local SEO (Google Maps / "near me"). Update hours/phone here.
+// results + local SEO (Google Maps / "near me"). Hours are derived from the
+// canonical ordering window (src/lib/orders/hours.ts) so they never drift.
+
+import { openDayNames, OPENS_HHMM, CLOSES_HHMM } from "@/lib/orders/hours";
 
 const SITE = "https://annapurnaoakland.com";
 
@@ -36,9 +39,9 @@ export function RestaurantJsonLd() {
     openingHoursSpecification: [
       {
         "@type": "OpeningHoursSpecification",
-        dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
-        opens: "11:00",
-        closes: "21:30",
+        dayOfWeek: openDayNames(), // Mon–Sat (closed Sunday) — from hours.ts
+        opens: OPENS_HHMM,
+        closes: CLOSES_HHMM,
       },
     ],
     potentialAction: {

@@ -8,6 +8,16 @@ export const LAST_ORDER_BUFFER_MIN = 10; // stop ordering this many minutes befo
 const CLOSED_DAYS = new Set([0]); // 0 = Sunday
 const TZ = "America/Los_Angeles";
 
+// ── Schema.org / SEO helpers (single source of truth for published hours) ──
+const SCHEMA_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
+export const OPENS_HHMM = hhmm(OPEN_MIN); // "11:00"
+export const CLOSES_HHMM = hhmm(CLOSE_MIN); // "21:30"
+/** Day names the restaurant is open, for schema.org openingHoursSpecification. */
+export function openDayNames(): string[] {
+  return SCHEMA_DAY_NAMES.filter((_, day) => !CLOSED_DAYS.has(day));
+}
+
 export interface OrderingWindow {
   open: boolean;
   reason: string | null;
