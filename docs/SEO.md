@@ -17,6 +17,14 @@ change.
 - [x] **`/order` → `/menu` 308 redirect** — the indexed bare `/order` URL 404'd.
       The old `/order` page used to be the ordering landing page Google served; the
       308 consolidates it into `/menu`, so `/menu` now needs to own ordering intent.
+- [x] **`/menu` is server-rendered (fixes Soft 404)** — the page was a `"use client"`
+      component that fetched dishes from `/api/menu` only after JS ran, so the
+      server HTML body was empty and Google's live test flagged it **"Soft 404 —
+      URL not available"** (it refused to index `/menu`, the main page). Now
+      `src/app/menu/page.tsx` is a server component that seeds the catalog from
+      `getMenuCatalog()` (ISR `revalidate=30`) into `src/app/menu/menu-client.tsx`;
+      the client still refreshes live availability from `/api/menu`. The dish list
+      is now in the initial HTML (88 cards) → indexable. Re-request indexing after deploy.
 - [x] **`/menu` targets "order online" intent** — since `/order` folded into `/menu`,
       the `/menu` title (`Order Online — Nepali & Himalayan Menu`), meta description,
       OpenGraph, and H1 (`Order online.`) now lead with ordering so it ranks for
