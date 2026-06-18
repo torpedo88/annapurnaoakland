@@ -17,6 +17,16 @@ function parseFrom(s: string): { email: string; name?: string } {
   return { email: s.trim() };
 }
 
+/**
+ * Reply-To for customer emails = the restaurant's monitored inbox
+ * (RESTAURANT_NOTIFY_EMAIL). The From domain's MX may not receive mail, so
+ * without this, customer replies to "reply to this email" would bounce.
+ */
+function customerReplyTo(): string | undefined {
+  const r = env.sendgrid().restaurantEmail?.split(",")[0]?.trim();
+  return r || undefined;
+}
+
 function isSmsEnabled(): boolean {
   const t = env.twilio();
   return Boolean(t.accountSid && t.authToken && t.from);
@@ -285,6 +295,7 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
       sg.setApiKey(emailCfg.apiKey);
       await sg.send({
         from,
+        replyTo: customerReplyTo(),
         to: order.customerEmail,
         subject: `Annapurna — order #${order.orderNumber} confirmed`,
         html: buildCustomerHtml(order as OrderRow, items, trackingUrl),
@@ -423,11 +434,79 @@ export async function sendOrderStatusUpdate(orderId: string, status: string, rec
     sg.setApiKey(emailCfg.apiKey);
     await sg.send({
       from,
+      replyTo: customerReplyTo(),
       to,
       subject: `Annapurna — order #${order.orderNumber}: ${info.short}`,
       html: buildStatusHtml(order as OrderRow, info, trackingUrl),
     });
   } catch (e) {
     console.error("[notify] status email failed for order", orderId, e);
+  }
+}
+
+// ─── Review request (post-completion) ───────────────────────────────────────────
+
+function buildReviewRequestHtml(order: OrderRow, reviewUrl: string): string {
+  const firstName = esc((order.customerName ?? "").trim().split(/\s+/)[0] || "there");
+  const inner = `
+        <tr><td style="padding:34px 28px 6px" align="center">
+          <div style="color:#C9A24B;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Thank you</div>
+          <h1 style="margin:0;color:#14100D;font-size:26px;font-weight:600">Thanks, ${firstName}! 🙏</h1>
+          <p style="margin:12px 0 0;color:#8A8276;font-size:15px;line-height:1.6">We hope you loved your Nepali &amp; Himalayan meal. A quick Google review helps our family restaurant more than you know — it takes about 30 seconds.</p>
+        </td></tr>
+        <tr><td style="padding:24px 28px 4px">
+          <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">
+            <a href="${esc(reviewUrl)}" style="display:block;background:#C9A24B;color:#14100D;padding:16px 22px;border-radius:12px;text-decoration:none;font-weight:700;font-size:16px;text-align:center">Leave a Google review →</a>
+          </td></tr></table>
+        </td></tr>
+        <tr><td style="padding:10px 28px 0" align="center"><span style="color:#b8b0a0;font-size:12px">Order #${order.orderNumber} · 948 Clay Street, Oakland</span></td></tr>`;
+  return emailShell("How was your meal at Annapurna?", inner);
+}
+
+/**
+ * Asks the customer for a Google review after their order completes. Best-effort
+ * (email + SMS), never throws. No-op unless GOOGLE_REVIEW_URL is configured.
+ * Fires once per order — the terminal status transition only happens once.
+ */
+export async function sendReviewRequest(orderId: string): Promise<void> {
+  const reviewUrl = env.googleReviewUrl();
+  if (!reviewUrl) return; // inert until the GBP review link is set
+
+  const [order] = await db.select().from(orders).where(eq(orders.id, orderId)).limit(1);
+  if (!order) return;
+  const o = order as OrderRow;
+
+  // Email
+  if (isEmailEnabled() && o.customerEmail) {
+    try {
+      const sg = (await import("@sendgrid/mail")).default;
+      const emailCfg = env.sendgrid();
+      sg.setApiKey(emailCfg.apiKey);
+      await sg.send({
+        from: parseFrom(emailCfg.from),
+        replyTo: customerReplyTo(),
+        to: o.customerEmail,
+        subject: "How was your meal at Annapurna? 🙏",
+        html: buildReviewRequestHtml(o, reviewUrl),
+      });
+    } catch (e) {
+      console.error("[notify] review-request email failed for order", orderId, e);
+    }
+  }
+
+  // SMS
+  if (isSmsEnabled() && o.customerPhone) {
+    try {
+      const twilio = (await import("twilio")).default;
+      const t = env.twilio();
+      const client = twilio(t.accountSid, t.authToken);
+      await client.messages.create({
+        from: t.from,
+        to: toE164(o.customerPhone),
+        body: `Annapurna: thanks for your order! Hope you loved it 🙏 A 30-sec Google review means a lot to our family: ${reviewUrl}`,
+      });
+    } catch (e) {
+      console.error("[notify] review-request SMS failed for order", orderId, e);
+    }
   }
 }
