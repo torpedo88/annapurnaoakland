@@ -25,6 +25,9 @@ export const env = {
     signingKey: process.env.UBER_SIGNING_KEY ?? "",
   }),
   baseUrl: () => process.env.NEXT_PUBLIC_BASE_URL ?? "http://localhost:3000",
+  // Google Business Profile "leave a review" short link (GBP → Ask for reviews).
+  // When set, completed orders get an automated review request (email + SMS).
+  googleReviewUrl: () => process.env.GOOGLE_REVIEW_URL ?? "",
   geocoding: () => ({ apiKey: process.env.GOOGLE_GEOCODING_API_KEY ?? "" }),
   staffSessionSecret: () => required("STAFF_SESSION_SECRET"),
   stripe: () => ({

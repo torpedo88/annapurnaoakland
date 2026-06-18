@@ -536,6 +536,7 @@ NODE_OPTIONS="--require $(pwd)/scripts/_server-only-shim.cjs" \
 | `RESTAURANT_PICKUP_ADDRESS` | ✅ (delivery) | Courier pickup |
 | `RESTAURANT_PICKUP_PHONE` | ✅ (delivery) | Courier pickup |
 | `GOOGLE_GEOCODING_API_KEY` | optional | Address geocoding (`env.geocoding()`) |
+| `GOOGLE_REVIEW_URL` | optional | GBP "leave a review" link; when set, completed orders auto-send a review request (email + SMS) — `sendReviewRequest` in `src/lib/notify` |
 | `SENDGRID_API_KEY` / `EMAIL_FROM` / `RESTAURANT_NOTIFY_EMAIL` | optional | Order email notifications |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` / `RESTAURANT_NOTIFY_PHONE` | optional | Order SMS notifications |
 | `NEXT_PUBLIC_BASE_URL` | optional | Absolute URLs (defaults to localhost) |

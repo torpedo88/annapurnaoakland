@@ -5,7 +5,7 @@ import { orders } from "@/db/schema";
 import { requireRole, AuthError } from "@/lib/auth/session";
 import { canTransition, type Fulfillment } from "@/lib/orders/status";
 import { getSettings } from "@/lib/settings";
-import { sendOrderStatusUpdate } from "@/lib/notify";
+import { sendOrderStatusUpdate, sendReviewRequest } from "@/lib/notify";
 
 export const runtime = "nodejs";
 
@@ -45,6 +45,13 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
 
   // Email the customer about the status change (best-effort, after response).
   after(() => sendOrderStatusUpdate(id, to).catch((e) => console.error("[notify] status PATCH:", e)));
+
+  // On a completed/delivered order, automatically ask for a Google review
+  // (inert unless GOOGLE_REVIEW_URL is set). The transition into a terminal
+  // status happens once, so this fires once per order.
+  if (to === "completed" || to === "delivered") {
+    after(() => sendReviewRequest(id).catch((e) => console.error("[notify] review request:", e)));
+  }
 
   return NextResponse.json({ ok: true, status: to });
 }
