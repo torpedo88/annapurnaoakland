@@ -17,6 +17,16 @@ function parseFrom(s: string): { email: string; name?: string } {
   return { email: s.trim() };
 }
 
+/**
+ * Reply-To for customer emails = the restaurant's monitored inbox
+ * (RESTAURANT_NOTIFY_EMAIL). The From domain's MX may not receive mail, so
+ * without this, customer replies to "reply to this email" would bounce.
+ */
+function customerReplyTo(): string | undefined {
+  const r = env.sendgrid().restaurantEmail?.split(",")[0]?.trim();
+  return r || undefined;
+}
+
 function isSmsEnabled(): boolean {
   const t = env.twilio();
   return Boolean(t.accountSid && t.authToken && t.from);
@@ -285,6 +295,7 @@ export async function sendOrderNotifications(orderId: string): Promise<void> {
       sg.setApiKey(emailCfg.apiKey);
       await sg.send({
         from,
+        replyTo: customerReplyTo(),
         to: order.customerEmail,
         subject: `Annapurna — order #${order.orderNumber} confirmed`,
         html: buildCustomerHtml(order as OrderRow, items, trackingUrl),
@@ -423,6 +434,7 @@ export async function sendOrderStatusUpdate(orderId: string, status: string, rec
     sg.setApiKey(emailCfg.apiKey);
     await sg.send({
       from,
+      replyTo: customerReplyTo(),
       to,
       subject: `Annapurna — order #${order.orderNumber}: ${info.short}`,
       html: buildStatusHtml(order as OrderRow, info, trackingUrl),
@@ -472,6 +484,7 @@ export async function sendReviewRequest(orderId: string): Promise<void> {
       sg.setApiKey(emailCfg.apiKey);
       await sg.send({
         from: parseFrom(emailCfg.from),
+        replyTo: customerReplyTo(),
         to: o.customerEmail,
         subject: "How was your meal at Annapurna? 🙏",
         html: buildReviewRequestHtml(o, reviewUrl),
