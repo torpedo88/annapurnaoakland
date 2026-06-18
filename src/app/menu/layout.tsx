@@ -2,13 +2,13 @@ import type { Metadata } from "next";
 import { MenuJsonLd } from "@/components/seo/menu-jsonld";
 
 export const metadata: Metadata = {
-  title: "Menu — Nepali & Himalayan Food",
+  title: "Order Online — Nepali & Himalayan Menu",
   description:
-    "The full Annapurna menu — momos, butter chicken, biryani, tandoori, and Nepali & Himalayan specialties. Order pickup or delivery in Oakland.",
+    "Order online for pickup or delivery in Oakland — momos, butter chicken, biryani, tandoori, and Nepali & Himalayan specialties from Annapurna's full menu.",
   alternates: { canonical: "/menu" },
   openGraph: {
-    title: "Menu · Annapurna Oakland",
-    description: "Momos, butter chicken, biryani, tandoori & more. Pickup or delivery in Oakland.",
+    title: "Order Online · Annapurna Oakland",
+    description: "Order online — momos, butter chicken, biryani, tandoori & more. Pickup or delivery in Oakland.",
     url: "https://annapurnaoakland.com/menu",
   },
 };

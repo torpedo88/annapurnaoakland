@@ -94,7 +94,7 @@ export default function MenuPage() {
               color: "#F3E9D6",
             }}
           >
-            The full menu.
+            Order online.
           </h1>
           <p className="max-w-2xl text-[17px] leading-relaxed" style={{ color: "#8A8276" }}>
             Hand-pleated momos, tandoor-fired naan, and slow-cooked classics — made to order

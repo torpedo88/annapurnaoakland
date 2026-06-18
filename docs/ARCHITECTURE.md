@@ -626,6 +626,10 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 - **`/order` → `/menu`** (permanent 308). Google had indexed the bare `/order`
   URL, which 404s (no index page — only `/order/[id]` tracking exists). The
   redirect reclaims that traffic. Exact match, so `/order/[id]` is untouched.
+  Because `/order` was the old ordering landing page, `/menu` now owns
+  "order online" search intent: its title (`Order Online — Nepali & Himalayan
+  Menu`), meta description, OpenGraph, and H1 (`Order online.`) lead with ordering
+  — see `src/app/menu/layout.tsx` + `src/app/menu/page.tsx`.
 - Add future path redirects to the same `redirects()` array. Redirects run
   before the filesystem and need a build/deploy to take effect.
 

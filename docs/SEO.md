@@ -15,6 +15,13 @@ change.
 - [x] **`/preview/*` + `/flyer` blocked from indexing** (`robots.ts`) — they're
       alternate designs / a print asset; indexing them risked duplicate content.
 - [x] **`/order` → `/menu` 308 redirect** — the indexed bare `/order` URL 404'd.
+      The old `/order` page used to be the ordering landing page Google served; the
+      308 consolidates it into `/menu`, so `/menu` now needs to own ordering intent.
+- [x] **`/menu` targets "order online" intent** — since `/order` folded into `/menu`,
+      the `/menu` title (`Order Online — Nepali & Himalayan Menu`), meta description,
+      OpenGraph, and H1 (`Order online.`) now lead with ordering so it ranks for
+      "order online" queries the old `/order` URL used to. Lives in
+      `src/app/menu/layout.tsx` (metadata) + `src/app/menu/page.tsx` (H1).
 - [x] **Sitemap expanded** — now `/`, `/menu`, `/reservations`, `/catering`,
       `/about` (was only `/` + `/menu`).
 - [x] **Meta description trimmed** to ≤160 chars (was 188, truncated in results).
@@ -54,9 +61,12 @@ website. This is ~70% of local restaurant SEO.
 - [ ] **Reply to reviews** — engagement is a ranking signal.
 
 ### Google Search Console — search.google.com/search-console
-- [ ] **Submit the sitemap**: Sitemaps → add `sitemap.xml`.
-- [ ] **Request indexing** for the new/changed pages: URL Inspection → enter the
-      URL → Request indexing, for `/`, `/menu`, `/reservations`, `/catering`.
+- [x] **Sitemap submitted** (`sitemap.xml`) — read **Success, 5 pages** (Jun 17 2026).
+- [x] **Requested indexing** for `/catering` + `/reservations` (Jun 17 2026) — both
+      were "Discovered – currently not indexed"; now in the priority crawl queue.
+      `/` and `/menu` are already indexed (the main result + its sitelinks).
+      **TODO:** after the Option-A `/menu` title change deploys, re-request `/menu`
+      indexing so Google recrawls the new "Order Online" title.
 - [ ] **Read the Pages (Coverage) report** and send the maintainer the exact
       errors/warnings so they can be fixed precisely (not guessed).
 - [ ] After Google re-crawls, check **Search Console → Enhancements** for valid
