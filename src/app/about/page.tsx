@@ -8,6 +8,9 @@ export const metadata: Metadata = {
   title: "Our Story \u2014 Annapurna",
   description:
     "Learn about the family story behind Annapurna, Oakland\u2019s authentic Nepali-Indian restaurant \u2014 from the Himalayan mountains to your table.",
+  // Without this, the page inherits the root layout's canonical ("/"), telling
+  // Google /about is a duplicate of the homepage.
+  alternates: { canonical: "/about" },
 };
 
 export default function AboutPage() {
@@ -115,8 +118,8 @@ export default function AboutPage() {
               <Clock className="mt-0.5 size-5 shrink-0 text-primary" />
               <div>
                 <p className="text-sm font-medium text-foreground">Hours</p>
-                <p className="text-sm text-muted-foreground">Open Daily</p>
-                <p className="text-sm text-muted-foreground">11:00 AM \u2013 9:30 PM</p>
+                <p className="text-sm text-muted-foreground">Mon \u2013 Sat \u00b7 11:00 AM \u2013 9:30 PM</p>
+                <p className="text-sm text-muted-foreground">Closed Sundays</p>
               </div>
             </div>
 

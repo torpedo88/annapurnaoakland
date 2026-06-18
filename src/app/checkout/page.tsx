@@ -6,6 +6,7 @@ import { loadStripe } from "@stripe/stripe-js";
 import { EmbeddedCheckoutProvider, EmbeddedCheckout } from "@stripe/react-stripe-js";
 import { useCart } from "@/lib/preview-cart";
 import { AddressAutocomplete } from "@/components/checkout/address-autocomplete";
+import { OrderingStatusBanner } from "@/components/ordering-status-banner";
 
 const stripePromise = loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY!);
 
@@ -294,6 +295,8 @@ export default function CheckoutPage() {
             Checkout.
           </h1>
         </div>
+
+        <OrderingStatusBanner />
 
         <form onSubmit={handleSubmit} className="grid lg:grid-cols-[1fr_420px] gap-8 lg:gap-12">
           <div className="space-y-10">

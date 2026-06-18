@@ -33,13 +33,14 @@ const LABEL: Record<string, string> = {
 };
 
 export function OrderCard({
-  order, busy, onStatus, onPayment, onRefund,
+  order, busy, onStatus, onPayment, onRefund, onPrint,
 }: {
   order: AdminOrder;
   busy: boolean;
   onStatus: (id: string, to: string) => void;
   onPayment: (id: string, patch: { payment_status?: string; payment_method?: string }) => void;
   onRefund: (id: string) => void;
+  onPrint?: (id: string) => void;
 }) {
   const fulfillment: Fulfillment = order.orderType === "delivery" ? "delivery" : "pickup";
   const actions = nextStatuses(fulfillment, order.status, order.selfDelivery);
@@ -82,6 +83,13 @@ export function OrderCard({
             {a === "cancelled" ? "Cancel" : `→ ${LABEL[a] ?? a}`}
           </button>
         ))}
+        {onPrint && (
+          <button onClick={() => onPrint(order.id)}
+            className="text-xs px-3 py-1.5 rounded-full font-semibold"
+            style={{ border: "1px solid rgba(201,162,75,0.3)", color: "#C9A24B" }}>
+            🖨 Print
+          </button>
+        )}
       </div>
       <div className="flex items-center flex-wrap gap-2 mt-3 text-xs" style={{ color: "#8A8276" }}>
         <span>

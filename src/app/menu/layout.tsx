@@ -1,9 +1,10 @@
 import type { Metadata } from "next";
+import { MenuJsonLd } from "@/components/seo/menu-jsonld";
 
 export const metadata: Metadata = {
-  title: "Menu",
+  title: "Menu — Nepali & Himalayan Food",
   description:
-    "The full Annapurna menu — momos, butter chicken, biryani, tandoori, and Himalayan specialties. Order pickup or delivery in Oakland.",
+    "The full Annapurna menu — momos, butter chicken, biryani, tandoori, and Nepali & Himalayan specialties. Order pickup or delivery in Oakland.",
   alternates: { canonical: "/menu" },
   openGraph: {
     title: "Menu · Annapurna Oakland",
@@ -13,5 +14,10 @@ export const metadata: Metadata = {
 };
 
 export default function MenuLayout({ children }: { children: React.ReactNode }) {
-  return children;
+  return (
+    <>
+      <MenuJsonLd />
+      {children}
+    </>
+  );
 }

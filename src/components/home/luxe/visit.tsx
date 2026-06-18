@@ -41,12 +41,12 @@ export function Visit() {
               fontSize: "clamp(2.4rem, 7vw, 4.6rem)",
             }}
           >
-            Ten minutes from Lake Merritt BART.
+            Two minutes from 12th St Oakland BART.
           </h2>
           <div className="grid sm:grid-cols-3 gap-8 mb-10">
             {[
               { k: "Address", a: "948 Clay Street", b: "Oakland, CA 94607" },
-              { k: "Hours", a: "Open daily", b: "11:00 — 21:30" },
+              { k: "Hours", a: "Mon–Sat · 11–21:30", b: "Closed Sundays" },
               { k: "Call", a: "(510) 250-9696", b: "", href: "tel:+15102509696" },
             ].map((c) => (
               <div key={c.k}>

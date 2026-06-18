@@ -13,6 +13,7 @@ import { validatePromo, redeemPromo } from "@/lib/orders/promo";
 import { getSettings, type Settings } from "@/lib/settings";
 import { computeDeliveryFee, assertDeliverable, MinOrderError } from "@/lib/orders/delivery-pricing";
 import { assertWithinDeliveryRadius, OutOfRangeError } from "@/lib/orders/geofence";
+import { isOrderingOpen } from "@/lib/orders/hours";
 import { after } from "next/server";
 import { sendOrderNotifications } from "@/lib/notify";
 
@@ -78,6 +79,12 @@ export async function placeOrder(
   const [settings, catalog] = await Promise.all([getSettings(), getPriceCatalog()]);
   if (settings.ordering_paused) {
     throw new OrderError("Online ordering is paused. Please call the restaurant.", 503);
+  }
+  // Phone/manual orders (source "phone") bypass the hours gate so staff can take
+  // a call anytime; online orders are blocked outside the ordering window.
+  if (input.source !== "phone") {
+    const win = isOrderingOpen();
+    if (!win.open) throw new OrderError(win.reason ?? "We're not taking online orders right now.", 503);
   }
   if (input.fulfillment === "delivery" && !settings.delivery_enabled) {
     throw new OrderError("Delivery is currently unavailable.", 503);
@@ -261,6 +268,10 @@ export async function createPendingOrder(
 ): Promise<{ orderId: string; accessToken: string; totalCents: number; deliveryFeeCents: number; promoCode: string | null }> {
   const [settings, catalog] = await Promise.all([getSettings(), getPriceCatalog()]);
   if (settings.ordering_paused) throw new OrderError("Online ordering is paused. Please call the restaurant.", 503);
+  {
+    const win = isOrderingOpen();
+    if (!win.open) throw new OrderError(win.reason ?? "We're not taking online orders right now.", 503);
+  }
   if (input.fulfillment === "delivery" && !settings.delivery_enabled) throw new OrderError("Delivery is currently unavailable.", 503);
   if (input.fulfillment === "pickup" && !settings.pickup_enabled) throw new OrderError("Pickup is currently unavailable.", 503);
 

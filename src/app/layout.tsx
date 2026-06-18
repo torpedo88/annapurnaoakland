@@ -27,7 +27,7 @@ const serifDisplay = Cormorant_Garamond({
 });
 
 const DESCRIPTION =
-  "Family-run Himalayan & Nepali kitchen at 948 Clay Street, Oakland, since 2010. Momos, butter chicken, biryani, tandoori. Order pickup or delivery. Open daily 11:00–21:30.";
+  "Family-run Himalayan & Nepali kitchen at 948 Clay Street, Oakland, since 2010. Momos, butter chicken, biryani, tandoori. Pickup or delivery. Closed Sundays.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://annapurnaoakland.com"),
