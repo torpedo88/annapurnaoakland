@@ -23,6 +23,11 @@ change.
       canonicals.
 - [x] **Menu rich-result markup** — `Menu` JSON-LD with dish names + prices on
       `/menu` (`src/components/seo/menu-jsonld.tsx`).
+- [x] **Duplicate-canonical fixes** (from Search Console "Duplicate, Google chose
+      different canonical" notices): `www` → apex 301 redirect (both hosts served
+      200); `/about` now sets its own canonical (it had inherited the homepage's);
+      non-production deployments (`dev.*`, `*.vercel.app`) now return
+      `Disallow: /` in robots so staging can't be indexed as a duplicate.
 - [x] **Review rich-result markup** — real `aggregateRating` + reviews from the
       Google Places API on the home Restaurant schema. Only emitted when real
       data is present; review text is escaped (XSS-safe). *Note: Google may

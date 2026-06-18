@@ -14,6 +14,15 @@ const nextConfig: NextConfig = {
       // /order has no index page (only /order/[id] tracking). Google indexed the
       // bare /order URL, which 404s. Permanently (308) route it to the menu.
       { source: "/order", destination: "/menu", permanent: true },
+      // Canonical host: www.* served 200 alongside the apex, so every page
+      // existed at two hostnames → Google "Duplicate, chose different canonical".
+      // Permanently redirect www → apex.
+      {
+        source: "/:path*",
+        has: [{ type: "host", value: "www.annapurnaoakland.com" }],
+        destination: "https://annapurnaoakland.com/:path*",
+        permanent: true,
+      },
     ];
   },
 };
