@@ -54,10 +54,32 @@ export function HomeHero() {
             className="object-contain"
           />
 
-          {/* Clickable hotspots over the baked-in MENU / RESERVATIONS pills.
-              Positions are %-based so they scale with the image. */}
-          <Hotspot href="/menu" label="View menu" style={{ top: "1.5%", left: "57.5%", width: "12.5%", height: "7%" }} />
-          <Hotspot href="/reservations" label="Make a reservation" style={{ top: "1.5%", left: "71%", width: "17%", height: "7%" }} />
+          {/* Transparent hotspot over the baked-in MENU pill (image already
+              reads "MENU"). %-based so it scales with the image. */}
+          <Hotspot href="/menu" label="View menu" style={{ top: "1.8%", left: "57.4%", width: "18.2%", height: "7.2%" }} />
+
+          {/* The image's second pill reads "RESERVATIONS"; per request that slot
+              is Order Online. Cover it with a matching gold pill so the label and
+              the destination agree. */}
+          <Link
+            href="/menu"
+            onClick={setPickup}
+            aria-label="Order online"
+            className="absolute z-10 inline-flex items-center justify-center uppercase"
+            style={{
+              top: "1.8%", left: "76.6%", width: "21%", height: "7.2%",
+              border: `1px solid ${luxe.gold}`,
+              borderRadius: "9999px",
+              backgroundColor: "rgba(20,16,13,0.92)",
+              color: luxe.gold,
+              fontFamily: "var(--font-serif-display), Georgia, serif",
+              letterSpacing: "0.12em",
+              fontSize: "clamp(8px, 1.15vw, 15px)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Order Online
+          </Link>
         </div>
 
         {/* Matching button row — adds Order Online and gives reliable targets on
