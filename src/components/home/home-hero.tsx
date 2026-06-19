@@ -5,30 +5,13 @@ import Image from "next/image";
 import { luxe } from "@/lib/theme";
 
 // Homepage hero. Per owner request this shows the exact design image as the
-// hero, with real clickable hotspots over the baked-in MENU / RESERVATIONS
-// buttons, plus a matching button row below (adds Order Online and gives mobile
-// users reliable targets). A visually-hidden <h1> keeps the page crawlable
-// since the headline text lives inside the image.
+// hero, with matching solid-gold pills covering the baked-in MENU and second
+// (Order Online) buttons, plus a matching button row below for mobile. A
+// visually-hidden <h1> keeps the page crawlable since the headline text lives
+// inside the image.
 
 const PILL =
   "uppercase tracking-[0.18em] text-[11px] font-medium px-6 py-3.5 rounded-[2px] inline-flex items-center justify-center transition-colors";
-
-// Transparent clickable overlay positioned (in %) over a region of the image.
-function Hotspot({
-  href, label, onClick, style,
-}: {
-  href: string; label: string; onClick?: () => void; style: React.CSSProperties;
-}) {
-  return (
-    <Link
-      href={href}
-      onClick={onClick}
-      aria-label={label}
-      className="absolute z-10 rounded-full focus:outline-none focus-visible:ring-2"
-      style={style}
-    />
-  );
-}
 
 function setPickup() {
   try { localStorage.setItem("annapurna:fulfillment", "pickup"); } catch { /* ignore */ }
@@ -54,13 +37,28 @@ export function HomeHero() {
             className="object-contain"
           />
 
-          {/* Transparent hotspot over the baked-in MENU pill (image already
-              reads "MENU"). %-based so it scales with the image. */}
-          <Hotspot href="/menu" label="View menu" style={{ top: "1.8%", left: "57.4%", width: "18.2%", height: "7.2%" }} />
-
-          {/* The image's second pill reads "RESERVATIONS"; per request that slot
-              is Order Online. Cover it with a matching gold pill so the label and
-              the destination agree. */}
+          {/* Both baked-in hero pills are covered with matching solid-gold pills
+              so label + destination agree and the two look identical. Coords
+              measured from the source PNG (MENU 57.4–75.6%, second slot
+              76.6–97.6%); %-based so they scale with the image. */}
+          <Link
+            href="/menu"
+            aria-label="View menu"
+            className="absolute z-10 inline-flex items-center justify-center uppercase"
+            style={{
+              top: "1.8%", left: "57.4%", width: "18.2%", height: "7.2%",
+              border: `1px solid ${luxe.gold}`,
+              borderRadius: "9999px",
+              backgroundColor: luxe.gold,
+              color: luxe.bg,
+              fontFamily: "var(--font-serif-display), Georgia, serif",
+              letterSpacing: "0.12em",
+              fontSize: "clamp(8px, 1.15vw, 15px)",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Menu
+          </Link>
           <Link
             href="/menu"
             onClick={setPickup}
