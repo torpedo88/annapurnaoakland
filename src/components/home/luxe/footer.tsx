@@ -51,7 +51,7 @@ export function LuxeFooter() {
             className="mt-4 max-w-sm text-[14px] leading-[1.8]"
             style={{ color: luxe.muted }}
           >
-            A family-run Himalayan kitchen in downtown Oakland. Open since 2010,
+            A family-run Indian & Nepalese kitchen in downtown Oakland. Open since 2010,
             cooking the recipes we grew up on.
           </p>
         </div>

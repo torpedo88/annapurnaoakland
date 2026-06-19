@@ -38,13 +38,13 @@ export async function RestaurantJsonLd() {
     "@type": "Restaurant",
     name: "Annapurna Restaurant & Bar",
     description:
-      "Family-run Himalayan & Nepali kitchen in Oakland since 2010. Momos, butter chicken, biryani, tandoori. Pickup & delivery.",
+      "Family-run Indian & Nepalese kitchen in Oakland since 2010. Momos, butter chicken, biryani, tandoori. Pickup & delivery.",
     url: SITE,
     ...(phone ? { telephone: phone } : {}),
     image: `${SITE}/images/annapurna-logo.png`,
     logo: `${SITE}/images/annapurna-logo.png`,
     priceRange: "$$",
-    servesCuisine: ["Nepalese", "Himalayan", "Indian"],
+    servesCuisine: ["Indian", "Nepalese", "Himalayan"],
     acceptsReservations: "True",
     menu: `${SITE}/menu`,
     address: {

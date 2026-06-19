@@ -5,7 +5,7 @@ import { ReservationForm } from "@/components/reservations/reservation-form";
 export const metadata: Metadata = {
   title: "Reservations — Book a Table",
   description:
-    "Reserve a table at Annapurna, the family-run Nepali & Himalayan restaurant at 948 Clay Street in downtown Oakland. Open Mon–Sat. Walk-ins and groups welcome.",
+    "Reserve a table at Annapurna, the family-run Indian & Nepalese restaurant at 948 Clay Street in downtown Oakland. Open Mon–Sat. Walk-ins and groups welcome.",
   alternates: { canonical: "/reservations" },
 };
 
@@ -19,7 +19,7 @@ export default function ReservationsPage() {
               Reserve a Table in Oakland
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Join us for Nepali &amp; Himalayan cooking at Annapurna in downtown Oakland.
+              Join us for Indian &amp; Nepalese cooking at Annapurna in downtown Oakland.
               Request a table below and we&apos;ll confirm by phone.
             </p>
           </div>

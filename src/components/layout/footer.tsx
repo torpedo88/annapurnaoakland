@@ -27,7 +27,7 @@ export function Footer() {
               Taste of the Himalayas
             </p>
             <p className="text-sm text-primary-foreground/60 leading-relaxed">
-              Family-owned Nepali-Indian restaurant bringing the flavors of the
+              Family-owned Indian & Nepalese restaurant bringing the flavors of the
               Himalayas to Oakland, CA since 2010.
             </p>
           </div>

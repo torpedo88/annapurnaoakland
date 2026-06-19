@@ -88,7 +88,7 @@ export function LuxeHero() {
           className="text-[10px] uppercase tracking-[0.34em] mb-5"
           style={{ color: luxe.gold }}
         >
-          A Himalayan Kitchen
+          Indian & Nepalese Cuisine
         </p>
         <h1
           className="uppercase leading-[0.95]"
