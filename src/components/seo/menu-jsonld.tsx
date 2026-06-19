@@ -26,7 +26,7 @@ export function MenuJsonLd() {
   const data = {
     "@context": "https://schema.org",
     "@type": "Menu",
-    name: "Annapurna — Nepali & Himalayan Menu",
+    name: "Annapurna — Indian & Nepalese Menu",
     url: `${SITE}/menu`,
     inLanguage: "en",
     hasMenuSection: sections,

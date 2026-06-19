@@ -627,7 +627,7 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
   URL, which 404s (no index page — only `/order/[id]` tracking exists). The
   redirect reclaims that traffic. Exact match, so `/order/[id]` is untouched.
   Because `/order` was the old ordering landing page, `/menu` now owns
-  "order online" search intent: its title (`Order Online — Nepali & Himalayan
+  "order online" search intent: its title (`Order Online — Indian & Nepalese
   Menu`), meta description, OpenGraph, and H1 (`Order online.`) lead with ordering
   — see `src/app/menu/layout.tsx` + `src/app/menu/page.tsx`.
 - **`/menu` is server-rendered.** It was a `"use client"` page that fetched the

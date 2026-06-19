@@ -143,7 +143,7 @@ function emailShell(title: string, inner: string): string {
           </div>
         </td></tr>
       </table>
-      <div style="color:#b8b0a0;font-size:11px;margin-top:14px">A Himalayan kitchen in Oakland since 2010</div>
+      <div style="color:#b8b0a0;font-size:11px;margin-top:14px">An Indian &amp; Nepalese kitchen in Oakland since 2010</div>
     </td></tr>
   </table>
 </body></html>`;
@@ -452,7 +452,7 @@ function buildReviewRequestHtml(order: OrderRow, reviewUrl: string): string {
         <tr><td style="padding:34px 28px 6px" align="center">
           <div style="color:#C9A24B;font-size:12px;letter-spacing:2px;text-transform:uppercase;margin-bottom:8px">Thank you</div>
           <h1 style="margin:0;color:#14100D;font-size:26px;font-weight:600">Thanks, ${firstName}! 🙏</h1>
-          <p style="margin:12px 0 0;color:#8A8276;font-size:15px;line-height:1.6">We hope you loved your Nepali &amp; Himalayan meal. A quick Google review helps our family restaurant more than you know — it takes about 30 seconds.</p>
+          <p style="margin:12px 0 0;color:#8A8276;font-size:15px;line-height:1.6">We hope you loved your Indian &amp; Nepalese meal. A quick Google review helps our family restaurant more than you know — it takes about 30 seconds.</p>
         </td></tr>
         <tr><td style="padding:24px 28px 4px">
           <table role="presentation" width="100%" cellpadding="0" cellspacing="0"><tr><td align="center">

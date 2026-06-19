@@ -3,9 +3,9 @@ import { Users, Utensils, Phone } from "lucide-react";
 import { CateringForm } from "@/components/catering/catering-form";
 
 export const metadata: Metadata = {
-  title: "Catering — Nepali & Himalayan in Oakland",
+  title: "Catering — Indian & Nepalese in Oakland",
   description:
-    "Nepali & Himalayan catering in Oakland & the East Bay from Annapurna. Momos, butter chicken, biryani, and tandoori for parties, offices, and events. Request a quote.",
+    "Indian & Nepalese catering in Oakland & the East Bay from Annapurna. Momos, butter chicken, biryani, and tandoori for parties, offices, and events. Request a quote.",
   alternates: { canonical: "/catering" },
 };
 
@@ -19,7 +19,7 @@ export default function CateringPage() {
               Catering for Your Event
             </h1>
             <p className="mt-4 text-lg text-muted-foreground">
-              Bring Annapurna&apos;s Nepali &amp; Himalayan kitchen to your party, office, or
+              Bring Annapurna&apos;s Indian &amp; Nepalese kitchen to your party, office, or
               celebration anywhere in Oakland and the East Bay. Tell us about your event and
               we&apos;ll send a quote.
             </p>

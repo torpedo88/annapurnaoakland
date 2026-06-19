@@ -19,7 +19,7 @@ export function HeroSection() {
           Taste of the Himalayas
         </h1>
         <p className="mt-4 text-lg text-primary-foreground/80 sm:text-xl">
-          Authentic Nepali &amp; Indian cuisine — hand-crafted momos, tandoori
+          Authentic Indian &amp; Nepalese cuisine — hand-crafted momos, tandoori
           specialties, and rich curries, served with heart in the heart of Oakland.
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
