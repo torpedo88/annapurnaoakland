@@ -1,12 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { luxe } from "@/lib/theme";
 
 // Homepage hero. Per owner request this shows the exact design image as the
-// hero, with matching solid-gold pills covering the baked-in MENU and second
-// (Order Online) buttons, plus a matching button row below for mobile. A
+// hero — now an animated (looping) version of that same image, with the static
+// PNG as the poster. Matching solid-gold pills cover the baked-in MENU and
+// second (Order Online) buttons, plus a matching button row below for mobile. A
 // visually-hidden <h1> keeps the page crawlable since the headline text lives
 // inside the image.
 
@@ -25,17 +25,21 @@ export function HomeHero() {
       </h1>
 
       <div className="relative mx-auto w-full max-w-6xl px-4 lg:px-8">
-        {/* Exact design image; keeps its 2390×1792 (4:3) aspect so the % hotspots
-            stay aligned at every width. */}
+        {/* Exact design image, animated. Keeps its 2390×1792 (4:3) aspect so the
+            % hotspots stay aligned at every width. The static PNG is the poster
+            so it paints instantly and degrades gracefully if video is blocked. */}
         <div className="relative w-full overflow-hidden rounded-[4px]" style={{ aspectRatio: "2390 / 1792", border: `1px solid ${luxe.line}` }}>
-          <Image
-            src="/images/annapurna-hero.png"
-            alt="Annapurna Restaurant & Bar — A Blend of Tradition & Flavor. Indian & Nepalese cuisine in Old Oakland."
-            fill
-            priority
-            sizes="(max-width: 1152px) 100vw, 1152px"
-            className="object-contain"
-          />
+          <video
+            className="absolute inset-0 h-full w-full object-contain"
+            autoPlay
+            muted
+            loop
+            playsInline
+            poster="/images/annapurna-hero.png"
+            aria-label="Annapurna Restaurant & Bar — A Blend of Tradition & Flavor. Indian & Nepalese cuisine in Old Oakland."
+          >
+            <source src="/video/hero-anim.mp4" type="video/mp4" />
+          </video>
 
           {/* Both baked-in hero pills are covered with matching solid-gold pills
               so label + destination agree and the two look identical. Coords
