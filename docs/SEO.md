@@ -50,6 +50,12 @@ change.
       still prefer its own rating for the star display ("self-serving" markup),
       but this is real, on-page data — no penalty risk.*
 
+- [x] **`llms.txt` added** (`public/llms.txt`, served at `/llms.txt`) — AI-search
+      context file for ChatGPT / Perplexity / Claude: NAP, hours, cuisine, signature
+      dishes, and links to menu/reservations/catering. Helps the site get cited in
+      AI answers for "Indian/Nepalese restaurant Oakland", "chicken tikka masala
+      Oakland", etc. robots.txt already allows AI crawlers (wildcard `Allow: /`).
+
 Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
 
 ## ⏳ Your action items (off-site — only the owner can do these)
