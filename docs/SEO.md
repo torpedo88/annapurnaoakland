@@ -50,6 +50,11 @@ change.
       still prefer its own rating for the star display ("self-serving" markup),
       but this is real, on-page data — no penalty risk.*
 
+- [x] **FAQ + FAQPage schema** (`src/components/home/faq.tsx`, on the home page) —
+      8 Q&As (food, location, hours, pickup/delivery + in-store-vs-app pricing,
+      dietary, reservations, catering, parking/bar) with matching `FAQPage`
+      JSON-LD. High AI-Overview / ChatGPT citation value; visible text + schema
+      generated from one source so they always agree.
 - [x] **`llms.txt` added** (`public/llms.txt`, served at `/llms.txt`) — AI-search
       context file for ChatGPT / Perplexity / Claude: NAP, hours, cuisine, signature
       dishes, and links to menu/reservations/catering. Helps the site get cited in
