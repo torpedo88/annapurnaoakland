@@ -1,8 +1,8 @@
 # Annapurna Oakland
 
 Online ordering site, kitchen/admin panel, and courier delivery dispatch
-(DoorDash Drive / Uber Direct / self-delivery) for Annapurna restaurant — a
-Himalayan/Nepali-Indian kitchen in Oakland, CA.
+(DoorDash Drive / Uber Direct / self-delivery) for Annapurna restaurant — an
+Indian & Nepalese kitchen in Oakland, CA.
 
 - **Public site** — menu, cart, checkout, live order tracking, table
   reservations, and catering requests.

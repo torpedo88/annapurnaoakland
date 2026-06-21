@@ -26,16 +26,17 @@ change.
       the client still refreshes live availability from `/api/menu`. The dish list
       is now in the initial HTML (88 cards) → indexable. Re-request indexing after deploy.
 - [x] **`/menu` targets "order online" intent** — since `/order` folded into `/menu`,
-      the `/menu` title (`Order Online — Nepali & Himalayan Menu`), meta description,
+      the `/menu` title (`Order Online — Indian & Nepalese Menu`), meta description,
       OpenGraph, and H1 (`Order online.`) now lead with ordering so it ranks for
       "order online" queries the old `/order` URL used to. Lives in
       `src/app/menu/layout.tsx` (metadata) + `src/app/menu/page.tsx` (H1).
 - [x] **Sitemap expanded** — now `/`, `/menu`, `/reservations`, `/catering`,
       `/about` (was only `/` + `/menu`).
 - [x] **Meta description trimmed** to ≤160 chars (was 188, truncated in results).
-- [x] **Local keywords in titles + copy** — "Nepali & Himalayan restaurant
+- [x] **Local keywords in titles + copy** — "Indian & Nepalese restaurant
       Oakland" on the home hero and menu title/description; per-page metadata +
-      canonicals.
+      canonicals. Indian keywords (chicken tikka masala, butter chicken, Indian
+      food/restaurant Oakland) added in 2026-06 rebrand — see "Rebrand" note below.
 - [x] **Menu rich-result markup** — `Menu` JSON-LD with dish names + prices on
       `/menu` (`src/components/seo/menu-jsonld.tsx`).
 - [x] **Duplicate-canonical fixes** (from Search Console "Duplicate, Google chose
@@ -49,6 +50,17 @@ change.
       still prefer its own rating for the star display ("self-serving" markup),
       but this is real, on-page data — no penalty risk.*
 
+- [x] **FAQ + FAQPage schema** (`src/components/home/faq.tsx`, on the home page) —
+      8 Q&As (food, location, hours, pickup/delivery + in-store-vs-app pricing,
+      dietary, reservations, catering, parking/bar) with matching `FAQPage`
+      JSON-LD. High AI-Overview / ChatGPT citation value; visible text + schema
+      generated from one source so they always agree.
+- [x] **`llms.txt` added** (`public/llms.txt`, served at `/llms.txt`) — AI-search
+      context file for ChatGPT / Perplexity / Claude: NAP, hours, cuisine, signature
+      dishes, and links to menu/reservations/catering. Helps the site get cited in
+      AI answers for "Indian/Nepalese restaurant Oakland", "chicken tikka masala
+      Oakland", etc. robots.txt already allows AI crawlers (wildcard `Allow: /`).
+
 Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
 
 ## ⏳ Your action items (off-site — only the owner can do these)
@@ -59,10 +71,14 @@ website. This is ~70% of local restaurant SEO.
 
 - [x] **Hours**: verified in GBP — **Sunday Closed**, Mon–Sat 11AM–9:30PM
       (matches the site).
-- [ ] **Primary category**: keep **"Nepalese restaurant" as PRIMARY** (it
-      already is). Do NOT switch primary to "Indian restaurant" — Nepalese is
-      the accurate, less-competitive niche you rank for. Keep "Indian
-      restaurant" (and optionally "Indian takeaway") as **secondary** only.
+- [x] **Primary category** (2026-06 rebrand): **"Indian restaurant" set as
+      PRIMARY, "Nepalese restaurant" as secondary** — an explicit owner decision
+      as part of rebranding to "Indian & Nepalese Cuisine". ⚠️ Note the trade-off
+      (recorded so it isn't lost): "Nepalese restaurant" was the lower-competition
+      niche the listing ranked well for; leading with "Indian restaurant" (a
+      crowded category in Oakland) can lower overall local-pack ranking. Watch the
+      Performance/ranking after the switch; revert to Nepalese-primary if local
+      visibility drops. Site copy rebranded to "Indian & Nepalese" everywhere.
 - [ ] Confirm **address** (948 Clay Street, Oakland CA 94607) and **phone**
       ((510) 250-9696) match the website.
 - [ ] Add recent **photos** (food, interior, the tandoor).

@@ -7,7 +7,7 @@ import { MapPin, Clock, Phone } from "lucide-react";
 export const metadata: Metadata = {
   title: "Our Story \u2014 Annapurna",
   description:
-    "Learn about the family story behind Annapurna, Oakland\u2019s authentic Nepali-Indian restaurant \u2014 from the Himalayan mountains to your table.",
+    "Learn about the family story behind Annapurna, Oakland\u2019s authentic Indian & Nepalese restaurant \u2014 from the Himalayan mountains to your table.",
   // Without this, the page inherits the root layout's canonical ("/"), telling
   // Google /about is a duplicate of the homepage.
   alternates: { canonical: "/about" },

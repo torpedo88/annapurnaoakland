@@ -23,6 +23,11 @@ export default async function AnalyticsPage() {
   const session = await getSession();
   if (!session || (session.role !== "owner" && session.role !== "manager")) redirect("/admin");
 
+  // Embedded GA4 dashboard. GA itself can't be iframed (X-Frame-Options: DENY),
+  // so we embed a Looker Studio report built on the GA4 property. Set the
+  // report's embed URL (Share → Embed report) in LOOKER_STUDIO_GA_EMBED_URL.
+  const lookerUrl = process.env.LOOKER_STUDIO_GA_EMBED_URL;
+
   const tools: Tool[] = [
     {
       name: "Google Analytics 4",
@@ -69,6 +74,36 @@ export default async function AnalyticsPage() {
         (revenue trends, busiest-times heatmap, top items, channel mix). The tools below add
         website-visitor analytics. Each turns on automatically once its key is set in Vercel — green = live.
       </p>
+
+      {/* ─── Embedded GA dashboard (Looker Studio) ─── */}
+      <div style={{ background: CARD_BG, border: BORDER, borderRadius: 16, padding: 20, marginBottom: 16 }}>
+        <h2 style={{ color: CREAM, fontFamily: "var(--font-display)", fontWeight: 200, fontSize: 20, marginBottom: 8 }}>
+          Live Google Analytics
+        </h2>
+        {lookerUrl ? (
+          <div style={{ borderRadius: 12, overflow: "hidden", border: BORDER }}>
+            <iframe
+              src={lookerUrl}
+              title="Google Analytics — Looker Studio"
+              style={{ width: "100%", height: 1400, border: 0, display: "block" }}
+              allowFullScreen
+            />
+          </div>
+        ) : (
+          <div style={{ color: MUTED, fontSize: 13, lineHeight: 1.6 }}>
+            <p style={{ marginBottom: 10 }}>
+              Google Analytics can&rsquo;t be embedded directly, so we show a Looker Studio report built
+              on your GA4 property. One-time setup (~5 min):
+            </p>
+            <ol style={{ margin: "0 0 12px 18px", padding: 0 }}>
+              <li>Open <a href="https://lookerstudio.google.com/" target="_blank" rel="noopener noreferrer" style={{ color: GOLD }}>Looker Studio</a> &rarr; <strong style={{ color: CREAM }}>Create &rarr; Report</strong>, pick the <strong style={{ color: CREAM }}>Google Analytics</strong> connector, and choose the Annapurna GA4 property (<code style={{ color: GOLD }}>G-RDEZ8ZPBSR</code>).</li>
+              <li>Top-right <strong style={{ color: CREAM }}>Share &rarr; Embed report</strong> &rarr; toggle <strong style={{ color: CREAM }}>Enable embedding</strong> &rarr; copy the embed URL (<code style={{ color: GOLD }}>lookerstudio.google.com/embed/reporting/&hellip;</code>).</li>
+              <li>Set it in Vercel as <code style={{ color: GOLD }}>LOOKER_STUDIO_GA_EMBED_URL</code> (Production) and redeploy &mdash; it&rsquo;ll appear here.</li>
+            </ol>
+            <p>Until then, use &ldquo;Open dashboard &uarr;&rdquo; on the Google Analytics card below.</p>
+          </div>
+        )}
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-4">
         {tools.map((t) => (

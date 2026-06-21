@@ -27,12 +27,12 @@ const serifDisplay = Cormorant_Garamond({
 });
 
 const DESCRIPTION =
-  "Family-run Himalayan & Nepali kitchen at 948 Clay Street, Oakland, since 2010. Momos, butter chicken, biryani, tandoori. Pickup or delivery. Closed Sundays.";
+  "Family-run Indian & Nepalese kitchen at 948 Clay Street, Oakland, since 2010. Momos, butter chicken, biryani, tandoori. Pickup or delivery. Closed Sundays.";
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://annapurnaoakland.com"),
   title: {
-    default: "Annapurna — Himalayan & Nepali Restaurant · Oakland",
+    default: "Annapurna — Indian & Nepalese Restaurant · Oakland",
     template: "%s · Annapurna Oakland",
   },
   description: DESCRIPTION,
@@ -47,13 +47,17 @@ export const metadata: Metadata = {
     "tandoori Oakland",
     "948 Clay Street",
     "Oakland delivery",
+    "Indian restaurant Oakland",
+    "Indian food Oakland",
+    "chicken tikka masala Oakland",
+    "butter chicken Oakland",
   ],
   alternates: { canonical: "/" },
   robots: { index: true, follow: true },
   openGraph: {
     type: "website",
     siteName: "Annapurna Oakland",
-    title: "Annapurna — Himalayan & Nepali Restaurant · Oakland",
+    title: "Annapurna — Indian & Nepalese Restaurant · Oakland",
     description: DESCRIPTION,
     url: "https://annapurnaoakland.com",
     locale: "en_US",
@@ -61,7 +65,7 @@ export const metadata: Metadata = {
   },
   twitter: {
     card: "summary_large_image",
-    title: "Annapurna — Himalayan & Nepali Restaurant · Oakland",
+    title: "Annapurna — Indian & Nepalese Restaurant · Oakland",
     description: DESCRIPTION,
     images: ["/images/annapurna-logo.png"],
   },
