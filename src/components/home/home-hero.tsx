@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { luxe } from "@/lib/theme";
 
 // Homepage hero. Shows the exact design image (animated, looping version of the
@@ -42,14 +43,13 @@ export function HomeHero() {
             pill overlays stay aligned because the box keeps the 2390×1792 (4:3)
             aspect at every width. */}
         <div className="relative w-full overflow-hidden rounded-[4px]" style={{ aspectRatio: "2390 / 1792", border: `1px solid ${luxe.line}` }}>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <Image
             src="/images/hero-poster.jpg"
             alt="Annapurna Restaurant & Bar — A Blend of Tradition & Flavor. Indian & Nepalese cuisine in Old Oakland."
-            className="absolute inset-0 h-full w-full object-contain"
-            width={2390}
-            height={1792}
-            fetchPriority="high"
+            fill
+            priority
+            sizes="(max-width: 1152px) 100vw, 1152px"
+            className="object-contain"
           />
           {showVideo && (
             <video
