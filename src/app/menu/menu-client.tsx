@@ -194,7 +194,11 @@ export function MenuClient({
         }}
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-3">
-          <div className="flex flex-wrap gap-2">
+          {/* Mobile: one horizontal-scroll row (swipe) so the filter is ~one
+              row tall instead of wrapping to 3–5 rows and eating the screen.
+              md+: wrap to multiple rows as before. Buttons are shrink-0 so they
+              keep size and overflow into the scroll. */}
+          <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               onClick={() => setActiveCat(null)}
               className="shrink-0 rounded-full px-4 py-2.5 min-h-[38px] text-xs font-bold uppercase tracking-wider transition"
