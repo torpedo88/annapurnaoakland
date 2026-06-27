@@ -75,11 +75,6 @@ export function OrdersBoard() {
     } catch { /* storage full / unavailable */ }
   }, []);
 
-  // Queue a ticket for printing (manual reprint or auto on new order).
-  const enqueuePrint = useCallback((order: AdminOrder) => {
-    setPrintQueue((q) => [...q, order]);
-  }, []);
-
   useEffect(() => {
     // Sound is ON by default. Auto-print is OFF by default and enabled per
     // device (tap it once on the kiosk) so staff phones don't get print dialogs.
@@ -195,10 +190,21 @@ export function OrdersBoard() {
     setPrintOn(next);
     localStorage.setItem(PRINT_KEY, next ? "on" : "off");
   };
-  // Manual reprint from an order card (ticket jam, lost copy, etc.).
-  const reprint = (id: string) => {
-    const o = orders.find((x) => x.id === id);
-    if (o) enqueuePrint(o);
+  // Manual print from an order card (e.g. tapping Print on the iPad) → re-queue
+  // the order for the kitchen print bridge, which prints it on the Bluetooth
+  // printer within ~5s. (A browser-kiosk setup without the bridge instead uses
+  // the "Auto-print" toggle, which prints new orders via window.print.)
+  const reprint = async (id: string) => {
+    setBusyId(id);
+    try {
+      await fetch("/api/admin/print-requeue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: id }),
+      });
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const tab = (l: Lane, label: string) => (

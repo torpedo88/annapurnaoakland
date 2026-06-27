@@ -1,0 +1,14 @@
+{
+  "name": "annapurna-print-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Android Bluetooth kitchen print bridge for Annapurna Oakland. Polls the site's /api/print API and prints new orders to a Star TSP100III over Bluetooth.",
+  "comment": "Illustrative deps. Create the native project with the React Native CLI first (see README), then install these into it.",
+  "dependencies": {
+    "@react-native-async-storage/async-storage": "^2.1.0",
+    "@supersami/rn-foreground-service": "^2.2.1",
+    "react": "19.0.0",
+    "react-native": "0.77.0",
+    "react-native-star-io10": "^2.6.0"
+  }
+}

@@ -540,6 +540,7 @@ NODE_OPTIONS="--require $(pwd)/scripts/_server-only-shim.cjs" \
 | `SENDGRID_API_KEY` / `EMAIL_FROM` / `RESTAURANT_NOTIFY_EMAIL` | optional | Order email notifications |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` / `RESTAURANT_NOTIFY_PHONE` | optional | Order SMS notifications |
 | `NEXT_PUBLIC_BASE_URL` | optional | Absolute URLs (defaults to localhost) |
+| `PRINT_BRIDGE_TOKEN` | optional (print bridge) | Bearer auth for the Android kitchen print bridge — `GET /api/print/pending`, `POST /api/print/ack` (`src/lib/print/auth.ts`) |
 | `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` | seed only | `db:seed:staff` |
 
 `env.doordash()` and `env.stripe()` use `required()` — they throw if any of their
