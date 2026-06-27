@@ -7,6 +7,14 @@ import type { MenuItem, MenuCategory } from "@/data/menu";
 
 const LOGO = "/images/annapurna-logo.png";
 
+// True only while `next build` is prerendering pages. Preview branches that
+// aren't scoped to a DATABASE_URL can't reach the DB at build time; rather than
+// fail the whole build we degrade DB-backed prerenders to empty and let ISR
+// re-render them with real data at runtime (where the DB is reachable). We
+// scope this strictly to the build phase so genuine runtime DB outages still
+// surface instead of being silently swallowed.
+const IS_BUILD_PHASE = process.env.NEXT_PHASE === "phase-production-build";
+
 /** A menu item plus its live availability flag (the public catalog needs both). */
 export type CatalogItem = MenuItem & { available: boolean };
 
@@ -24,10 +32,25 @@ function tagsFor(it: { isVegetarian: boolean | null; isVeganOption: boolean | nu
  * `src/data/menu.ts` catalog. Memoized per request.
  */
 export const getMenuCatalog = cache(async (): Promise<{ categories: MenuCategory[]; items: CatalogItem[] }> => {
-  const [cats, items] = await Promise.all([
-    db.select().from(menuCategories).orderBy(asc(menuCategories.sortOrder), asc(menuCategories.name)),
-    db.select().from(menuItems).orderBy(asc(menuItems.sortOrder), asc(menuItems.name)),
-  ]);
+  let cats: (typeof menuCategories.$inferSelect)[];
+  let items: (typeof menuItems.$inferSelect)[];
+  try {
+    [cats, items] = await Promise.all([
+      db.select().from(menuCategories).orderBy(asc(menuCategories.sortOrder), asc(menuCategories.name)),
+      db.select().from(menuItems).orderBy(asc(menuItems.sortOrder), asc(menuItems.name)),
+    ]);
+  } catch (err) {
+    // Build-time only: DB unreachable (e.g. preview branch without DATABASE_URL).
+    // Prerender an empty catalog; ISR (revalidate=30) hydrates it at runtime.
+    if (IS_BUILD_PHASE) {
+      console.warn(
+        "[menu/catalog] DB unreachable during build — prerendering empty menu; ISR will hydrate at runtime:",
+        (err as Error)?.message,
+      );
+      return { categories: [], items: [] };
+    }
+    throw err;
+  }
   const catById = new Map(cats.map((c) => [c.id, c]));
 
   const categories: MenuCategory[] = cats.map((c) => ({
