@@ -92,6 +92,10 @@ repo; the native app lives in a separate project (see the spec).
   `error`) stamps `kitchen_printed_at` once (idempotent — a re-ack is a no-op).
   With `error`, it records the message + bumps `kitchen_print_attempts` and leaves
   the order in the queue for retry.
+- `POST /api/admin/print-requeue` — **staff-authed**. Tapping **Print** on an
+  order in the admin board (e.g. on the iPad) clears its `kitchen_printed_at`, so
+  the bridge reprints it on the next poll. `pending` covers active orders
+  (`received` / `preparing` / `ready`), so an in-progress order can be reprinted.
 - Order JSON shape: `src/lib/print/serialize.ts` (mirrors the receipt fields).
 
 ### Setup

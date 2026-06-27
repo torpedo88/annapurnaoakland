@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, asc, eq, isNull, inArray } from "drizzle-orm";
+import { and, asc, isNull, inArray } from "drizzle-orm";
 import { db } from "@/db";
 import { orders, orderItems } from "@/db/schema";
 import { verifyPrintToken } from "@/lib/print/auth";
@@ -11,10 +11,14 @@ export const dynamic = "force-dynamic";
 // Cap a single poll so a cold bridge can't pull an unbounded backlog at once.
 const MAX = 50;
 
-// The Android print bridge polls this for new kitchen tickets. Returns received
-// orders not yet printed (kitchen_printed_at IS NULL), oldest first. Every new
-// order needs a ticket regardless of payment/source, matching the existing
-// window.print board behavior.
+// Active statuses eligible to print: new orders (received) plus in-progress ones,
+// so a staff "Print" tap (which re-queues by clearing kitchen_printed_at — see
+// /api/admin/print-requeue) reprints an order even after it has moved on.
+const PRINTABLE = ["received", "preparing", "ready"];
+
+// The Android print bridge polls this for kitchen tickets: printable orders not
+// yet printed (kitchen_printed_at IS NULL), oldest first. Every new order needs a
+// ticket regardless of payment/source, matching the existing board behavior.
 export async function GET(req: Request) {
   if (!verifyPrintToken(req)) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,7 +27,7 @@ export async function GET(req: Request) {
   const rows = await db
     .select()
     .from(orders)
-    .where(and(eq(orders.status, "received"), isNull(orders.kitchenPrintedAt)))
+    .where(and(inArray(orders.status, PRINTABLE), isNull(orders.kitchenPrintedAt)))
     .orderBy(asc(orders.createdAt))
     .limit(MAX);
 
