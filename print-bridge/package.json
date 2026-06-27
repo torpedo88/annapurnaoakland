@@ -6,6 +6,7 @@
   "comment": "Illustrative deps. Create the native project with the React Native CLI first (see README), then install these into it.",
   "dependencies": {
     "@react-native-async-storage/async-storage": "^2.1.0",
+    "@supersami/rn-foreground-service": "^2.2.1",
     "react": "19.0.0",
     "react-native": "0.77.0",
     "react-native-star-io10": "^2.6.0"

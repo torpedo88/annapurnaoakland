@@ -13,7 +13,8 @@ import {
 import { DEFAULT_SETTINGS, loadSettings, saveSettings } from "./src/storage";
 import { discoverBluetoothPrinters, printOrder, type FoundPrinter } from "./src/printer";
 import { requestBluetoothPermissions } from "./src/permissions";
-import { usePrintBridge } from "./src/usePrintBridge";
+import { startPrintService, stopPrintService } from "./src/printService";
+import { readStatus, EMPTY_STATUS, type ServiceStatus } from "./src/status";
 import type { PrintOrder, Settings } from "./src/types";
 
 const TEST_ORDER: PrintOrder = {
@@ -29,15 +30,38 @@ export default function App() {
   const [printers, setPrinters] = useState<FoundPrinter[]>([]);
   const [scanning, setScanning] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [status, setStatus] = useState<ServiceStatus>(EMPTY_STATUS);
 
-  useEffect(() => { loadSettings().then((s) => { setSettings(s); setLoaded(true); }); }, []);
+  // Load settings; if already configured + enabled, (re)start the background
+  // service on launch (e.g. after a reboot the app is opened once).
+  useEffect(() => {
+    loadSettings().then((s) => {
+      setSettings(s);
+      setLoaded(true);
+      if (s.enabled && s.serverUrl && s.token && s.printerId) startPrintService();
+    });
+  }, []);
 
-  const status = usePrintBridge(settings);
+  // The print loop runs in the foreground service; mirror its status for display.
+  useEffect(() => {
+    const id = setInterval(() => { readStatus().then(setStatus); }, 2000);
+    return () => clearInterval(id);
+  }, []);
 
   function update(patch: Partial<Settings>) {
     const next = { ...settings, ...patch };
     setSettings(next);
     saveSettings(next).catch(() => {});
+  }
+
+  function toggleEnabled(v: boolean) {
+    if (v && (!settings.serverUrl || !settings.token || !settings.printerId)) {
+      setMsg("Set server URL, token, and printer first");
+      return;
+    }
+    update({ enabled: v });
+    if (v) startPrintService();
+    else stopPrintService();
   }
 
   async function scan() {
@@ -89,8 +113,8 @@ export default function App() {
         ))}
 
         <View style={s.rowBetween}>
-          <Text style={s.h2}>Auto-print</Text>
-          <Switch value={settings.enabled} onValueChange={(v) => update({ enabled: v })} />
+          <Text style={s.h2}>Auto-print (background)</Text>
+          <Switch value={settings.enabled} onValueChange={toggleEnabled} />
         </View>
 
         <TouchableOpacity style={s.btnWide} onPress={testPrint}>
@@ -98,12 +122,17 @@ export default function App() {
         </TouchableOpacity>
 
         <View style={s.card}>
-          <Text style={s.stat}>Status: {status.polling ? "polling" : "idle"}</Text>
-          <Text style={s.stat}>Printed this session: {status.printedCount}</Text>
+          <Text style={s.stat}>Service: {status.running ? "running (works in background)" : "stopped"}</Text>
+          <Text style={s.stat}>Printed this run: {status.printedCount}</Text>
           <Text style={s.stat}>Last poll: {status.lastPollAt ? new Date(status.lastPollAt).toLocaleTimeString() : "—"}</Text>
           {status.lastError ? <Text style={[s.stat, s.err]}>Error: {status.lastError}</Text> : null}
           {msg ? <Text style={s.stat}>{msg}</Text> : null}
         </View>
+
+        <Text style={s.hint}>
+          Auto-print runs in the background — you can leave this app and use the Uber Eats app.
+          Keep the tablet plugged in, Wi-Fi + Bluetooth on, and battery optimization OFF for this app.
+        </Text>
       </ScrollView>
     </SafeAreaView>
   );
@@ -127,4 +156,5 @@ const s = StyleSheet.create({
   card: { backgroundColor: "#1C1712", borderRadius: 10, padding: 14, marginTop: 18, gap: 4 },
   stat: { color: "#F3E9D6", fontSize: 14 },
   err: { color: "#E08A7A" },
+  hint: { color: "#8A8276", fontSize: 12, marginTop: 14, lineHeight: 17 },
 });

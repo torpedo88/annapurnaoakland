@@ -22,13 +22,19 @@
 6. Tap **Test print** — a ticket should come out. ✅
 7. Turn **Auto-print ON**.
    → New orders now print within ~5 seconds.
+8. **One-time (important on Lenovo):** Settings → **Battery** → **Battery
+   optimization** → *Print Bridge* → **Don't optimize**. (Stops Android killing it.)
+   If there's an **Auto-start / Background manager**, allow *Print Bridge* too.
 
 ---
 
 ## 🔁  Keep it running (every day)
-- Tablet stays **plugged in** and **screen ON** (set screen timeout to *Never*).
-- **Wi-Fi ON** + **Bluetooth ON**.
-- App shows **Status: polling**. If not → open app, toggle **Auto-print** off then on.
+- Prints in the **background** — fine to switch to the **Uber Eats app**. Just
+  **don't force-stop / swipe away** Print Bridge.
+- Tablet stays **plugged in**; **Wi-Fi ON** + **Bluetooth ON**.
+- A small **"Annapurna printing"** notification means it's running. Gone? Open the
+  app → toggle **Auto-print** off then on.
+- After a tablet **reboot**, open the Print Bridge app once.
 
 ---
 

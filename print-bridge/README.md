@@ -43,6 +43,11 @@ Add the Bluetooth permissions to `android/app/src/main/AndroidManifest.xml`
 <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
 <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+<!-- background printing (foreground service) -->
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
+<uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC" />
+<uses-permission android:name="android.permission.POST_NOTIFICATIONS" />
+<uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED" />
 ```
 The app already requests the runtime grants (Android 12+) when you tap **Scan** —
 see `src/permissions.ts`. No extra code needed.
@@ -85,7 +90,28 @@ install`) → open it.
 - Disable battery optimization for the app.
 - Optional: screen-pinning / a kiosk launcher so staff can't navigate away.
 
-## Hardening (next, not in this scaffold)
-- A **foreground service** so printing survives the app being backgrounded
-  (e.g. `@supersami/rn-foreground-service`), and a `BOOT_COMPLETED` receiver to
-  relaunch after reboot. v1 prints while the app is open/foreground.
+## Background printing (no need to keep the app open)
+Printing runs in an Android **foreground service** (`src/printService.ts`, via
+`@supersami/rn-foreground-service`), so it keeps printing with the screen off and
+the **Uber Eats app in the foreground**. A persistent "Annapurna printing"
+notification shows while it runs. Turning **Auto-print** on starts the service;
+off stops it. On launch (e.g. after a reboot) the app restarts the service if it
+was enabled.
+
+**Lenovo / aggressive battery management — required, or it gets killed:**
+- Settings → **Battery** → **Battery optimization** → Print Bridge → **Don't
+  optimize**.
+- If the Lenovo has an **Auto-start / Background manager**, allow Print Bridge.
+- Keep the tablet **plugged in**; set screen timeout long or **Never**.
+
+**Auto-start after reboot:** the foreground service relaunches when the app is
+opened. For fully hands-off restart on power-loss, add a `BOOT_COMPLETED`
+receiver that launches the app/service (native Android — follow the
+`@supersami/rn-foreground-service` boot example). Until then, after a reboot just
+open the app once.
+
+> **Coexisting with Uber on the same tablet:** our app prints **website orders
+> only**; Uber Eats orders stay in the Uber app and print however they do today.
+> Both apps run fine together — ours in the background, Uber in front. Print
+> volume is low, so sharing one Bluetooth printer is fine; if you ever see
+> contention, add a second cheap printer.
