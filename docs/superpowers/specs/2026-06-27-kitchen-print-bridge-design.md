@@ -84,6 +84,52 @@ Two parts:
 - **Minimal UI:** printer connection status, server reachability, paired-printer
   picker (first run), manual "reprint last", and an on/off switch.
 
+## 3.1 Installing & running the bridge on the tablet
+
+Distribution is **sideloading a signed release APK** — no Play Store, no Apple,
+no account fees.
+
+**Step 0 — Confirm the tablet is usable (before building anything).**
+- **Owned, not leased.** If DoorDash/Grubhub owns the tablet (you'd return it),
+  don't use it.
+- **Not locked.** Can you exit the DoorDash/Grubhub app and open Android
+  **Settings**? If it's pinned in kiosk mode with no Settings access, it's
+  MDM-locked and can't sideload — and some MDM/Samsung Knox enrollments survive a
+  factory reset.
+- Locked or leased → fall back to a cheap **unlocked Android tablet (~$50–80)**.
+  Everything below is identical on that device.
+
+**Step 1 — Prepare the device (one-time).**
+- If repurposing, **factory reset** to clear the delivery app + its kiosk lock;
+  finish setup; join the restaurant **Wi-Fi**.
+- Settings → **Apps → Special access → Install unknown apps** → allow it for the
+  app you'll install from (Files or Chrome).
+
+**Step 2 — Get the APK onto the device + install (pick one).**
+- **Link/Drive:** we host the signed APK; open the link in the tablet browser →
+  download → tap → Install.
+- **USB + computer:** `adb install kitchen-bridge.apk` (Developer options → USB
+  debugging on).
+- **USB file copy:** copy the APK to the tablet, open with Files → Install.
+
+**Step 3 — First run.**
+- Grant prompts: **Bluetooth** (Connect/Scan), **Notifications** (for the
+  foreground service), and **disable battery optimization** for the app so Android
+  won't kill it.
+- Pair the printer once in Android **Settings → Bluetooth** (Star PIN is usually
+  `0000` / `1234`), then select it in the app.
+- Enter the **server URL + device token** we provide → toggle **On**.
+
+**Step 4 — Lock it in as a kiosk.**
+- Screen timeout off (or keep it plugged in); keep Wi-Fi + Bluetooth on.
+- **Auto-start on boot** (the app relaunches its print service after a reboot via
+  a `BOOT_COMPLETED` receiver).
+- Optional: Android **screen pinning** or a kiosk launcher so staff can't navigate
+  away from it.
+
+**Deliverable:** a one-page printed setup card with these exact steps and the
+server URL / device token pre-filled, shipped with the build.
+
 ## 4. Data flow
 Order paid (Stripe confirms) → saved with `status` received, `kitchen_printed_at`
 null → bridge polls `/api/print/pending` → receives order → prints over Bluetooth
