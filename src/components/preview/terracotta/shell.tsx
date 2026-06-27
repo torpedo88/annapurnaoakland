@@ -31,32 +31,22 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="mx-auto max-w-7xl px-5 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          {/* Left: hamburger (mobile only) + brand */}
-          <div className="flex items-center gap-2 sm:gap-3 justify-self-start">
-            <button
-              onClick={() => setNavOpen(true)}
-              aria-label="Open menu"
-              className="md:hidden rounded-full h-10 w-10 flex items-center justify-center transition shrink-0"
-              style={{ border: "1px solid rgba(201,162,75,0.4)", color: "#C9A24B" }}
+          {/* Left: brand — logo + name (far left) */}
+          <Link href="/" className="flex items-center gap-3 justify-self-start">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src="/images/annapurna-logo.png"
+              alt="Annapurna Restaurant & Bar"
+              className="h-14 w-auto object-contain shrink-0"
+              style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
+            />
+            <span
+              className="hidden sm:inline uppercase tracking-[0.16em] text-2xl"
+              style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
             >
-              <Menu className="h-5 w-5" />
-            </button>
-            <Link href="/" className="flex items-center gap-3">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src="/images/annapurna-logo.png"
-                alt="Annapurna Restaurant & Bar"
-                className="h-14 w-auto object-contain shrink-0"
-                style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
-              />
-              <span
-                className="hidden sm:inline uppercase tracking-[0.16em] text-2xl"
-                style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
-              >
-                Annapurna
-              </span>
-            </Link>
-          </div>
+              Annapurna
+            </span>
+          </Link>
 
           {/* Center: nav (bigger, centered) */}
           <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-[0.2em] justify-self-center">
@@ -105,6 +95,15 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
                   {count}
                 </span>
               )}
+            </button>
+            {/* Hamburger — mobile only, far right; opens the slide-out nav */}
+            <button
+              onClick={() => setNavOpen(true)}
+              aria-label="Open menu"
+              className="md:hidden rounded-full h-10 w-10 flex items-center justify-center transition shrink-0"
+              style={{ border: "1px solid rgba(201,162,75,0.4)", color: "#C9A24B" }}
+            >
+              <Menu className="h-5 w-5" />
             </button>
           </div>
         </div>
