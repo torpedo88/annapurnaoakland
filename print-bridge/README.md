@@ -25,28 +25,47 @@ Design: `../docs/superpowers/specs/2026-06-27-kitchen-print-bridge-design.md`.
 
 ## Build it (one-time)
 
-1. **Create the native project** (gets the `android/` toolchain this folder
-   omits), then drop these files in:
-   ```bash
-   npx @react-native-community/cli init PrintBridge
-   cd PrintBridge
-   # copy App.tsx and src/ from this folder over the generated ones
-   npm i react-native-star-io10 @react-native-async-storage/async-storage
-   ```
-2. **Android permissions** — add to `android/app/src/main/AndroidManifest.xml`:
-   ```xml
-   <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
-   <uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
-   <uses-permission android:name="android.permission.BLUETOOTH" />
-   <uses-permission android:name="android.permission.INTERNET" />
-   ```
-   On Android 12+, request `BLUETOOTH_CONNECT` / `BLUETOOTH_SCAN` at runtime
-   before scanning (see the Star SDK sample).
-3. **Build a release APK**:
-   ```bash
-   cd android && ./gradlew assembleRelease
-   # APK: android/app/build/outputs/apk/release/app-release.apk
-   ```
+Both build options start the same — create the native project and add this app's
+source:
+```bash
+npx @react-native-community/cli init PrintBridge
+cd PrintBridge
+# copy App.tsx + src/ + eas.json from this folder over the generated files
+npm i react-native-star-io10 @react-native-async-storage/async-storage
+```
+
+Add the Bluetooth permissions to `android/app/src/main/AndroidManifest.xml`
+(just above `<application>`):
+```xml
+<uses-permission android:name="android.permission.INTERNET" />
+<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_ADMIN" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" android:maxSdkVersion="30" />
+<uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
+<uses-permission android:name="android.permission.BLUETOOTH_SCAN" />
+```
+The app already requests the runtime grants (Android 12+) when you tap **Scan** —
+see `src/permissions.ts`. No extra code needed.
+
+### Option A — local build (Android Studio)
+Needs Node 20+, JDK 17, Android Studio (+ SDK & platform-tools).
+```bash
+cd android
+./gradlew assembleDebug    # debug APK — no signing setup, fine for sideloading
+# → android/app/build/outputs/apk/debug/app-debug.apk
+```
+
+### Option B — cloud build with EAS (no Android Studio)
+Builds the APK on Expo's servers; you only need Node + a free Expo account.
+`eas.json` (in this folder) is preconfigured for an internal APK.
+```bash
+npm i -g eas-cli
+eas login
+eas build:configure         # one-time; sets up Android credentials
+eas build -p android --profile preview
+# download the APK from the link EAS prints when it finishes
+```
+EAS builds bare React Native projects too — the Star native module autolinks.
 
 ## Install on the tablet
 See the design spec **§3.1** for the full tablet-prep + sideload steps. Short

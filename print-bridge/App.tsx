@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import { DEFAULT_SETTINGS, loadSettings, saveSettings } from "./src/storage";
 import { discoverBluetoothPrinters, printOrder, type FoundPrinter } from "./src/printer";
+import { requestBluetoothPermissions } from "./src/permissions";
 import { usePrintBridge } from "./src/usePrintBridge";
 import type { PrintOrder, Settings } from "./src/types";
 
@@ -41,7 +42,11 @@ export default function App() {
 
   async function scan() {
     setScanning(true); setMsg(null);
-    try { setPrinters(await discoverBluetoothPrinters()); }
+    try {
+      const ok = await requestBluetoothPermissions();
+      if (!ok) { setMsg("Bluetooth permission denied"); return; }
+      setPrinters(await discoverBluetoothPrinters());
+    }
     catch (e) { setMsg(`Scan failed: ${e instanceof Error ? e.message : String(e)}`); }
     finally { setScanning(false); }
   }
