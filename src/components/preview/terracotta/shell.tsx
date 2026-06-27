@@ -71,8 +71,11 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
             })}
           </nav>
 
-          {/* Right: Order Now + cart (far right) */}
-          <div className="flex items-center gap-3 justify-self-end">
+          {/* Right: Order Now + cart + hamburger (far right). col-start-3 pins
+              this to the last column so it stays flush right on mobile, where
+              the center nav is hidden and the grid would otherwise auto-place
+              this cluster into the empty middle column. */}
+          <div className="flex items-center gap-3 justify-self-end col-start-3">
             <Link
               href="/menu"
               className="inline-flex rounded-[2px] px-3.5 sm:px-5 py-2 sm:py-2.5 text-[10px] sm:text-[11px] uppercase tracking-[0.14em] sm:tracking-[0.16em] font-semibold transition whitespace-nowrap"
