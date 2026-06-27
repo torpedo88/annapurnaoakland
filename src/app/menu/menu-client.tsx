@@ -146,14 +146,16 @@ export function MenuClient({
           </div>
         </div>
 
-        {/* Search + filters */}
-        <div className="relative mx-auto max-w-7xl px-6 lg:px-10 pb-6 flex flex-wrap items-center gap-3">
-          <div className="relative w-full sm:flex-1 min-w-0 sm:max-w-md">
+        {/* Search + filters — one row on every width (no wrap) so the filter
+            header stays compact on mobile. The search flexes; the veg toggle and
+            count are shrink-0 and the veg label shortens to "Veg" on phones. */}
+        <div className="relative mx-auto max-w-7xl px-6 lg:px-10 pb-5 flex items-center gap-2 sm:gap-3">
+          <div className="relative flex-1 min-w-0 sm:max-w-md">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4" style={{ color: "#8A8276" }} />
             <input
               value={q}
               onChange={(e) => setQ(e.target.value)}
-              placeholder="Search dishes — momo, tikka, paneer…"
+              placeholder="Search dishes…"
               className="w-full pl-11 pr-4 py-3 rounded-full text-sm transition focus:outline-none focus:ring-2"
               style={{
                 backgroundColor: "#1C1712",
@@ -165,7 +167,7 @@ export function MenuClient({
           </div>
           <button
             onClick={() => setVegOnly((v) => !v)}
-            className="inline-flex items-center gap-2 rounded-full px-4 py-3 text-sm font-semibold transition"
+            className="inline-flex shrink-0 items-center gap-2 rounded-full px-3 sm:px-4 py-3 text-sm font-semibold transition"
             style={
               vegOnly
                 ? { backgroundColor: "#4A6B4A", color: "#F3E9D6", border: "1px solid #4A6B4A" }
@@ -173,9 +175,10 @@ export function MenuClient({
             }
           >
             <Leaf className="h-4 w-4" />
-            Vegetarian only
+            <span className="hidden sm:inline">Vegetarian only</span>
+            <span className="sm:hidden">Veg</span>
           </button>
-          <span className="text-sm ml-auto" style={{ color: "#8A8276" }}>
+          <span className="hidden sm:inline text-sm shrink-0 whitespace-nowrap" style={{ color: "#8A8276" }}>
             {totalCount} {totalCount === 1 ? "dish" : "dishes"}
           </span>
         </div>
@@ -194,7 +197,11 @@ export function MenuClient({
         }}
       >
         <div className="mx-auto max-w-7xl px-6 lg:px-10 py-3">
-          <div className="flex flex-wrap gap-2">
+          {/* Mobile: one horizontal-scroll row (swipe) so the filter is ~one
+              row tall instead of wrapping to 3–5 rows and eating the screen.
+              md+: wrap to multiple rows as before. Buttons are shrink-0 so they
+              keep size and overflow into the scroll. */}
+          <div className="flex gap-2 overflow-x-auto md:flex-wrap md:overflow-visible [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
             <button
               onClick={() => setActiveCat(null)}
               className="shrink-0 rounded-full px-4 py-2.5 min-h-[38px] text-xs font-bold uppercase tracking-wider transition"

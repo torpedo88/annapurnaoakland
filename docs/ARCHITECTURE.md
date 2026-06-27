@@ -616,6 +616,15 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
 10. **`/order` is not a page** — only `/order/[id]` (tracking) exists. The bare
     `/order` URL is 308-redirected to `/menu` in `next.config.ts` (§17); don't
     add an `order/page.tsx` without removing that redirect.
+11. **`/menu` prerenders against the DB at build time** (`revalidate=30`, calls
+    `getMenuCatalog()`). Preview env vars are scoped to the **`dev` branch only**,
+    so a preview deploy on any *other* branch builds with no `DATABASE_URL` and
+    would otherwise fail at the `/menu` prerender (`ECONNREFUSED 127.0.0.1:5432`).
+    `getMenuCatalog()` guards this: during the build phase
+    (`NEXT_PHASE === "phase-production-build"`) an unreachable DB degrades to an
+    empty catalog and ISR hydrates it at runtime. To get real data on a
+    feature-branch preview, widen the Preview env var scope to all branches
+    (Vercel → Settings → Environment Variables).
 
 ---
 

@@ -17,8 +17,11 @@ and test-mode delivery.
 | Uber Direct | production creds | test-mode creds |
 | DoorDash | (sandbox) | (sandbox) |
 
-`dev.annapurnaoakland.com` is pinned to the `dev` branch in Vercel, so every push
-to `dev` redeploys staging using the **Preview**-scoped env vars.
+`dev.annapurnaoakland.com` is bound to the `dev` git branch in Vercel (the
+domain's `gitBranch` = `dev`), so every push to `dev` auto-serves a fresh
+**Preview** build on that domain using the **Preview (dev)**-scoped env vars
+(→ dev Supabase project). Production deploys do **not** touch it. See the
+Database-isolation section below for how this is enforced and what breaks it.
 
 ## Workflow
 
@@ -90,14 +93,27 @@ user created on dev appeared in prod):
    If a `DATABASE_URL` for branch `dev` resolves to the prod ref, the dev site
    reads/writes **prod**.
 
-2. **`dev.annapurnaoakland.com` is a manual alias** — it does **not** auto-follow
-   pushes to `dev`. A `git push origin dev` builds a new deployment and updates
-   `…-git-dev-….vercel.app`, but the custom domain keeps pointing at the *old*
-   deployment until you re-alias:
+2. **`dev.annapurnaoakland.com` must be bound to the `dev` branch** (`gitBranch`
+   = `dev` on the Vercel project domain). If `gitBranch` is **null**, Vercel
+   treats it as a *production* domain and **every production deploy reassigns it
+   to the prod build → prod DB**. This is what recurred on 2026-06-21 (the domain
+   had `gitBranch: null` despite docs claiming it was pinned; a run of prod
+   deploys kept stealing it). Manual `vercel alias set` is only a temporary
+   patch — the next prod deploy reclaims an unbound domain. Check / fix the
+   binding (token from Vercel CLI auth; project `prj_Y3SC21U9GW1DRuZGIJdFuC3yvmLV`,
+   team `team_oI0gNni8Xtndu9VUqadh2brY`):
    ```bash
-   npx vercel alias set <new-dev-deploy-url> dev.annapurnaoakland.com   # or: npm run deploy:dev
+   # check
+   curl -s -H "Authorization: Bearer $VERCEL_TOKEN" \
+     "https://api.vercel.com/v9/projects/<projectId>/domains/dev.annapurnaoakland.com?teamId=<team>" | jq .gitBranch
+   # fix (bind to dev)
+   curl -s -X PATCH -H "Authorization: Bearer $VERCEL_TOKEN" -H "Content-Type: application/json" \
+     -d '{"gitBranch":"dev"}' \
+     "https://api.vercel.com/v9/projects/<projectId>/domains/dev.annapurnaoakland.com?teamId=<team>"
    ```
-   A stale alias is why an "env fix" can look like it didn't work.
+   (Or set it in Vercel → Project → Settings → Domains → `dev.annapurnaoakland.com`
+   → Git Branch = `dev`.) Leave the apex/`www` domains unbound (they stay
+   production).
 
 **Verify isolation** quickly: 86 one item in the **dev** DB only
 (`update menu_items set is_available=false where slug=…`), then check

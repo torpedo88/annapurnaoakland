@@ -50,6 +50,18 @@ change.
       still prefer its own rating for the star display ("self-serving" markup),
       but this is real, on-page data — no penalty risk.*
 
+- [x] **Hero performance (Core Web Vitals)** — the animated hero shipped with an
+      8MB PNG poster + 3.3MB autoplay video → **mobile LCP was 47.7s** (Perf 48/D).
+      Fixed: poster compressed to a WebP/AVIF via `next/image priority`
+      (`public/images/hero-poster.jpg`, ~390KB source), video re-encoded
+      3.3MB→264KB (audio stripped, scaled) and **lazy-loaded** (`preload=none`,
+      mounts on window `load`). Result: **LCP 47.7s→~12s, TBT 200→40ms, TTI
+      50→12s, SEO 100, BestPractices 100**. ⏳ STILL OPEN: LCP (~12s mobile) and
+      CLS (0.219) are now bound by **heavy client JS + a layout shift**, not
+      assets — needs a focused pass (code-split / lazy-load below-fold home
+      sections, more server components, `font-display`/reserved heights). PageSpeed
+      lab is harsh (Moto G4/slow 4G); field CWV will be better. Verify with
+      `mcp__pagespeed__performance_audit`.
 - [x] **FAQ + FAQPage schema** (`src/components/home/faq.tsx`, on the home page) —
       8 Q&As (food, location, hours, pickup/delivery + in-store-vs-app pricing,
       dietary, reservations, catering, parking/bar) with matching `FAQPage`
