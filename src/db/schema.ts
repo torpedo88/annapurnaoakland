@@ -112,6 +112,12 @@ export const orders = pgTable("orders", {
   addressState: text("address_state"),
   addressZip: text("address_zip"),
   specialInstructions: text("special_instructions"),
+  // Kitchen print bridge: stamped when the Android bridge prints the ticket
+  // (null = not yet printed). Drives /api/print/pending and makes acks
+  // idempotent so a ticket prints exactly once.
+  kitchenPrintedAt: timestamp("kitchen_printed_at", { withTimezone: true }),
+  kitchenPrintAttempts: integer("kitchen_print_attempts").notNull().default(0),
+  kitchenPrintError: text("kitchen_print_error"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),
   updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().default(now()),
 });

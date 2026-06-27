@@ -1,5 +1,19 @@
 # Kitchen ticket printing (Star TSP100)
 
+Two ways to get kitchen tickets onto the Star TSP100:
+
+- **A — Browser board auto-print** (this doc, below): the admin Orders board
+  prints via `window.print()`. Needs a **computer** running Chrome
+  `--kiosk-printing` with the printer as the OS default.
+- **B — Android print bridge** (for iPad / no-PC setups): a dedicated Android
+  tablet runs a small app that polls a print API and prints to the printer over
+  Bluetooth via the Star SDK. See the section at the bottom and the design spec
+  `docs/superpowers/specs/2026-06-27-kitchen-print-bridge-design.md`.
+
+> Run only **one** of these against a given printer, or tickets double-print.
+
+---
+
 The admin **Orders** board auto-prints an 80mm kitchen ticket the moment a new
 order arrives. No server or cloud-printer setup is required — printing happens
 from the browser on the on-site machine that has the Star TSP100 attached
@@ -60,3 +74,35 @@ Then:
   to none; `@page { size: 80mm auto; margin: 0 }` handles the rest.
 - **Nothing prints** → confirm **🖨 Auto-print on** is lit, and that the order
   reached status `received` (auto-print fires on new received orders only).
+
+---
+
+## B — Android print bridge (no-PC / Bluetooth)
+
+For setups with no computer (e.g. an iPad shows orders) the kitchen prints via a
+dedicated **Android tablet** running a small bridge app that talks to the Star
+printer over Bluetooth. The app pulls orders from a server-side print API in this
+repo; the native app lives in a separate project (see the spec).
+
+### Print API (this repo)
+- `GET /api/print/pending` — returns `received` orders not yet printed
+  (`kitchen_printed_at IS NULL`), oldest first, capped at 50. Auth: bearer
+  `PRINT_BRIDGE_TOKEN`.
+- `POST /api/print/ack` — body `{ "orderId": "…", "error"?: "…" }`. Success (no
+  `error`) stamps `kitchen_printed_at` once (idempotent — a re-ack is a no-op).
+  With `error`, it records the message + bumps `kitchen_print_attempts` and leaves
+  the order in the queue for retry.
+- Order JSON shape: `src/lib/print/serialize.ts` (mirrors the receipt fields).
+
+### Setup
+1. Set `PRINT_BRIDGE_TOKEN` to a long random string (env + the bridge app).
+2. Apply the new columns: `npm run db:push` (adds `kitchen_printed_at`,
+   `kitchen_print_attempts`, `kitchen_print_error` to `orders`).
+3. **Backfill** so the bridge doesn't print the existing backlog on first
+   connect: `UPDATE orders SET kitchen_printed_at = now() WHERE kitchen_printed_at IS NULL;`
+4. Build + sideload the bridge app onto the tablet and pair the printer — see the
+   design spec `docs/superpowers/specs/2026-06-27-kitchen-print-bridge-design.md`
+   (§3.1 covers tablet install).
+
+> Don't run this **and** the browser board auto-print (A) against the same
+> printer — pick one.
