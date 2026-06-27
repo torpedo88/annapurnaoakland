@@ -96,8 +96,16 @@ no account fees.
   **Settings**? If it's pinned in kiosk mode with no Settings access, it's
   MDM-locked and can't sideload — and some MDM/Samsung Knox enrollments survive a
   factory reset.
-- Locked or leased → fall back to a cheap **unlocked Android tablet (~$50–80)**.
+- Locked or leased → fall back to a cheap **unlocked Android tablet**.
   Everything below is identical on that device.
+
+> **Decision (2026-06-27):** the restaurant's spare tablets came **from the
+> delivery companies** (DoorDash/Grubhub) — i.e. leased + MDM/kiosk-locked and
+> must be returned. They are **not usable** as the bridge. The plan uses a
+> **purchased, unlocked Android tablet** instead. Buy any **Android 11+** (12+
+> preferred) tablet with Wi-Fi + Bluetooth — e.g. Samsung Galaxy Tab A9 or a
+> Lenovo Tab M-series (~$70–130); a cheap Android phone works too. **Avoid Amazon
+> Fire** tablets (Fire OS lacks Google services). Steps 1–4 are unchanged on it.
 
 **Step 1 — Prepare the device (one-time).**
 - If repurposing, **factory reset** to clear the delivery app + its kiosk lock;
@@ -165,10 +173,9 @@ longer return it.
   visible, not silent.
 
 ## 8. Dependencies & risks
-1. **Tablet must allow sideloading.** Repurposed DoorDash/Grubhub tablets may be
-   MDM-locked or leased. **Prerequisite:** confirm at least one tablet permits
-   "install unknown apps". (If none do, fall back to a ~$50 unlocked Android
-   device.)
+1. **Bridge device — RESOLVED (2026-06-27).** The company delivery tablets are
+   leased + MDM-locked → not usable. Plan uses a **purchased unlocked Android
+   tablet** (~$70–130). Low risk; small one-time cost, owned outright.
 2. **Star SDK / printer support.** StarXpand SDK explicitly supports TSP100III
    over Bluetooth — low risk.
 3. **Build/test boundary.** The print API (Part A) is normal web code I can
@@ -199,7 +206,8 @@ reprint; bridge/printer status in admin. Out: phone orders, multi-printer, statu
 sync-back, scheduled-order handling (until base flow ships).
 
 ## 12. Open questions
-- Are the spare delivery tablets sideload-capable (MDM/leased)? — verify first.
+- ~~Are the spare delivery tablets sideload-capable?~~ **Resolved:** no — company
+  leased/locked. Use a purchased unlocked Android tablet.
 - React Native vs native Kotlin for the bridge (lean RN for stack fit; confirm
   `react-native-star-io10` covers TSP100III Bluetooth Classic on the target
   Android version).
