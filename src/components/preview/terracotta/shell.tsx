@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { ShoppingBag, X, Plus, Minus, Check } from "lucide-react";
+import { ShoppingBag, X, Plus, Minus, Check, Menu } from "lucide-react";
 import { useCart } from "@/lib/preview-cart";
 import { useEffect, useState } from "react";
 import { PromoMarquee } from "./promo-marquee";
@@ -18,6 +18,7 @@ const nav = [
 export function TerracottaShell({ children }: { children: React.ReactNode }) {
   const { count, setOpen } = useCart();
   const pathname = usePathname();
+  const [navOpen, setNavOpen] = useState(false);
 
   return (
     <>
@@ -30,22 +31,32 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
         }}
       >
         <div className="mx-auto max-w-7xl px-5 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
-          {/* Left: brand — logo + name (far left) */}
-          <Link href="/" className="flex items-center gap-3 justify-self-start">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src="/images/annapurna-logo.png"
-              alt="Annapurna Restaurant & Bar"
-              className="h-14 w-auto object-contain shrink-0"
-              style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
-            />
-            <span
-              className="hidden sm:inline uppercase tracking-[0.16em] text-2xl"
-              style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
+          {/* Left: hamburger (mobile only) + brand */}
+          <div className="flex items-center gap-2 sm:gap-3 justify-self-start">
+            <button
+              onClick={() => setNavOpen(true)}
+              aria-label="Open menu"
+              className="md:hidden rounded-full h-10 w-10 flex items-center justify-center transition shrink-0"
+              style={{ border: "1px solid rgba(201,162,75,0.4)", color: "#C9A24B" }}
             >
-              Annapurna
-            </span>
-          </Link>
+              <Menu className="h-5 w-5" />
+            </button>
+            <Link href="/" className="flex items-center gap-3">
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src="/images/annapurna-logo.png"
+                alt="Annapurna Restaurant & Bar"
+                className="h-14 w-auto object-contain shrink-0"
+                style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
+              />
+              <span
+                className="hidden sm:inline uppercase tracking-[0.16em] text-2xl"
+                style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
+              >
+                Annapurna
+              </span>
+            </Link>
+          </div>
 
           {/* Center: nav (bigger, centered) */}
           <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-[0.2em] justify-self-center">
@@ -104,8 +115,100 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
       {children}
 
       <CartDrawer />
+      <MobileNavDrawer open={navOpen} onClose={() => setNavOpen(false)} pathname={pathname} />
       <AddedToast />
     </>
+  );
+}
+
+// Mobile-only slide-out navigation. Mirrors the CartDrawer pattern but slides
+// in from the left and is hidden entirely on md+ (where the inline nav shows).
+function MobileNavDrawer({ open, onClose, pathname }: { open: boolean; onClose: () => void; pathname: string }) {
+  // Lock body scroll + close on Escape while the drawer is open.
+  useEffect(() => {
+    if (!open) return;
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    window.addEventListener("keydown", onKey);
+    return () => {
+      document.body.style.overflow = prevOverflow;
+      window.removeEventListener("keydown", onKey);
+    };
+  }, [open, onClose]);
+
+  return (
+    <div
+      className="md:hidden fixed inset-0 z-50"
+      style={{ pointerEvents: open ? "auto" : "none" }}
+      aria-hidden={!open}
+    >
+      {/* Backdrop */}
+      <div
+        onClick={onClose}
+        className="absolute inset-0 transition-opacity duration-300"
+        style={{ background: "rgba(10,7,5,0.62)", backdropFilter: "blur(2px)", WebkitBackdropFilter: "blur(2px)", opacity: open ? 1 : 0 }}
+      />
+      {/* Panel — slides from the left */}
+      <aside
+        role="dialog"
+        aria-modal="true"
+        aria-label="Navigation"
+        className="absolute left-0 top-0 h-full w-[80%] max-w-[320px] flex flex-col transition-transform duration-300 ease-out"
+        style={{
+          transform: open ? "translateX(0)" : "translateX(-100%)",
+          background: "linear-gradient(180deg, #1f120c 0%, #2c1610 55%, #3a1b14 100%)",
+          borderRight: "1px solid rgba(201,162,75,0.22)",
+          boxShadow: "8px 0 40px rgba(0,0,0,0.5)",
+        }}
+      >
+        <div className="flex items-center justify-between px-5 h-20" style={{ borderBottom: "1px solid rgba(201,162,75,0.18)" }}>
+          <span className="uppercase tracking-[0.16em] text-xl" style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}>
+            Annapurna
+          </span>
+          <button
+            onClick={onClose}
+            aria-label="Close menu"
+            className="rounded-full h-10 w-10 flex items-center justify-center"
+            style={{ border: "1px solid rgba(201,162,75,0.4)", color: "#C9A24B" }}
+          >
+            <X className="h-5 w-5" />
+          </button>
+        </div>
+
+        <nav className="flex flex-col px-3 py-4 gap-1">
+          {nav.map((n) => {
+            const active = pathname === n.href;
+            return (
+              <Link
+                key={n.href}
+                href={n.href}
+                onClick={onClose}
+                className="rounded-lg px-4 py-3.5 text-sm uppercase tracking-[0.18em] transition"
+                style={{
+                  color: active ? "#14100D" : "#C9C2B5",
+                  backgroundColor: active ? "#C9A24B" : "transparent",
+                  fontWeight: active ? 700 : 500,
+                }}
+              >
+                {n.label}
+              </Link>
+            );
+          })}
+        </nav>
+
+        <div className="mt-auto p-5">
+          <Link
+            href="/menu"
+            onClick={onClose}
+            className="block text-center rounded-[2px] px-5 py-3 text-[11px] uppercase tracking-[0.16em] font-semibold"
+            style={{ backgroundColor: "#C9A24B", color: "#14100D" }}
+          >
+            Order Now
+          </Link>
+        </div>
+      </aside>
+    </div>
   );
 }
 
