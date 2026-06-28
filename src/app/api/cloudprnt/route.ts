@@ -79,6 +79,16 @@ export async function GET(req: Request) {
   const items = await db.select().from(orderItems).where(eq(orderItems.orderId, id));
 
   const ticket = buildStarLineTicket(serializePrintOrder(order, items));
+
+  // Mark printed on SERVE, not on DELETE. Star printers don't reliably echo the
+  // jobToken on their DELETE confirm, so a DELETE-based stamp matched no row and
+  // the same order was re-served every poll → infinite reprints. Stamping here
+  // makes the next POST poll return jobReady:false. DELETE stays as a backup.
+  await db
+    .update(orders)
+    .set({ kitchenPrintedAt: new Date() })
+    .where(and(eq(orders.id, id), isNull(orders.kitchenPrintedAt)));
+
   return new NextResponse(Buffer.from(ticket, "utf8"), {
     status: 200,
     headers: { "Content-Type": MEDIA },
