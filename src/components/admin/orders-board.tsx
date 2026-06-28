@@ -14,12 +14,13 @@ const PRINT_KEY = "annapurna:admin:print";
 const PRINTED_KEY = "annapurna:admin:printed";
 const PRINTED_CAP = 800;
 
-// Loud two-note chime for new orders (much louder than the old single beep).
-function beep() {
+// Play a sequence of [freq, startOffset(s), duration(s)] notes on one context.
+function playTones(seq: Array<[number, number, number]>) {
   try {
     const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
     const ctx = new Ctx();
-    const note = (freq: number, start: number, dur: number) => {
+    let end = 0;
+    for (const [freq, start, dur] of seq) {
       const osc = ctx.createOscillator();
       const gain = ctx.createGain();
       osc.type = "sine";
@@ -32,11 +33,26 @@ function beep() {
       gain.gain.exponentialRampToValueAtTime(0.0001, t + dur);
       osc.start(t);
       osc.stop(t + dur + 0.02);
-    };
-    note(880, 0, 0.22);
-    note(1175, 0.16, 0.3);
-    setTimeout(() => ctx.close(), 900);
+      end = Math.max(end, start + dur);
+    }
+    setTimeout(() => ctx.close(), (end + 0.2) * 1000);
   } catch { /* audio not available */ }
+}
+
+// Short two-note chime (used to unlock audio on the sound toggle gesture).
+function beep() {
+  playTones([[880, 0, 0.22], [1175, 0.16, 0.3]]);
+}
+
+// Long, insistent alarm (~3s) for orders still awaiting acceptance — an
+// alternating two-tone siren the looping effect repeats until accepted.
+function alarm() {
+  const seq: Array<[number, number, number]> = [];
+  for (let i = 0; i < 6; i++) {
+    const t = i * 0.5;
+    seq.push([880, t, 0.24], [1175, t + 0.25, 0.24]);
+  }
+  playTones(seq);
 }
 
 // Spoken announcement so staff hear the order type across the kitchen.
@@ -75,11 +91,6 @@ export function OrdersBoard() {
     } catch { /* storage full / unavailable */ }
   }, []);
 
-  // Queue a ticket for printing (manual reprint or auto on new order).
-  const enqueuePrint = useCallback((order: AdminOrder) => {
-    setPrintQueue((q) => [...q, order]);
-  }, []);
-
   useEffect(() => {
     // Sound is ON by default. Auto-print is OFF by default and enabled per
     // device (tap it once on the kiosk) so staff phones don't get print dialogs.
@@ -104,7 +115,8 @@ export function OrdersBoard() {
       const freshOrders = incoming.filter((o) => !seenRef.current.has(o.id));
       data.orders.forEach((o) => seenRef.current.add(o.id));
       if (freshOrders.length && !firstLoadRef.current && soundOn) {
-        beep();
+        // The looping alarm effect handles the chime; here we just speak the
+        // order type once so staff hear what arrived.
         const delivery = freshOrders.filter((o) => o.orderType === "delivery").length;
         const pickup = freshOrders.length - delivery;
         let msg: string;
@@ -164,6 +176,18 @@ export function OrdersBoard() {
     return () => clearTimeout(t);
   }, [printHeadId]);
 
+  // Repeating alarm: while any order is still awaiting acceptance (status
+  // "received"), re-chime every 8s until staff accept them all (Accept moves an
+  // order to "preparing"). The one-shot beep+announce on arrival happens in
+  // load(); this keeps nagging so a new order is never missed.
+  const pendingCount = orders.filter((o) => o.status === "received").length;
+  useEffect(() => {
+    if (!soundOn || pendingCount === 0) return;
+    alarm(); // ring immediately, then repeat (~3s alarm) until accepted
+    const t = setInterval(alarm, 3_300);
+    return () => clearInterval(t);
+  }, [soundOn, pendingCount]);
+
   const patchStatus = async (id: string, to: string) => {
     setBusyId(id);
     await fetch(`/api/admin/orders/${id}`, {
@@ -195,10 +219,21 @@ export function OrdersBoard() {
     setPrintOn(next);
     localStorage.setItem(PRINT_KEY, next ? "on" : "off");
   };
-  // Manual reprint from an order card (ticket jam, lost copy, etc.).
-  const reprint = (id: string) => {
-    const o = orders.find((x) => x.id === id);
-    if (o) enqueuePrint(o);
+  // Manual print from an order card (e.g. tapping Print on the iPad) → clear
+  // kitchen_printed_at via /api/admin/print-requeue, so the CloudPRNT printer
+  // pulls the ticket again on its next poll (~5–10s). (A browser-kiosk setup
+  // instead uses the "Auto-print" toggle, which prints via window.print.)
+  const reprint = async (id: string) => {
+    setBusyId(id);
+    try {
+      await fetch("/api/admin/print-requeue", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ orderId: id }),
+      });
+    } finally {
+      setBusyId(null);
+    }
   };
 
   const tab = (l: Lane, label: string) => (
