@@ -271,7 +271,7 @@ export function MenuClient({
                   </h2>
                   <span className="text-sm" style={{ color: "#8A8276" }}>{g.items.length} dishes</span>
                 </div>
-                <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-5">
+                <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-5">
                   {g.items.map((item) => (
                     <MenuCard
                       key={item.id}
@@ -353,10 +353,10 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
           </span>
         )}
       </button>
-      <div className="p-5 flex-1 flex flex-col">
-        <div className="flex items-start justify-between gap-3 mb-2">
+      <div className="p-3 sm:p-5 flex-1 flex flex-col">
+        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-1.5 sm:mb-2">
           <h3
-            className="text-xl leading-tight"
+            className="text-base sm:text-xl leading-tight"
             style={{ fontFamily: "var(--font-display)", color: "#F3E9D6" }}
           >
             <button
@@ -369,13 +369,13 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
             </button>
           </h3>
           <span
-            className="rounded-full font-bold px-3 py-1 text-sm whitespace-nowrap shrink-0"
+            className="rounded-full font-bold px-2.5 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap shrink-0"
             style={{ backgroundColor: "rgba(201,162,75,0.15)", color: "#C9A24B" }}
           >
             ${item.price.toFixed(2)}
           </span>
         </div>
-        <p className="text-sm leading-relaxed line-clamp-3 flex-1" style={{ color: "#8A8276" }}>
+        <p className="text-xs sm:text-sm leading-relaxed line-clamp-2 sm:line-clamp-3 flex-1" style={{ color: "#8A8276" }}>
           {item.description || " "}
         </p>
         {item.description && (
@@ -389,7 +389,7 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
           </button>
         )}
         <div
-          className="mt-4 pt-4"
+          className="mt-3 pt-3 sm:mt-4 sm:pt-4"
           style={{ borderTop: "1px solid rgba(201,162,75,0.15)" }}
         >
           {showSpice && !unavailable && (
@@ -433,7 +433,7 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
                 <button
                   onClick={() => decrement(item.id)}
                   aria-label="Decrease"
-                  className="h-9 w-9 flex items-center justify-center transition"
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center transition"
                   style={{ color: "#8A8276" }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = "#C9A24B")}
                   onMouseLeave={(e) => (e.currentTarget.style.color = "#8A8276")}
@@ -444,7 +444,7 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
                 <button
                   onClick={() => increment(item.id)}
                   aria-label="Increase"
-                  className="h-9 w-9 flex items-center justify-center transition"
+                  className="h-8 w-8 sm:h-9 sm:w-9 flex items-center justify-center transition"
                   style={{ color: "#8A8276" }}
                   onMouseEnter={(e) => (e.currentTarget.style.color = "#C9A24B")}
                   onMouseLeave={(e) => (e.currentTarget.style.color = "#8A8276")}
