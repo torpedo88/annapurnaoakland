@@ -1,16 +1,78 @@
-# Kitchen ticket printing (Star TSP100)
+# Kitchen ticket printing
 
-Two ways to get kitchen tickets onto the Star TSP100:
+Three ways to get kitchen tickets onto a Star printer:
 
-- **A — Browser board auto-print** (this doc, below): the admin Orders board
-  prints via `window.print()`. Needs a **computer** running Chrome
-  `--kiosk-printing` with the printer as the OS default.
-- **B — Android print bridge** (for iPad / no-PC setups): a dedicated Android
-  tablet runs a small app that polls a print API and prints to the printer over
-  Bluetooth via the Star SDK. See the section at the bottom and the design spec
+- **C — CloudPRNT (PRIMARY, recommended):** a Star **network** printer (e.g.
+  TSP650II LAN) polls `/api/cloudprnt` over the internet and prints accepted
+  orders itself. **No computer, tablet, Bluetooth, or local app.** This is the
+  production setup — see the CloudPRNT section directly below.
+- **A — Browser board auto-print:** the admin Orders board prints via
+  `window.print()`. Needs a **computer** running Chrome `--kiosk-printing` with
+  the printer as the OS default.
+- **B — Android print bridge** (fallback, unused): a dedicated Android tablet
+  polls `/api/print/pending` and prints over Bluetooth via the Star SDK. Built
+  but superseded by CloudPRNT; kept as a fallback. Design spec:
   `docs/superpowers/specs/2026-06-27-kitchen-print-bridge-design.md`.
 
 > Run only **one** of these against a given printer, or tickets double-print.
+
+---
+
+## C — CloudPRNT (primary)
+
+A Star network printer on the restaurant LAN polls the server itself. Because the
+printer reaches **out** to the server (outbound through the router/NAT), this
+works with the app hosted on Vercel — no inbound access to the LAN is needed, and
+there is no on-site computer/tablet to babysit.
+
+### Flow
+
+`/api/cloudprnt` implements the Star CloudPRNT protocol (`src/app/api/cloudprnt/route.ts`):
+
+- **POST** (poll, every few seconds): replies `{ jobReady, mediaTypes, jobToken }`
+  when a ticket is waiting, else `{ jobReady: false }`.
+- **GET** (pull): returns the ticket as `application/vnd.star.line` (Star Line
+  Mode bytes built by `src/lib/print/star-line.ts`).
+- **DELETE** (confirm): stamps `orders.kitchen_printed_at` so each ticket prints
+  **once**.
+
+**Tickets print on ACCEPT.** An order becomes printable only when staff advance
+it from `received` to `preparing` (the board's accept action) and it has not yet
+been printed (`kitchen_printed_at IS NULL`). New orders chime on the board
+(sound, see `orders-board.tsx`) so staff notice them; accepting prints the
+ticket. A manual reprint clears `kitchen_printed_at` (`/api/admin/print-requeue`),
+so the printer pulls it again on its next poll.
+
+Auth is HTTP **Basic** — the printer config has username/password fields. The
+username is ignored; the password must equal `CLOUDPRNT_TOKEN`.
+
+### Printer setup (one time)
+
+1. Plug the Star printer into the router by **Ethernet**; note its IP (self-test:
+   hold **FEED** while powering on prints a config page with the IP).
+2. Browse to `http://<printer-ip>/` → **CloudPRNT** section.
+3. Set:
+   - **Server URL:** `https://www.annapurnaoakland.com/api/cloudprnt`
+   - **Username:** anything (e.g. `annapurna`)
+   - **Password:** the `CLOUDPRNT_TOKEN` value (set in Vercel prod)
+   - Enable CloudPRNT; poll interval ~5–10s.
+4. Save. Accept an order on the board → a ticket prints.
+
+### Quick local test (on the LAN)
+
+Run the dev server with `CLOUDPRNT_TOKEN=… PORT=3001 npm run dev`, point the
+printer's CloudPRNT URL at `http://<your-LAN-IP>:3001/api/cloudprnt`, and accept
+an order — or exercise the protocol with curl:
+
+```bash
+B=http://localhost:3001/api/cloudprnt
+curl -s -X POST -u "anna:TOKEN" -d '{}' "$B"           # poll → jobReady/jobToken
+curl -s -u "anna:TOKEN" "$B?token=<jobToken>"          # pull → ticket bytes
+curl -s -X DELETE -u "anna:TOKEN" "$B?token=<jobToken>" # confirm → marks printed
+```
+
+Raw network sanity check (bypasses CloudPRNT): pipe text to the printer's
+port 9100 — `printf 'hi\n\n\n' | nc <printer-ip> 9100`.
 
 ---
 

@@ -468,6 +468,19 @@ named `doordashFeeCents` for historical reasons — it carries the Uber fee too)
 
 ### Kitchen ticket printing
 
+**Primary: CloudPRNT (Star network printer).** `src/app/api/cloudprnt/route.ts`
+implements the Star CloudPRNT protocol. A Star LAN printer (TSP650II) polls it
+(`POST` → `{jobReady,jobToken}`, `GET` → ticket as `application/vnd.star.line`
+from `src/lib/print/star-line.ts`, `DELETE` → stamps `kitchen_printed_at`).
+Tickets print **on accept**: an order is printable only once staff move it
+`received → preparing` and `kitchen_printed_at IS NULL`. The printer reaches
+*out* to the server, so it works behind the restaurant's NAT with the app on
+Vercel — no on-site computer, tablet, or Bluetooth. Auth is HTTP Basic
+(`CLOUDPRNT_TOKEN`). New orders trigger a **looping alarm** on the board
+(`orders-board.tsx`) that repeats every ~3s until accepted. Full setup:
+[`docs/KITCHEN-PRINTING.md`](./KITCHEN-PRINTING.md).
+
+**Fallback: browser board auto-print (window.print).**
 `src/components/admin/kitchen-receipt.tsx` renders an 80mm thermal ticket into a
 hidden `#kitchen-receipt` element; `globals.css` `@media print` isolates it and
 sets `@page { size: 80mm auto }`. The orders board queues each new `received`
@@ -540,7 +553,8 @@ NODE_OPTIONS="--require $(pwd)/scripts/_server-only-shim.cjs" \
 | `SENDGRID_API_KEY` / `EMAIL_FROM` / `RESTAURANT_NOTIFY_EMAIL` | optional | Order email notifications |
 | `TWILIO_ACCOUNT_SID` / `TWILIO_AUTH_TOKEN` / `TWILIO_FROM` / `RESTAURANT_NOTIFY_PHONE` | optional | Order SMS notifications |
 | `NEXT_PUBLIC_BASE_URL` | optional | Absolute URLs (defaults to localhost) |
-| `PRINT_BRIDGE_TOKEN` | optional (print bridge) | Bearer auth for the Android kitchen print bridge — `GET /api/print/pending`, `POST /api/print/ack` (`src/lib/print/auth.ts`) |
+| `CLOUDPRNT_TOKEN` | optional (kitchen printing) | HTTP Basic password the Star network printer sends to `/api/cloudprnt` (CloudPRNT). Primary kitchen-print path; orders print on accept. Blank = 401 |
+| `PRINT_BRIDGE_TOKEN` | optional (print bridge, unused) | Bearer auth for the Android kitchen print bridge — `GET /api/print/pending`, `POST /api/print/ack` (`src/lib/print/auth.ts`). Superseded by CloudPRNT |
 | `ADMIN_BOOTSTRAP_EMAIL` / `ADMIN_BOOTSTRAP_PASSWORD` | seed only | `db:seed:staff` |
 
 `env.doordash()` and `env.stripe()` use `required()` — they throw if any of their
