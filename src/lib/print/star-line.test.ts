@@ -16,47 +16,65 @@ const base: PrintOrder = {
   ],
   subtotal: 19.49,
   tax: 1.93,
-  tip: 0,
-  deliveryFee: 0,
-  discount: 0,
+  tip: 5,
+  deliveryFee: 6.99,
+  discount: 2,
   total: 21.42,
   paymentStatus: "paid",
   source: "web",
 };
 
 describe("buildStarLineTicket", () => {
-  it("includes header, order number, items with mods, and total", () => {
+  it("includes header, order type/number, and items with mods", () => {
     const t = buildStarLineTicket(base);
     expect(t).toContain("ANNAPURNA");
     expect(t).toContain("#1042");
     expect(t).toContain("PICKUP");
-    expect(t).toContain("2 x Chicken Momo");
+    expect(t).toContain("2x Chicken Momo");
     expect(t).toContain("- spice: medium");
-    expect(t).toContain("TOTAL");
-    expect(t).toContain("$21.42");
   });
 
-  it("emits the double-size header and cut control codes", () => {
+  it("lists NO prices anywhere (kitchen ticket)", () => {
     const t = buildStarLineTicket(base);
-    expect(t).toContain("\x1bi\x01\x01"); // big on
-    expect(t).toContain("\x1bi\x00\x00"); // normal
+    expect(t).not.toContain("$");
+    expect(t).not.toMatch(/total/i);
+    expect(t).not.toMatch(/subtotal/i);
+    expect(t).not.toMatch(/\btax\b/i);
+    expect(t).not.toMatch(/\btip\b/i);
+    expect(t).not.toMatch(/payment/i);
+    expect(t).not.toContain("21.42");
+    expect(t).not.toContain("19.49");
+  });
+
+  it("prints a reorder QR (Star 2D barcode command) with the menu URL + promo", () => {
+    const t = buildStarLineTicket(base);
+    expect(t).toContain("Scan to reorder");
+    expect(t).toContain("annapurnaoakland.com/menu");
+    expect(t).toContain("promo=REORDER10");
+    // ESC GS y P — the Star Line Mode "print QR" command terminates the QR block.
+    expect(t).toContain("\x1b\x1d\x79\x50");
+  });
+
+  it("shows the 10% reorder discount code under the QR", () => {
+    const t = buildStarLineTicket(base);
+    expect(t).toContain("10% OFF your next order");
+    expect(t).toContain("REORDER10");
+  });
+
+  it("emits header sizing and ends with a cut", () => {
+    const t = buildStarLineTicket(base);
+    expect(t).toContain("\x1bi\x01\x01"); // double size
     expect(t.endsWith("\x1bd\x03")).toBe(true); // cut last
   });
 
-  it("omits zero rows and pickup address; shows delivery address", () => {
-    const pickup = buildStarLineTicket(base);
-    expect(pickup).not.toContain("Tip");
-    expect(pickup).not.toContain("Delivery");
-
+  it("shows delivery address for delivery orders, omits for pickup", () => {
+    expect(buildStarLineTicket(base)).not.toContain("Clay St");
     const delivery = buildStarLineTicket({
       ...base,
       orderType: "delivery",
       deliveryAddress: "948 Clay St, Oakland, CA",
-      deliveryFee: 6.99,
-      tip: 6,
     });
     expect(delivery).toContain("948 Clay St, Oakland, CA");
-    expect(delivery).toContain("Delivery");
-    expect(delivery).toContain("Tip");
+    expect(delivery).toContain("DELIVERY");
   });
 });

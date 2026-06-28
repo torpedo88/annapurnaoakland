@@ -52,7 +52,8 @@ username is ignored; the password must equal `CLOUDPRNT_TOKEN`.
    hold **FEED** while powering on prints a config page with the IP).
 2. Browse to `http://<printer-ip>/` → **CloudPRNT** section.
 3. Set:
-   - **Server URL:** `https://www.annapurnaoakland.com/api/cloudprnt`
+   - **Server URL:** `https://annapurnaoakland.com/api/cloudprnt` (apex, not
+     www — the printer won't follow the www→apex redirect)
    - **Username:** anything (e.g. `annapurna`)
    - **Password:** the `CLOUDPRNT_TOKEN` value (set in Vercel prod)
    - Enable CloudPRNT; poll interval ~5–10s.
