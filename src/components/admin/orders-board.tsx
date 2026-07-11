@@ -180,6 +180,28 @@ export function OrdersBoard() {
   // "received"), re-chime every 8s until staff accept them all (Accept moves an
   // order to "preparing"). The one-shot beep+announce on arrival happens in
   // load(); this keeps nagging so a new order is never missed.
+  // Browsers block Web Audio until the page gets a user gesture, so a brand-new
+  // order can ring silently if nobody has clicked yet. Unlock (resume a context)
+  // on the very first interaction anywhere, so the alarm plays from then on.
+  useEffect(() => {
+    const unlock = () => {
+      try {
+        const Ctx = window.AudioContext ?? (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+        const ctx = new Ctx();
+        void ctx.resume();
+        setTimeout(() => ctx.close(), 200);
+      } catch { /* audio unavailable */ }
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+    window.addEventListener("pointerdown", unlock);
+    window.addEventListener("keydown", unlock);
+    return () => {
+      window.removeEventListener("pointerdown", unlock);
+      window.removeEventListener("keydown", unlock);
+    };
+  }, []);
+
   const pendingCount = orders.filter((o) => o.status === "received").length;
   useEffect(() => {
     if (!soundOn || pendingCount === 0) return;
