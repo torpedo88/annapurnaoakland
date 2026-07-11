@@ -1,95 +1,115 @@
 import { CircularGallery, GalleryItem } from "@/components/ui/circular-gallery";
 import { OrderCTA } from "@/components/home/luxe/order-cta";
+import { luxe } from "@/lib/theme";
 
 // Preview route for the 3D CircularGallery, filled with Annapurna's own dish
-// photos from /public/images/dishes. Tiles are small + clickable (each links to
-// /menu). The Order Pickup / Order Delivery CTAs sit above the carousel. Scroll
-// to rotate; it also auto-rotates slowly when idle. View at
+// photos from /public/images/dishes. Tiles are clickable (link to /menu), the
+// front tile reveals price + Add, and the ring has depth-of-field blur, mirror
+// reflections, a warm spotlight, a gold orbit + dots, and drag/scroll/snap
+// motion. Prices are representative placeholders. View at
 // /preview/circular-gallery.
 const galleryData: GalleryItem[] = [
-  {
-    common: "Jhol Momo",
-    binomial: "Steamed Nepali dumplings",
-    href: "/menu",
-    photo: { url: "/images/dishes/momo.jpg", text: "Steamed momo dumplings", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Butter Chicken",
-    binomial: "Murgh makhani",
-    href: "/menu",
-    photo: { url: "/images/dishes/butterChicken.jpg", text: "Butter chicken in creamy tomato gravy", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Lamb Biryani",
-    binomial: "Fragrant basmati & spice",
-    href: "/menu",
-    photo: { url: "/images/dishes/lambBiryani.jpg", text: "Lamb biryani", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Palak Paneer",
-    binomial: "Spinach & house cheese",
-    href: "/menu",
-    photo: { url: "/images/dishes/palakPaneer.jpg", text: "Palak paneer", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Mixed Tandoori",
-    binomial: "Clay-oven grill",
-    href: "/menu",
-    photo: { url: "/images/dishes/mixedTandoori.jpg", text: "Mixed tandoori platter", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Chhoila",
-    binomial: "Newari grilled chicken",
-    href: "/menu",
-    photo: { url: "/images/dishes/chhoila.jpg", text: "Chhoila", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Chicken Tikka Masala",
-    binomial: "Charred, simmered in masala",
-    href: "/menu",
-    photo: { url: "/images/dishes/chickenTikkaMasala.jpg", text: "Chicken tikka masala", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Dal Makhani",
-    binomial: "Slow-cooked black lentils",
-    href: "/menu",
-    photo: { url: "/images/dishes/dalMakhani.jpg", text: "Dal makhani", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Mango Lassi",
-    binomial: "Yogurt & Alphonso mango",
-    href: "/menu",
-    photo: { url: "/images/dishes/mangoLassi.jpg", text: "Mango lassi", pos: "center", by: "Annapurna Kitchen" },
-  },
-  {
-    common: "Gulab Jamun",
-    binomial: "Rose-cardamom syrup",
-    href: "/menu",
-    photo: { url: "/images/dishes/gulabJamun.jpg", text: "Gulab jamun", pos: "center", by: "Annapurna Kitchen" },
-  },
+  { common: "Jhol Momo", binomial: "Steamed Nepali dumplings", href: "/menu", price: "$13.99", photo: { url: "/images/dishes/momo.jpg", text: "Steamed momo dumplings", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Butter Chicken", binomial: "Murgh makhani", href: "/menu", price: "$16.99", photo: { url: "/images/dishes/butterChicken.jpg", text: "Butter chicken in creamy tomato gravy", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Lamb Biryani", binomial: "Fragrant basmati & spice", href: "/menu", price: "$18.99", photo: { url: "/images/dishes/lambBiryani.jpg", text: "Lamb biryani", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Palak Paneer", binomial: "Spinach & house cheese", href: "/menu", price: "$14.99", photo: { url: "/images/dishes/palakPaneer.jpg", text: "Palak paneer", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Mixed Tandoori", binomial: "Clay-oven grill", href: "/menu", price: "$21.99", photo: { url: "/images/dishes/mixedTandoori.jpg", text: "Mixed tandoori platter", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Chhoila", binomial: "Newari grilled chicken", href: "/menu", price: "$12.99", photo: { url: "/images/dishes/chhoila.jpg", text: "Chhoila", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Chicken Tikka Masala", binomial: "Charred, simmered in masala", href: "/menu", price: "$16.99", photo: { url: "/images/dishes/chickenTikkaMasala.jpg", text: "Chicken tikka masala", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Dal Makhani", binomial: "Slow-cooked black lentils", href: "/menu", price: "$13.99", photo: { url: "/images/dishes/dalMakhani.jpg", text: "Dal makhani", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Mango Lassi", binomial: "Yogurt & Alphonso mango", href: "/menu", price: "$5.99", photo: { url: "/images/dishes/mangoLassi.jpg", text: "Mango lassi", pos: "center", by: "Annapurna Kitchen" } },
+  { common: "Gulab Jamun", binomial: "Rose-cardamom syrup", href: "/menu", price: "$6.99", photo: { url: "/images/dishes/gulabJamun.jpg", text: "Gulab jamun", pos: "center", by: "Annapurna Kitchen" } },
 ];
 
 export default function CircularGalleryPreview() {
   return (
-    // The outer container provides the scrollable height that drives rotation.
-    <div className="w-full bg-background text-foreground" style={{ height: "500vh" }}>
-      {/* The inner container sticks to the top while scrolling. */}
+    // Outer container provides the scrollable height that drives rotation.
+    <div
+      className="w-full text-foreground"
+      style={{
+        height: "500vh",
+        background:
+          "radial-gradient(120% 90% at 50% 22%, #2a1a10 0%, #16110c 48%, #0d0906 100%)",
+      }}
+    >
+      {/* Inner container sticks to the top while scrolling. */}
       <div className="w-full h-screen sticky top-0 flex flex-col items-center justify-center overflow-hidden">
-        <div className="text-center mb-8 absolute top-16 z-10 px-4 flex flex-col items-center gap-5">
+        {/* Vignette — darkens the edges to focus the ring. */}
+        <div
+          aria-hidden
+          className="pointer-events-none absolute inset-0 z-0"
+          style={{
+            background:
+              "radial-gradient(ellipse at 50% 45%, transparent 40%, rgba(0,0,0,0.55) 100%)",
+          }}
+        />
+
+        {/* Annapurna snow-peak silhouette along the base. */}
+        <svg
+          aria-hidden
+          viewBox="0 0 1440 260"
+          preserveAspectRatio="none"
+          className="pointer-events-none absolute bottom-0 left-0 w-full z-0"
+          style={{ height: "34vh", opacity: 0.9 }}
+        >
+          <path
+            d="M0,260 L0,150 L180,60 L300,120 L470,20 L560,90 L720,10 L840,95 L980,35 L1120,110 L1250,55 L1440,140 L1440,260 Z"
+            fill="#120d09"
+          />
+          <path
+            d="M470,20 L520,55 L500,60 L540,80 L470,45 L440,70 L470,20 Z M720,10 L775,50 L748,55 L792,78 L720,40 L688,66 L720,10 Z M980,35 L1022,68 L1000,72 L1035,92 L980,58 L952,80 L980,35 Z"
+            fill={luxe.ink}
+            opacity={0.55}
+          />
+          <path
+            d="M0,150 L180,60 L300,120 L470,20 L560,90 L720,10 L840,95 L980,35 L1120,110 L1250,55 L1440,140"
+            fill="none"
+            stroke={luxe.gold}
+            strokeOpacity={0.3}
+            strokeWidth={1.5}
+          />
+        </svg>
+
+        {/* Heading + Order CTAs. */}
+        <div className="text-center absolute top-14 z-20 px-4 flex flex-col items-center gap-5">
           <div>
-            <h1 className="font-serif text-4xl font-bold">Our Signature Dishes</h1>
-            <p className="text-muted-foreground">Tap a dish to order — scroll to rotate</p>
+            <p
+              className="text-[11px] uppercase tracking-[0.32em] mb-3"
+              style={{ color: luxe.gold }}
+            >
+              Old Oakland · Indian &amp; Nepalese
+            </p>
+            <h1
+              className="font-serif text-4xl sm:text-5xl font-bold bg-clip-text text-transparent"
+              style={{
+                backgroundImage: `linear-gradient(180deg, ${luxe.ink} 0%, ${luxe.gold} 65%, ${luxe.ember} 100%)`,
+              }}
+            >
+              Our Signature Dishes
+            </h1>
+            <p className="mt-2 text-sm" style={{ color: luxe.muted }}>
+              Drag or scroll to explore · tap a dish to order
+            </p>
           </div>
-          {/* Order Pickup / Order Delivery — kept above the carousel. */}
           <OrderCTA align="center" />
         </div>
-        <div className="w-full h-full">
+
+        {/* The 3D ring. */}
+        <div className="w-full h-full z-10">
           <CircularGallery
             items={galleryData}
-            cardWidth={160}
-            cardHeight={210}
-            radius={480}
-            perspective={3400}
+            cardWidth={200}
+            cardHeight={265}
+            radius={490}
+            perspective={3200}
+            maxBlur={5}
+            showReflection
+            showOrbit
+            spotlight
+            snap
+            autoRotateSpeed={0}
+            accentColor={luxe.gold}
+            ctaLabel="Add to order"
           />
         </div>
       </div>
