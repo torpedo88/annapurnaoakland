@@ -117,11 +117,11 @@ export function GalleryHero() {
           items={galleryData}
           cardWidth={200}
           cardHeight={265}
-          radius={410}
+          radius={490}
           perspective={3000}
           mobileCardWidth={140}
           mobileCardHeight={186}
-          mobileRadius={215}
+          mobileRadius={255}
           mobilePerspective={1500}
           autoRotateSpeed={0.05}
           maxBlur={5}
