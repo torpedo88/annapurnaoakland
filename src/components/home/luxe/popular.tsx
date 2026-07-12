@@ -26,11 +26,11 @@ export function Popular() {
   if (!loaded || items.length === 0) return null;
 
   return (
-    <section className="py-10 lg:py-14" style={{ borderTop: `1px solid ${luxe.line}` }}>
+    <section className="py-7 lg:py-10" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto mb-6 h-px w-9" style={{ backgroundColor: luxe.gold }} />
         <h2
-          className="brand-heading text-center mb-12"
+          className="brand-heading text-center mb-8"
           style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}
         >
           Popular right now.
