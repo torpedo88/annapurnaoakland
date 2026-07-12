@@ -52,7 +52,7 @@ export function Faq() {
   };
 
   return (
-    <section className="py-5 lg:py-8" style={{ backgroundColor: luxe.bg }}>
+    <section className="py-4 lg:py-6" style={{ backgroundColor: luxe.bg }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}

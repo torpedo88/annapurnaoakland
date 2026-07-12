@@ -4,7 +4,7 @@ import { OrderCTA } from "./order-cta";
 
 export function Visit() {
   return (
-    <section className="relative py-5 lg:py-8 overflow-hidden">
+    <section className="relative py-4 lg:py-6 overflow-hidden">
       <div className="absolute inset-0">
         <Image
           src="/images/visit-bg.jpg"

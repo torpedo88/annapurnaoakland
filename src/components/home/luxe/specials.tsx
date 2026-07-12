@@ -53,7 +53,7 @@ export function Specials() {
   if (!dish) return null;
 
   return (
-    <section className="py-5 lg:py-8" style={{ borderTop: `1px solid ${luxe.line}` }}>
+    <section className="py-4 lg:py-6" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto mb-6 h-px w-9" style={{ backgroundColor: luxe.gold }} />
         <p
@@ -63,7 +63,7 @@ export function Specials() {
           Today&apos;s specials
         </p>
 
-        <div className="flex flex-col items-center gap-12">
+        <div className="flex flex-col items-center gap-8">
           {/* ── Dish of the Day — horizontal banner ── */}
           {dish && (
             <div
