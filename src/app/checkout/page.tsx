@@ -290,7 +290,7 @@ export default function CheckoutPage() {
           </p>
           <h1
             className="leading-[0.95]"
-            style={{ fontFamily: "var(--font-serif-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, fontSize: "clamp(2.6rem, 7vw, 3.75rem)", color: "#F3E9D6" }}
+            style={{ fontFamily: "var(--font-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, fontSize: "clamp(2.6rem, 7vw, 3.75rem)", color: "#F3E9D6" }}
           >
             Checkout.
           </h1>

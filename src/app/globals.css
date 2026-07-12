@@ -151,6 +151,10 @@
   html {
     @apply font-sans;
   }
+  /* Brand typography: every heading across the app uses the display font. */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-display), "Cormorant Garamond", Georgia, serif;
+  }
   @media (prefers-reduced-motion: reduce) {
     *,
     *::before,
@@ -194,6 +198,26 @@
     touch-action: manipulation;
   }
 
+}
+
+/* ── Brand heading system ─────────────────────────────────────────────────────
+   Reusable classes matching the hero: a gold-gradient display heading and a
+   gold uppercase kicker. Unlayered so they beat Tailwind font/color utilities. */
+.brand-kicker {
+  font-family: var(--font-sans);
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.6875rem; /* 11px */
+  font-weight: 500;
+  color: #c9a24b;
+}
+.brand-heading {
+  font-family: var(--font-display), "Cormorant Garamond", Georgia, serif;
+  font-weight: 700;
+  background-image: linear-gradient(180deg, #f3e9d6 0%, #c9a24b 65%, #b9742f 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
 }
 
 /* Prevent iOS Safari from auto-zooming when a <16px input gains focus.

@@ -115,14 +115,8 @@ export function MenuClient({
             The Menu
           </p>
           <h1
-            className="leading-[0.95] mb-6"
-            style={{
-              fontFamily: "var(--font-serif-display), Georgia, serif",
-              fontStyle: "italic",
-              fontWeight: 500,
-              fontSize: "clamp(2.8rem, 8vw, 5rem)",
-              color: "#F3E9D6",
-            }}
+            className="brand-heading leading-[0.95] mb-6"
+            style={{ fontSize: "clamp(2.8rem, 8vw, 5rem)" }}
           >
             Order online.
           </h1>
@@ -282,7 +276,7 @@ export function MenuClient({
                 <div className="flex items-baseline justify-between mb-6">
                   <h2
                     className="text-3xl lg:text-4xl leading-none"
-                    style={{ fontFamily: "var(--font-serif-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, color: "#F3E9D6" }}
+                    style={{ fontFamily: "var(--font-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, color: "#F3E9D6" }}
                   >
                     {g.label}
                   </h2>
@@ -589,7 +583,7 @@ function DishDetailModal({ item, onClose }: { item: LiveItem | null; onClose: ()
                 <h2
                   id="dish-modal-title"
                   className="text-2xl leading-tight"
-                  style={{ fontFamily: "var(--font-serif-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, color: "#F3E9D6" }}
+                  style={{ fontFamily: "var(--font-display), Georgia, serif", fontStyle: "italic", fontWeight: 500, color: "#F3E9D6" }}
                 >
                   {item.name}
                 </h2>

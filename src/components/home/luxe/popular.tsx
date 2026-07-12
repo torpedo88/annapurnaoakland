@@ -36,14 +36,8 @@ export function Popular() {
           Crowd favorites
         </p>
         <h2
-          className="text-center mb-12"
-          style={{
-            fontFamily: "var(--font-serif-display), Georgia, serif",
-            fontWeight: 500,
-            fontStyle: "italic",
-            fontSize: "clamp(2rem, 5vw, 3.2rem)",
-            color: luxe.ink,
-          }}
+          className="brand-heading text-center mb-12"
+          style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}
         >
           Popular right now.
         </h2>

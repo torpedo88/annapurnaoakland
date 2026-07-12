@@ -50,7 +50,7 @@ export function GalleryHero() {
 
   return (
     <section
-      className="relative w-full min-h-[calc(100svh-3.5rem)] overflow-hidden text-foreground flex flex-col items-center justify-center"
+      className="relative w-full overflow-hidden text-foreground flex flex-col items-center"
       style={{
         background:
           "radial-gradient(120% 90% at 50% 22%, #2a1a10 0%, #16110c 48%, #0d0906 100%)",
@@ -101,20 +101,10 @@ export function GalleryHero() {
       </svg>
 
       {/* Heading + Order CTAs. */}
-      <div className="text-center absolute top-10 z-20 px-4 flex flex-col items-center gap-5">
+      <div className="text-center relative z-20 px-4 pt-8 flex flex-col items-center gap-4">
         <div>
-          <p
-            className="text-[11px] uppercase tracking-[0.32em] mb-3"
-            style={{ color: luxe.gold }}
-          >
-            Old Oakland · Indian &amp; Nepalese
-          </p>
-          <h2
-            className="font-serif text-4xl sm:text-5xl font-bold bg-clip-text text-transparent"
-            style={{
-              backgroundImage: `linear-gradient(180deg, ${luxe.ink} 0%, ${luxe.gold} 65%, ${luxe.ember} 100%)`,
-            }}
-          >
+          <p className="brand-kicker mb-3">Old Oakland · Indian &amp; Nepalese</p>
+          <h2 className="brand-heading text-4xl sm:text-5xl">
             Our Signature Dishes
           </h2>
           <p className="mt-2 text-sm" style={{ color: luxe.muted }}>
@@ -125,7 +115,7 @@ export function GalleryHero() {
       </div>
 
       {/* The 3D ring. */}
-      <div className="w-full h-[calc(100svh-3.5rem)] z-10">
+      <div className="w-full h-[58vh] min-h-[440px] z-10">
         <CircularGallery
           items={galleryData}
           cardWidth={200}

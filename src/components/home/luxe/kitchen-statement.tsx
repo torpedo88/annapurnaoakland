@@ -18,14 +18,8 @@ export function KitchenStatement() {
           The Kitchen
         </p>
         <h2
-          className="leading-[1.12]"
-          style={{
-            color: luxe.ink,
-            fontFamily: "var(--font-serif-display), Georgia, serif",
-            fontWeight: 500,
-            fontStyle: "italic",
-            fontSize: "clamp(2rem, 5vw, 3.2rem)",
-          }}
+          className="brand-heading leading-[1.12]"
+          style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}
         >
           A tasting of the Himalayas, plated with patience.
         </h2>

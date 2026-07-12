@@ -63,14 +63,8 @@ export function Faq() {
           Good to know
         </p>
         <h2
-          className="mb-10 leading-[1.05]"
-          style={{
-            color: luxe.ink,
-            fontFamily: "var(--font-serif-display), Georgia, serif",
-            fontStyle: "italic",
-            fontWeight: 500,
-            fontSize: "clamp(2rem, 4.5vw, 3rem)",
-          }}
+          className="brand-heading mb-10 leading-[1.05]"
+          style={{ fontSize: "clamp(2rem, 4.5vw, 3rem)" }}
         >
           Frequently asked questions
         </h2>

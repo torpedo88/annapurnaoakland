@@ -68,7 +68,7 @@ export function Testimonials() {
           <h2
             className="mt-5"
             style={{
-              fontFamily: "var(--font-serif-display), Georgia, serif",
+              fontFamily: "var(--font-display), Georgia, serif",
               fontWeight: 500,
               fontStyle: "italic",
               fontSize: "clamp(2rem, 5vw, 3.2rem)",

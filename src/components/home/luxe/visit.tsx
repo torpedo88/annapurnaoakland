@@ -32,14 +32,8 @@ export function Visit() {
             Come See Us
           </p>
           <h2
-            className="leading-[1.02] mb-10"
-            style={{
-              color: luxe.ink,
-              fontFamily: "var(--font-serif-display), Georgia, serif",
-              fontWeight: 500,
-              fontStyle: "italic",
-              fontSize: "clamp(2.4rem, 7vw, 4.6rem)",
-            }}
+            className="brand-heading leading-[1.02] mb-10"
+            style={{ fontSize: "clamp(2.4rem, 7vw, 4.6rem)" }}
           >
             Two minutes from 12th St Oakland BART.
           </h2>
@@ -57,16 +51,16 @@ export function Visit() {
                   {c.k}
                 </p>
                 {c.href ? (
-                  <a href={c.href} className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-serif-display), Georgia, serif" }}>
+                  <a href={c.href} className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-display), Georgia, serif" }}>
                     {c.a}
                   </a>
                 ) : (
-                  <p className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-serif-display), Georgia, serif" }}>
+                  <p className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-display), Georgia, serif" }}>
                     {c.a}
                   </p>
                 )}
                 {c.b && (
-                  <p className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-serif-display), Georgia, serif" }}>
+                  <p className="text-[19px]" style={{ color: luxe.ink, fontFamily: "var(--font-display), Georgia, serif" }}>
                     {c.b}
                   </p>
                 )}
