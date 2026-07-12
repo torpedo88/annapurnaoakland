@@ -345,7 +345,7 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                 >
                   <div
                     className={cn(
-                      "relative w-full h-full rounded-lg shadow-2xl overflow-hidden group border bg-card/70 dark:bg-card/30 backdrop-blur-lg transition-all duration-300",
+                      "relative w-full h-full rounded-lg shadow-2xl overflow-hidden group border bg-card/70 dark:bg-card/30 transition-all duration-300",
                       isActive ? "border-transparent" : "border-border",
                     )}
                     style={

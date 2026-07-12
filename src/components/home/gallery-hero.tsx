@@ -124,7 +124,7 @@ export function GalleryHero() {
           mobileRadius={255}
           mobilePerspective={1500}
           autoRotateSpeed={0.05}
-          maxBlur={5}
+          maxBlur={0}
           showReflection
           showOrbit
           spotlight
