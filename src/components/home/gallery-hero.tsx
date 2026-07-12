@@ -1,28 +1,53 @@
+"use client";
+
 import { CircularGallery, GalleryItem } from "@/components/ui/circular-gallery";
 import { OrderCTA } from "@/components/home/luxe/order-cta";
+import { useCart } from "@/lib/preview-cart";
+import type { MenuItem } from "@/data/menu";
 import { luxe } from "@/lib/theme";
 
 // Homepage hero: a 3D circular gallery of signature dishes (Higgsfield-generated
-// images in /public/images/ai-dishes). Auto-rotates horizontally, pauses on
-// hover, drags to spin, and a tap opens a zoomed detail view with an order
-// button. Mobile geometry is tuned so previous/active/next tiles are all
-// visible. A visually-hidden <h1> keeps the page crawlable; the visible headline
-// is an <h2>. Prices are representative placeholders. Also rendered on the
-// /preview/circular-gallery route.
+// images in /public/images/ai-dishes). Auto-rotates horizontally, follows the
+// cursor on hover, drags to spin, and a tap opens a zoomed detail view with
+// "Add to cart" + "Order online". Each item carries its real menu-item id (=
+// slug) so Add-to-cart lines up with server-side pricing and "Order online"
+// deep-links to that dish on /menu. Prices are the current menu prices; the
+// server re-prices authoritatively at checkout. A visually-hidden <h1> keeps the
+// page crawlable; the visible headline is an <h2>. Also on /preview/circular-gallery.
 const galleryData: GalleryItem[] = [
-  { common: "Jhol Momo", binomial: "Steamed Nepali dumplings", href: "/menu", price: "$13.99", photo: { url: "/images/ai-dishes/momo.jpg", text: "Steamed momo dumplings", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Butter Chicken", binomial: "Murgh makhani", href: "/menu", price: "$16.99", photo: { url: "/images/ai-dishes/butterChicken.jpg", text: "Butter chicken in creamy tomato gravy", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Lamb Biryani", binomial: "Fragrant basmati & spice", href: "/menu", price: "$18.99", photo: { url: "/images/ai-dishes/lambBiryani.jpg", text: "Lamb biryani", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Palak Paneer", binomial: "Spinach & house cheese", href: "/menu", price: "$14.99", photo: { url: "/images/ai-dishes/palakPaneer.jpg", text: "Palak paneer", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Mixed Tandoori", binomial: "Clay-oven grill", href: "/menu", price: "$21.99", photo: { url: "/images/ai-dishes/mixedTandoori.jpg", text: "Mixed tandoori platter", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Chhoila", binomial: "Newari grilled chicken", href: "/menu", price: "$12.99", photo: { url: "/images/ai-dishes/chhoila.jpg", text: "Chhoila", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Chicken Tikka Masala", binomial: "Charred, simmered in masala", href: "/menu", price: "$16.99", photo: { url: "/images/ai-dishes/chickenTikkaMasala.jpg", text: "Chicken tikka masala", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Dal Makhani", binomial: "Slow-cooked black lentils", href: "/menu", price: "$13.99", photo: { url: "/images/ai-dishes/dalMakhani.jpg", text: "Dal makhani", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Mango Lassi", binomial: "Yogurt & Alphonso mango", href: "/menu", price: "$5.99", photo: { url: "/images/ai-dishes/mangoLassi.jpg", text: "Mango lassi", pos: "center", by: "Annapurna Kitchen" } },
-  { common: "Gulab Jamun", binomial: "Rose-cardamom syrup", href: "/menu", price: "$6.99", photo: { url: "/images/ai-dishes/gulabJamun.jpg", text: "Gulab jamun", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "appetizer-chicken-momo", common: "Jhol Momo", binomial: "Steamed Nepali dumplings", href: "/menu#item-appetizer-chicken-momo", price: "$14.99", photo: { url: "/images/ai-dishes/momo.jpg", text: "Steamed momo dumplings", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "chicken-dish-chicken-nauni-butter-chicken", common: "Butter Chicken", binomial: "Chicken nauni", href: "/menu#item-chicken-dish-chicken-nauni-butter-chicken", price: "$18.99", photo: { url: "/images/ai-dishes/butterChicken.jpg", text: "Butter chicken in creamy tomato gravy", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "biryani-lamb-biryani", common: "Lamb Biryani", binomial: "Fragrant basmati & spice", href: "/menu#item-biryani-lamb-biryani", price: "$19.99", photo: { url: "/images/ai-dishes/lambBiryani.jpg", text: "Lamb biryani", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "vegetarian-dish-palak-paneer", common: "Palak Paneer", binomial: "Spinach & house cheese", href: "/menu#item-vegetarian-dish-palak-paneer", price: "$17.99", photo: { url: "/images/ai-dishes/palakPaneer.jpg", text: "Palak paneer", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "tandoori-dish-chicken-tandoori", common: "Chicken Tandoori", binomial: "Clay-oven grill", href: "/menu#item-tandoori-dish-chicken-tandoori", price: "$22.99", photo: { url: "/images/ai-dishes/mixedTandoori.jpg", text: "Tandoori platter", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "appetizer-chicken-chhoila", common: "Chicken Chhoila", binomial: "Newari grilled chicken", href: "/menu#item-appetizer-chicken-chhoila", price: "$14.99", photo: { url: "/images/ai-dishes/chhoila.jpg", text: "Chhoila", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "chicken-dish-chicken-tikka-masala", common: "Chicken Tikka Masala", binomial: "Charred, simmered in masala", href: "/menu#item-chicken-dish-chicken-tikka-masala", price: "$18.99", photo: { url: "/images/ai-dishes/chickenTikkaMasala.jpg", text: "Chicken tikka masala", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "vegetarian-dish-daal-makhani", common: "Daal Makhani", binomial: "Slow-cooked black lentils", href: "/menu#item-vegetarian-dish-daal-makhani", price: "$17.99", photo: { url: "/images/ai-dishes/dalMakhani.jpg", text: "Daal makhani", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "beverages-mango-lassi", common: "Mango Lassi", binomial: "Yogurt & Alphonso mango", href: "/menu#item-beverages-mango-lassi", price: "$4.99", photo: { url: "/images/ai-dishes/mangoLassi.jpg", text: "Mango lassi", pos: "center", by: "Annapurna Kitchen" } },
+  { id: "dessert-gulab-jamun", common: "Gulab Jamun", binomial: "Rose-cardamom syrup", href: "/menu#item-dessert-gulab-jamun", price: "$7.99", photo: { url: "/images/ai-dishes/gulabJamun.jpg", text: "Gulab jamun", pos: "center", by: "Annapurna Kitchen" } },
 ];
 
 export function GalleryHero() {
+  const cart = useCart();
+
+  const handleAddToCart = (gi: GalleryItem) => {
+    if (!gi.id) return;
+    const price = Number((gi.price || "0").replace(/[^0-9.]/g, "")) || 0;
+    const menuItem: MenuItem = {
+      id: gi.id,
+      name: gi.common,
+      description: gi.binomial,
+      price,
+      category: "",
+      categoryLabel: "",
+      image: gi.photo.url,
+      isCatering: false,
+      tags: [],
+    };
+    cart.add(menuItem, 1);
+    cart.setOpen(true);
+  };
+
   return (
     <section
       className="relative w-full min-h-[calc(100svh-3.5rem)] overflow-hidden text-foreground flex flex-col items-center justify-center"
@@ -54,7 +79,7 @@ export function GalleryHero() {
         viewBox="0 0 1440 260"
         preserveAspectRatio="none"
         className="pointer-events-none absolute bottom-0 left-0 w-full z-0"
-        style={{ height: "34vh", opacity: 0.9 }}
+        style={{ height: "18vh", opacity: 0.9 }}
       >
         <path
           d="M0,260 L0,150 L180,60 L300,120 L470,20 L560,90 L720,10 L840,95 L980,35 L1120,110 L1250,55 L1440,140 L1440,260 Z"
@@ -92,7 +117,7 @@ export function GalleryHero() {
             Our Signature Dishes
           </h2>
           <p className="mt-2 text-sm" style={{ color: luxe.muted }}>
-            Hover to pause · drag to spin · tap a dish to view
+            Move your cursor to explore · tap a dish to order
           </p>
         </div>
         <OrderCTA align="center" />
@@ -118,6 +143,8 @@ export function GalleryHero() {
           zoomable
           accentColor={luxe.gold}
           ctaLabel="Order online"
+          addLabel="Add to cart"
+          onAddToCart={handleAddToCart}
         />
       </div>
     </section>

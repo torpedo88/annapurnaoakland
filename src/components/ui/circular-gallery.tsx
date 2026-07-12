@@ -7,9 +7,11 @@ import { cn } from "@/lib/utils";
 
 // Define the type for a single gallery item
 export interface GalleryItem {
+  /** Stable id (the menu item slug) — passed back to onAddToCart. */
+  id?: string;
   common: string;
   binomial: string;
-  /** Optional destination for the zoom-view order button. */
+  /** Optional destination for the zoom-view "Order online" link. */
   href?: string;
   /** Optional price, shown on the tile and in the zoom view, e.g. "$13.99". */
   price?: string;
@@ -43,8 +45,12 @@ interface CircularGalleryProps extends HTMLAttributes<HTMLDivElement> {
   accentColor?: string;
   /** When true, clicking a tile opens a zoomed detail view instead of navigating. */
   zoomable?: boolean;
-  /** Label for the order button in the zoom view (links to item.href). */
+  /** Label for the "Order online" link in the zoom view (links to item.href). */
   ctaLabel?: string;
+  /** Add-to-cart handler; when set the zoom view shows an "Add to cart" button. */
+  onAddToCart?: (item: GalleryItem) => void;
+  /** Label for the add-to-cart button. */
+  addLabel?: string;
 }
 
 const DRAG_SENSITIVITY = 0.35;
@@ -52,6 +58,8 @@ const MOMENTUM_DECAY = 0.94;
 const VELOCITY_MIN = 0.02;
 const MOVE_THRESHOLD = 6; // px of drag before a press stops counting as a click
 const MOBILE_MAX = 640;
+const FOLLOW_RANGE = 95; // deg the ring can be steered by the cursor across the hero
+const FOLLOW_EASE = 0.09;
 
 const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
   (
@@ -74,6 +82,8 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
       accentColor = "#C9A24B",
       zoomable = false,
       ctaLabel,
+      onAddToCart,
+      addLabel = "Add to cart",
       ...props
     },
     ref,
@@ -87,6 +97,8 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
     const dragOffsetRef = useRef(0);
     const draggingRef = useRef(false);
     const hoverRef = useRef(false);
+    const hoverBaseRef = useRef(0);
+    const followTargetRef = useRef(0);
     const lastPointerXRef = useRef(0);
     const downXRef = useRef(0);
     const movedRef = useRef(false);
@@ -135,9 +147,15 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
             velocityRef.current *= MOMENTUM_DECAY;
           } else {
             velocityRef.current = 0;
-            const paused =
-              hoverRef.current || zoomRef.current || reducedRef.current;
-            if (!paused) dragOffsetRef.current += autoRotateSpeed;
+            if (zoomRef.current || reducedRef.current) {
+              // fully paused
+            } else if (hoverRef.current) {
+              // Follow the cursor: ease toward the cursor-derived target.
+              dragOffsetRef.current +=
+                (followTargetRef.current - dragOffsetRef.current) * FOLLOW_EASE;
+            } else {
+              dragOffsetRef.current += autoRotateSpeed;
+            }
           }
         }
         const total = dragOffsetRef.current;
@@ -183,6 +201,28 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
     };
     const endDrag = () => {
       draggingRef.current = false;
+      // Re-anchor the cursor-follow so it doesn't snap back after a drag.
+      if (hoverRef.current) {
+        hoverBaseRef.current = dragOffsetRef.current;
+        followTargetRef.current = dragOffsetRef.current;
+      }
+    };
+
+    const onMouseEnter = () => {
+      hoverRef.current = true;
+      hoverBaseRef.current = dragOffsetRef.current;
+      followTargetRef.current = dragOffsetRef.current;
+    };
+    const onMouseMove = (e: React.MouseEvent) => {
+      if (!hoverRef.current || draggingRef.current) return;
+      const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+      const nx = ((e.clientX - rect.left) / rect.width - 0.5) * 2; // -1..1
+      const clamped = Math.max(-1, Math.min(1, nx));
+      followTargetRef.current = hoverBaseRef.current + clamped * FOLLOW_RANGE;
+    };
+    const onMouseLeave = () => {
+      hoverRef.current = false;
+      endDrag();
     };
 
     const handleTileClick = (e: React.MouseEvent, item: GalleryItem) => {
@@ -226,11 +266,9 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
-          onMouseEnter={() => (hoverRef.current = true)}
-          onMouseLeave={() => {
-            hoverRef.current = false;
-            endDrag();
-          }}
+          onMouseEnter={onMouseEnter}
+          onMouseMove={onMouseMove}
+          onMouseLeave={onMouseLeave}
           {...props}
         >
           {spotlight && (
@@ -457,15 +495,31 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                       {zoomItem.price}
                     </p>
                   )}
-                  {zoomItem.href && ctaLabel && (
-                    <Link
-                      href={zoomItem.href}
-                      className="mt-4 inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em]"
-                      style={{ backgroundColor: accentColor, color: "#14100D" }}
-                    >
-                      {ctaLabel}
-                    </Link>
-                  )}
+                  <div className="mt-5 flex flex-col gap-2.5">
+                    {onAddToCart && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          onAddToCart(zoomItem);
+                          setZoomItem(null);
+                        }}
+                        className="inline-flex items-center justify-center rounded-full px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em]"
+                        style={{ backgroundColor: accentColor, color: "#14100D" }}
+                      >
+                        {addLabel}
+                      </button>
+                    )}
+                    {zoomItem.href && ctaLabel && (
+                      <Link
+                        href={zoomItem.href}
+                        onClick={() => setZoomItem(null)}
+                        className="inline-flex items-center justify-center rounded-full border px-6 py-3 text-xs font-semibold uppercase tracking-[0.16em]"
+                        style={{ borderColor: accentColor, color: accentColor }}
+                      >
+                        {ctaLabel}
+                      </Link>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>,

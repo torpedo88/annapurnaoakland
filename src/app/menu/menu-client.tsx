@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import Image from "next/image";
@@ -42,6 +42,23 @@ export function MenuClient({
       .catch(() => { /* keep server-seeded menu on refresh failure */ });
     return () => { on = false; };
   }, []);
+
+  // Deep-link support: /menu#item-<id> scrolls to (and highlights) that dish.
+  // Used by the homepage gallery hero's "Order online" link. Runs once, after
+  // items render (initial SSR or the /api/menu refresh below).
+  const didScrollRef = useRef(false);
+  useEffect(() => {
+    if (didScrollRef.current) return;
+    const hash = window.location.hash;
+    if (!hash.startsWith("#item-")) return;
+    const el = document.getElementById(hash.slice(1));
+    if (el) {
+      didScrollRef.current = true;
+      requestAnimationFrame(() =>
+        el.scrollIntoView({ behavior: "smooth", block: "center" }),
+      );
+    }
+  }, [items]);
 
   // Dish-detail popup: the item whose full description/options are shown.
   const [detail, setDetail] = useState<LiveItem | null>(null);
@@ -290,7 +307,7 @@ export function MenuClient({
 
       <DishDetailModal item={detail} onClose={() => setDetail(null)} />
 
-      <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}`}</style>
+      <style>{`.no-scrollbar::-webkit-scrollbar{display:none}.no-scrollbar{-ms-overflow-style:none;scrollbar-width:none}article[id^="item-"]:target{outline:2px solid #C9A24B;outline-offset:4px}`}</style>
     </>
   );
 }
@@ -306,7 +323,8 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
 
   return (
     <article
-      className="group rounded-[1.5rem] overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex flex-col"
+      id={`item-${item.id}`}
+      className="group scroll-mt-28 rounded-[1.5rem] overflow-hidden hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300 flex flex-col"
       style={{ backgroundColor: "#1C1712", border: "1px solid rgba(201,162,75,0.15)" }}
     >
       <button
