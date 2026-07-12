@@ -5,9 +5,14 @@ import { getMenuCatalog, type CatalogItem } from "@/lib/menu/catalog";
 
 export const runtime = "nodejs";
 
+const LOGO = "/images/annapurna-logo.png";
+
 // Public "Popular right now" feed: the real top-selling items (last 90 days,
-// paid orders), resolved against the live DB catalog, topped up with other
-// available dishes so the section is never empty.
+// paid orders), resolved against the live DB catalog. We surface FOUR DIVERSE
+// dishes — ranked by real sales, but preferring one per category and dishes
+// that have a real photo — so it reflects demand without showing four of the
+// same thing. Falls back to the catalog (still diverse) when there are no
+// recent orders (e.g. the isolated dev DB).
 export async function GET() {
   const { items } = await getMenuCatalog();
   const orderable = items.filter((i) => !i.isCatering && i.available);
@@ -23,23 +28,38 @@ export async function GET() {
       WHERE o.payment_status = 'paid' AND o.created_at >= now() - interval '90 days'
       GROUP BY mi.slug
       ORDER BY sum(oi.quantity) DESC
-      LIMIT 12
+      LIMIT 24
     `)) as unknown as { slug: string | null }[];
     topSlugs = rows.map((r) => r.slug).filter((s): s is string => Boolean(s));
   } catch {
-    /* fall back to curated below */
+    /* fall back to catalog order below */
   }
 
-  const picked: CatalogItem[] = [];
-  const seen = new Set<string>();
+  // A demand-ranked pool: real best-sellers first, then the rest of the catalog.
+  const ranked: CatalogItem[] = [];
+  const inPool = new Set<string>();
   for (const slug of topSlugs) {
     const it = bySlug.get(slug);
-    if (it && !seen.has(slug)) { picked.push(it); seen.add(slug); }
+    if (it && !inPool.has(it.id)) { ranked.push(it); inPool.add(it.id); }
   }
   for (const it of orderable) {
-    if (picked.length >= 4) break;
-    if (!seen.has(it.id)) { picked.push(it); seen.add(it.id); }
+    if (!inPool.has(it.id)) { ranked.push(it); inPool.add(it.id); }
   }
+
+  const hasImg = (it: CatalogItem) => Boolean(it.image) && it.image !== LOGO;
+  const picked: CatalogItem[] = [];
+  const usedIds = new Set<string>();
+  const usedCats = new Set<string>();
+  const take = (pred: (it: CatalogItem) => boolean) => {
+    for (const it of ranked) {
+      if (picked.length >= 4) break;
+      if (usedIds.has(it.id) || !pred(it)) continue;
+      picked.push(it); usedIds.add(it.id); usedCats.add(it.category);
+    }
+  };
+  take((it) => hasImg(it) && !usedCats.has(it.category)); // diverse + photographed
+  take((it) => hasImg(it));                               // photographed, any category
+  take(() => true);                                       // never empty
 
   return NextResponse.json(
     { items: picked.slice(0, 4) },
