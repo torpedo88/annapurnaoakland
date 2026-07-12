@@ -1,6 +1,14 @@
 import Link from "next/link";
 import { luxe } from "@/lib/theme";
 
+// External profiles — kept in sync with the schema.org `sameAs` list in
+// src/components/seo/restaurant-jsonld.tsx (crawlable social signals + user reach).
+const SOCIALS = [
+  { href: "https://www.instagram.com/annapurnarestaurant510/", label: "Instagram" },
+  { href: "https://www.facebook.com/annapurnarestaurantandbar/", label: "Facebook" },
+  { href: "https://www.yelp.com/biz/annapurna-restaurant-and-bar-oakland-3", label: "Yelp" },
+];
+
 function Col({
   title,
   links,
@@ -54,6 +62,21 @@ export function LuxeFooter() {
             A family-run Indian & Nepalese kitchen in downtown Oakland. Open since 2010,
             cooking the recipes we grew up on.
           </p>
+          <div className="mt-6 flex items-center gap-5">
+            {SOCIALS.map(({ href, label }) => (
+              <a
+                key={label}
+                href={href}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label={`Annapurna on ${label}`}
+                className="text-[12px] uppercase tracking-[0.2em] opacity-70 transition hover:opacity-100"
+                style={{ color: luxe.ink }}
+              >
+                {label}
+              </a>
+            ))}
+          </div>
         </div>
         <Col
           title="Order"

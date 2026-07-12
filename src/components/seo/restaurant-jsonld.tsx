@@ -15,6 +15,7 @@ const SAME_AS = [
   "https://www.google.com/maps?cid=12301210349358800714",
   "https://www.yelp.com/biz/annapurna-restaurant-and-bar-oakland-3",
   "https://www.facebook.com/annapurnarestaurantandbar/",
+  "https://www.instagram.com/annapurnarestaurant510/",
   "https://www.grubhub.com/restaurant/annapurna-restaurant--bar-948-clay-st-oakland/333338",
 ];
 

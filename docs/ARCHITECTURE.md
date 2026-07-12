@@ -672,14 +672,16 @@ schema; hours derived from `src/lib/orders/hours.ts` so they never drift; real
 `aggregateRating` + reviews from the Google Places API via
 `src/lib/reviews/google.ts` — emitted only when real data exists, and the output
 escapes `<` because review text is third-party; `sameAs` links the verified
-Google/Yelp/Facebook/Grubhub profiles — the `SAME_AS` constant — so Google ties
-the site to the business's listings in the knowledge graph for local ranking)
-and
+Google/Yelp/Facebook/Instagram/Grubhub profiles — the `SAME_AS` constant — so
+Google ties the site to the business's listings in the knowledge graph for local
+ranking, kept in sync with the footer's social links) and
 `src/components/seo/menu-jsonld.tsx` (Menu schema with dish prices, on `/menu`),
 plus metadata in `src/app/layout.tsx`. Per-page `metadata` exports carry local
 keywords.
 The **home footer** (`src/components/home/luxe/footer.tsx`) shows the address +
-a keyless Google Maps embed (`output=embed`, no API key) linking to directions.
+a keyless Google Maps embed (`output=embed`, no API key) linking to directions,
+plus Instagram / Facebook / Yelp profile links (the `SOCIALS` constant, mirroring
+the schema `sameAs`).
 
 ---
 
