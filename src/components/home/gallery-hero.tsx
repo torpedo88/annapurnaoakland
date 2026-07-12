@@ -73,29 +73,30 @@ export function GalleryHero() {
         }}
       />
 
-      {/* Annapurna snow-peak silhouette along the base. */}
+      {/* Annapurna snow-peaks — a hazy horizon that blends into the backdrop
+          (blurred ridgeline + faded accents) rather than a hard band. */}
       <svg
         aria-hidden
         viewBox="0 0 1440 260"
         preserveAspectRatio="none"
         className="pointer-events-none absolute bottom-0 left-0 w-full z-0"
-        style={{ height: "18vh", opacity: 0.9 }}
+        style={{ height: "26vh", opacity: 0.5, filter: "blur(2px)" }}
       >
         <path
           d="M0,260 L0,150 L180,60 L300,120 L470,20 L560,90 L720,10 L840,95 L980,35 L1120,110 L1250,55 L1440,140 L1440,260 Z"
-          fill="#120d09"
+          fill="#161009"
         />
         <path
           d="M470,20 L520,55 L500,60 L540,80 L470,45 L440,70 L470,20 Z M720,10 L775,50 L748,55 L792,78 L720,40 L688,66 L720,10 Z M980,35 L1022,68 L1000,72 L1035,92 L980,58 L952,80 L980,35 Z"
           fill={luxe.ink}
-          opacity={0.55}
+          opacity={0.18}
         />
         <path
           d="M0,150 L180,60 L300,120 L470,20 L560,90 L720,10 L840,95 L980,35 L1120,110 L1250,55 L1440,140"
           fill="none"
           stroke={luxe.gold}
-          strokeOpacity={0.3}
-          strokeWidth={1.5}
+          strokeOpacity={0.14}
+          strokeWidth={1}
         />
       </svg>
 
