@@ -1,7 +1,6 @@
 import { GalleryHero } from "@/components/home/gallery-hero";
 import { Specials } from "@/components/home/luxe/specials";
 import { Popular } from "@/components/home/luxe/popular";
-import { KitchenStatement } from "@/components/home/luxe/kitchen-statement";
 import { Testimonials } from "@/components/home/luxe/testimonials";
 import { Visit } from "@/components/home/luxe/visit";
 import { Faq } from "@/components/home/faq";
@@ -13,7 +12,6 @@ export default function HomePage() {
       <GalleryHero />
       <Specials />
       <Popular />
-      <KitchenStatement />
       <Testimonials />
       <Visit />
       <Faq />

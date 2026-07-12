@@ -32,7 +32,7 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
       >
         <div className="mx-auto max-w-7xl px-5 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Left: brand — logo + name (far left) */}
-          <Link href="/" className="flex items-center gap-3 justify-self-start">
+          <Link href="/" className="flex min-w-0 items-center gap-3 justify-self-start">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src="/images/annapurna-logo.png"
@@ -40,8 +40,11 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
               className="h-14 w-auto object-contain shrink-0"
               style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
             />
+            {/* Wordmark only appears at xl, where the center nav leaves room —
+                below that the logo (which already reads "Annapurna") stands in,
+                so it never overlaps the nav. */}
             <span
-              className="hidden sm:inline uppercase tracking-[0.16em] text-2xl"
+              className="hidden xl:inline truncate uppercase tracking-[0.12em] text-2xl"
               style={{ color: "#C9A24B", fontFamily: "var(--font-display)", fontWeight: 300 }}
             >
               Annapurna
@@ -49,7 +52,7 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
           </Link>
 
           {/* Center: nav (bigger, centered) */}
-          <nav className="hidden md:flex items-center gap-10 text-sm uppercase tracking-[0.2em] justify-self-center">
+          <nav className="hidden md:flex items-center gap-6 lg:gap-8 xl:gap-10 text-sm uppercase tracking-[0.16em] lg:tracking-[0.2em] justify-self-center">
             {nav.map((n) => {
               const active = pathname === n.href;
               return (

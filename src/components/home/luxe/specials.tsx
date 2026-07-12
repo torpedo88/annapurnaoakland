@@ -53,7 +53,7 @@ export function Specials() {
   if (!dish) return null;
 
   return (
-    <section className="py-24 lg:py-28" style={{ borderTop: `1px solid ${luxe.line}` }}>
+    <section className="py-14 lg:py-20" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto mb-6 h-px w-9" style={{ backgroundColor: luxe.gold }} />
         <p
