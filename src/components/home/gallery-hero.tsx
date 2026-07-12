@@ -101,7 +101,7 @@ export function GalleryHero() {
       </svg>
 
       {/* Heading + Order CTAs. */}
-      <div className="text-center relative z-20 px-4 pt-5 flex flex-col items-center gap-3">
+      <div className="text-center relative z-20 px-4 pt-5 flex flex-col items-center gap-6">
         <div>
           <p className="brand-kicker mb-3">Old Oakland · Indian &amp; Nepalese</p>
           <h2 className="brand-heading text-4xl sm:text-5xl">
@@ -117,11 +117,11 @@ export function GalleryHero() {
           items={galleryData}
           cardWidth={200}
           cardHeight={265}
-          radius={470}
+          radius={410}
           perspective={3000}
           mobileCardWidth={140}
           mobileCardHeight={186}
-          mobileRadius={250}
+          mobileRadius={215}
           mobilePerspective={1500}
           autoRotateSpeed={0.05}
           maxBlur={5}

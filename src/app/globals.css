@@ -215,6 +215,9 @@
 .brand-heading {
   font-family: var(--font-display), "Cormorant Garamond", Georgia, serif;
   font-weight: 700;
+  /* Room for descenders (g, y, p) so background-clip:text doesn't crop them. */
+  line-height: 1.15;
+  padding-bottom: 0.08em;
   background-image: linear-gradient(180deg, #f3e9d6 0%, #c9a24b 65%, #b9742f 100%);
   -webkit-background-clip: text;
   background-clip: text;
