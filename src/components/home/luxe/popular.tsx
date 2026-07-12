@@ -5,6 +5,7 @@ import { useCart } from "@/lib/preview-cart";
 import { hasSpiceOptions, DEFAULT_SPICE } from "@/lib/spice";
 import { luxe } from "@/lib/theme";
 import type { MenuItem } from "@/data/menu";
+import { DishDetailModal, type DishModalItem } from "@/components/menu/dish-detail-modal";
 
 const LOGO = "/images/annapurna-logo.png";
 
@@ -12,6 +13,7 @@ export function Popular() {
   const { add } = useCart();
   const [items, setItems] = useState<MenuItem[]>([]);
   const [loaded, setLoaded] = useState(false);
+  const [detail, setDetail] = useState<DishModalItem | null>(null);
 
   useEffect(() => {
     let on = true;
@@ -43,6 +45,7 @@ export function Popular() {
               name={item.name}
               price={item.price}
               imageSrc={item.image || LOGO}
+              onZoom={() => setDetail(item)}
               onAdd={() =>
                 add(item, 1, hasSpiceOptions(item.category) ? DEFAULT_SPICE : undefined)
               }
@@ -50,6 +53,8 @@ export function Popular() {
           ))}
         </div>
       </div>
+
+      <DishDetailModal item={detail} onClose={() => setDetail(null)} />
     </section>
   );
 }
@@ -58,11 +63,13 @@ function PopularCard({
   name,
   price,
   imageSrc,
+  onZoom,
   onAdd,
 }: {
   name: string;
   price: number;
   imageSrc: string;
+  onZoom: () => void;
   onAdd: () => void;
 }) {
   const [src, setSrc] = useState(imageSrc || LOGO);
@@ -73,20 +80,30 @@ function PopularCard({
       className="rounded-[1.5rem] overflow-hidden flex flex-col hover:shadow-xl hover:-translate-y-0.5 transition-all duration-300"
       style={{ backgroundColor: luxe.surface, border: "1px solid rgba(201,162,75,0.18)" }}
     >
-      <div className="overflow-hidden" style={{ backgroundColor: luxe.bg }}>
+      <button
+        type="button"
+        onClick={onZoom}
+        aria-label={`View ${name}`}
+        className="overflow-hidden block w-full cursor-pointer group"
+        style={{ backgroundColor: luxe.bg }}
+      >
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={src}
           alt={name}
-          className={`w-full h-44 ${src.endsWith(LOGO) ? "object-contain p-6 opacity-90" : "object-cover"}`}
+          className={`w-full h-44 transition-transform duration-500 group-hover:scale-105 ${src.endsWith(LOGO) ? "object-contain p-6 opacity-90" : "object-cover"}`}
           onError={(e) => {
             if (!e.currentTarget.src.endsWith(LOGO)) e.currentTarget.src = LOGO;
           }}
         />
-      </div>
+      </button>
 
       <div className="p-4 flex-1 flex flex-col gap-3">
-        <div className="flex items-start justify-between gap-2">
+        <button
+          type="button"
+          onClick={onZoom}
+          className="flex items-start justify-between gap-2 text-left cursor-pointer"
+        >
           <h3
             className="text-lg leading-tight"
             style={{ fontFamily: "var(--font-display)", fontWeight: 200, color: luxe.ink }}
@@ -99,7 +116,7 @@ function PopularCard({
           >
             ${price.toFixed(2)}
           </span>
-        </div>
+        </button>
 
         <button
           onClick={onAdd}
