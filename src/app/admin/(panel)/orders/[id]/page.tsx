@@ -18,7 +18,7 @@ const PAYMENT_LABELS: Record<string, string> = {
 };
 const money = (v: string | null) => `$${Number(v ?? 0).toFixed(2)}`;
 const fmtDate = (d: Date | null) =>
-  d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
+  d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" }) : "—";
 
 export default async function AdminOrderDetail({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

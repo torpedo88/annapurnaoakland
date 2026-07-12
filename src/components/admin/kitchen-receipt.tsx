@@ -12,8 +12,9 @@ const num = (v: string | null) => Number(v ?? 0);
 
 export function KitchenReceipt({ order }: { order: AdminOrder }) {
   const isDelivery = order.orderType === "delivery";
-  const time = new Date(order.createdAt).toLocaleString([], {
+  const time = new Date(order.createdAt).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
+    timeZone: "America/Los_Angeles",
   });
   const row: React.CSSProperties = { display: "flex", justifyContent: "space-between", gap: 8 };
   const Hr = () => <div style={{ borderTop: "1px dashed #000", margin: "6px 0" }} />;

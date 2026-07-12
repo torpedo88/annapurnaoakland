@@ -31,7 +31,7 @@ export interface RecentOrderRow {
 
 const money = (v: string | null) => `$${Number(v ?? 0).toFixed(2)}`;
 const fmtDate = (d: Date | string | null) =>
-  d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }) : "—";
+  d ? new Date(d).toLocaleString("en-US", { month: "short", day: "numeric", hour: "numeric", minute: "2-digit", timeZone: "America/Los_Angeles" }) : "—";
 
 export function RecentOrders({ rows }: { rows: RecentOrderRow[] }) {
   const router = useRouter();
