@@ -66,14 +66,8 @@ export function Testimonials() {
             Loved in Oakland
           </p>
           <h2
-            className="mt-5"
-            style={{
-              fontFamily: "var(--font-display), Georgia, serif",
-              fontWeight: 500,
-              fontStyle: "italic",
-              fontSize: "clamp(2rem, 5vw, 3.2rem)",
-              color: luxe.ink,
-            }}
+            className="brand-heading mt-5"
+            style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}
           >
             What our guests say.
           </h2>

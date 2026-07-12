@@ -101,21 +101,18 @@ export function GalleryHero() {
       </svg>
 
       {/* Heading + Order CTAs. */}
-      <div className="text-center relative z-20 px-4 pt-8 flex flex-col items-center gap-4">
+      <div className="text-center relative z-20 px-4 pt-5 flex flex-col items-center gap-3">
         <div>
           <p className="brand-kicker mb-3">Old Oakland · Indian &amp; Nepalese</p>
           <h2 className="brand-heading text-4xl sm:text-5xl">
             Our Signature Dishes
           </h2>
-          <p className="mt-2 text-sm" style={{ color: luxe.muted }}>
-            Move your cursor to explore · tap a dish to order
-          </p>
         </div>
         <OrderCTA align="center" />
       </div>
 
       {/* The 3D ring. Shorter on mobile so it sits right under the buttons. */}
-      <div className="w-full h-[44vh] min-h-[360px] sm:h-[58vh] sm:min-h-[440px] z-10">
+      <div className="w-full h-[40vh] min-h-[330px] sm:h-[52vh] sm:min-h-[420px] z-10">
         <CircularGallery
           items={galleryData}
           cardWidth={200}
