@@ -187,7 +187,10 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
       lastPointerXRef.current = e.clientX;
       downXRef.current = e.clientX;
       velocityRef.current = 0;
-      (e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId);
+      // NOTE: intentionally NOT calling setPointerCapture here — capturing the
+      // pointer on the container swallows the `click` event on the tile buttons,
+      // which breaks tap/click-to-zoom on desktop. Dragging still works because
+      // pointermove events bubble up from the full-width region.
     };
     const onPointerMove = (e: React.PointerEvent) => {
       if (!draggingRef.current) return;

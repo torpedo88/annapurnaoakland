@@ -29,12 +29,6 @@ export function Popular() {
     <section className="py-24 lg:py-28" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="mx-auto max-w-7xl px-6">
         <div className="mx-auto mb-6 h-px w-9" style={{ backgroundColor: luxe.gold }} />
-        <p
-          className="text-[10px] uppercase tracking-[0.34em] mb-5 text-center"
-          style={{ color: luxe.gold }}
-        >
-          Crowd favorites
-        </p>
         <h2
           className="brand-heading text-center mb-12"
           style={{ fontSize: "clamp(2rem, 5vw, 3.2rem)" }}

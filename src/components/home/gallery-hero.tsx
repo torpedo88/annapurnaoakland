@@ -114,8 +114,8 @@ export function GalleryHero() {
         <OrderCTA align="center" />
       </div>
 
-      {/* The 3D ring. */}
-      <div className="w-full h-[58vh] min-h-[440px] z-10">
+      {/* The 3D ring. Shorter on mobile so it sits right under the buttons. */}
+      <div className="w-full h-[44vh] min-h-[360px] sm:h-[58vh] sm:min-h-[440px] z-10">
         <CircularGallery
           items={galleryData}
           cardWidth={200}
