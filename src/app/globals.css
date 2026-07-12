@@ -18,7 +18,8 @@
   --color-secondary-foreground: #14100D;
   --color-accent-foreground: #14100D;
 
-  --font-sans: var(--font-body);
+  /* Brand: one typeface everywhere — the display font (Jost). */
+  --font-sans: var(--font-display);
   --font-serif: var(--font-display);
   --font-mono: var(--font-body);
 

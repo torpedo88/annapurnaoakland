@@ -52,7 +52,7 @@ export function Testimonials() {
   data.reviews.forEach((r, i) => cols[i % 3]!.push(toTestimonial(r)));
 
   return (
-    <section className="py-14 lg:py-20 relative" style={{ borderTop: `1px solid ${luxe.line}` }}>
+    <section className="py-10 lg:py-14 relative" style={{ borderTop: `1px solid ${luxe.line}` }}>
       <div className="container z-10 mx-auto px-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}

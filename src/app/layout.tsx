@@ -87,7 +87,7 @@ export default function RootLayout({
             "radial-gradient(1100px 520px at 50% -8%, rgba(201,162,75,0.07), transparent 70%), radial-gradient(900px 600px at 100% 100%, rgba(185,96,63,0.05), transparent 70%), #14100D",
           backgroundAttachment: "fixed",
           color: "#F3E9D6",
-          fontFamily: "var(--font-body), sans-serif",
+          fontFamily: "var(--font-display), sans-serif",
         }}
         className="antialiased min-h-screen"
       >
