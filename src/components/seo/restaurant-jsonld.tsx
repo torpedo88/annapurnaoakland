@@ -7,6 +7,17 @@ import { getGoogleReviews } from "@/lib/reviews/google";
 
 const SITE = "https://annapurnaoakland.com";
 
+// Verified same-entity profiles (all list 948 Clay St · (510) 250-9696). `sameAs`
+// lets Google tie this site to the business's Google/Yelp/Facebook/Grubhub
+// listings in the knowledge graph — key for local ("near me") ranking. Only add
+// URLs confirmed to be this restaurant; a wrong link hurts entity resolution.
+const SAME_AS = [
+  "https://www.google.com/maps?cid=12301210349358800714",
+  "https://www.yelp.com/biz/annapurna-restaurant-and-bar-oakland-3",
+  "https://www.facebook.com/annapurnarestaurantandbar/",
+  "https://www.grubhub.com/restaurant/annapurna-restaurant--bar-948-clay-st-oakland/333338",
+];
+
 export async function RestaurantJsonLd() {
   const phone = process.env.RESTAURANT_PICKUP_PHONE || undefined;
 
@@ -47,6 +58,7 @@ export async function RestaurantJsonLd() {
     servesCuisine: ["Indian", "Nepalese", "Himalayan"],
     acceptsReservations: "True",
     menu: `${SITE}/menu`,
+    sameAs: SAME_AS,
     address: {
       "@type": "PostalAddress",
       streetAddress: "948 Clay Street",

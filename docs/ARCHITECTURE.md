@@ -671,7 +671,10 @@ content), JSON-LD in `src/components/seo/restaurant-jsonld.tsx` (Restaurant
 schema; hours derived from `src/lib/orders/hours.ts` so they never drift; real
 `aggregateRating` + reviews from the Google Places API via
 `src/lib/reviews/google.ts` — emitted only when real data exists, and the output
-escapes `<` because review text is third-party) and
+escapes `<` because review text is third-party; `sameAs` links the verified
+Google/Yelp/Facebook/Grubhub profiles — the `SAME_AS` constant — so Google ties
+the site to the business's listings in the knowledge graph for local ranking)
+and
 `src/components/seo/menu-jsonld.tsx` (Menu schema with dish prices, on `/menu`),
 plus metadata in `src/app/layout.tsx`. Per-page `metadata` exports carry local
 keywords.
