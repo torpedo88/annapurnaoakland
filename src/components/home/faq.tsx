@@ -52,7 +52,7 @@ export function Faq() {
   };
 
   return (
-    <section className="py-7 lg:py-10" style={{ backgroundColor: luxe.bg }}>
+    <section className="py-5 lg:py-8" style={{ backgroundColor: luxe.bg }}>
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
@@ -63,7 +63,7 @@ export function Faq() {
           Good to know
         </p>
         <h2
-          className="brand-heading mb-10 leading-[1.05]"
+          className="brand-heading mb-6 leading-[1.05]"
           style={{ fontSize: "clamp(2rem, 4.5vw, 3rem)" }}
         >
           Frequently asked questions
