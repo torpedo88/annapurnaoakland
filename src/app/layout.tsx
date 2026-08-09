@@ -5,6 +5,7 @@ import { CartProvider } from "@/lib/preview-cart";
 import { TerracottaShell } from "@/components/preview/terracotta/shell";
 import { RestaurantJsonLd } from "@/components/seo/restaurant-jsonld";
 import { Analytics } from "@/components/analytics/analytics";
+import { Analytics as VercelAnalytics } from "@vercel/analytics/next";
 
 const display = Jost({
   subsets: ["latin"],
@@ -96,6 +97,7 @@ export default function RootLayout({
         </CartProvider>
         <RestaurantJsonLd />
         <Analytics />
+        <VercelAnalytics />
       </body>
     </html>
   );
