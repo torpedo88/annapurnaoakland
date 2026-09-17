@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { luxe } from "@/lib/theme";
+import { DeferredMap } from "./deferred-map";
 
 // External profiles — kept in sync with the schema.org `sameAs` list in
 // src/components/seo/restaurant-jsonld.tsx (crawlable social signals + user reach).
@@ -122,14 +123,7 @@ export function LuxeFooter() {
             style={{ border: `1px solid ${luxe.line}` }}
             aria-label="Open Annapurna location in Google Maps"
           >
-            <iframe
-              title="Map to Annapurna — 948 Clay Street, Oakland CA 94607"
-              src="https://www.google.com/maps?q=948%20Clay%20Street%2C%20Oakland%2C%20CA%2094607&output=embed"
-              className="w-full h-40 pointer-events-none"
-              style={{ border: 0, filter: "grayscale(0.2)" }}
-              loading="lazy"
-              referrerPolicy="no-referrer-when-downgrade"
-            />
+            <DeferredMap />
           </a>
         </div>
       </div>

@@ -2,8 +2,15 @@
 
 import React, { useState, useEffect, useRef, HTMLAttributes } from "react";
 import { createPortal } from "react-dom";
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
+
+// The ring tiles are ~200px wide on desktop and ~140px on mobile, so the
+// optimizer never needs to ship more than a ~400px-wide file for them (the
+// sources are 806x1080). The zoom view is a max-w-md dialog.
+const TILE_SIZES = "(min-width: 640px) 200px, 140px";
+const ZOOM_SIZES = "(min-width: 448px) 448px, 100vw";
 
 // Define the type for a single gallery item
 export interface GalleryItem {
@@ -356,12 +363,16 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                         : undefined
                     }
                   >
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
-                    <img
+                    <Image
                       src={item.photo.url}
                       alt={item.photo.text}
+                      fill
+                      sizes={TILE_SIZES}
+                      // The ring is the hero, so the front tiles are the LCP
+                      // candidates and must not wait behind lazy-loading.
+                      priority={i < 3}
                       draggable={false}
-                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                      className="object-cover transition-transform duration-500 group-hover:scale-105"
                       style={{ objectPosition: item.photo.pos || "center" }}
                     />
                     <div
@@ -415,12 +426,16 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                           "linear-gradient(to top, rgba(0,0,0,0.45), transparent 70%)",
                       }}
                     >
-                      {/* eslint-disable-next-line @next/next/no-img-element */}
-                      <img
+                      {/* Decorative mirror of the tile above — same optimized
+                          URL, so it is served from cache, and alt="" keeps it
+                          out of the accessibility tree. */}
+                      <Image
                         src={item.photo.url}
                         alt=""
+                        fill
+                        sizes={TILE_SIZES}
                         draggable={false}
-                        className="absolute inset-0 w-full h-full object-cover"
+                        className="object-cover"
                         style={{ objectPosition: item.photo.pos || "center" }}
                       />
                     </span>
@@ -477,11 +492,12 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                   ×
                 </button>
                 <div className="relative aspect-[4/3] w-full">
-                  {/* eslint-disable-next-line @next/next/no-img-element */}
-                  <img
+                  <Image
                     src={zoomItem.photo.url}
                     alt={zoomItem.photo.text}
-                    className="absolute inset-0 h-full w-full object-cover"
+                    fill
+                    sizes={ZOOM_SIZES}
+                    className="object-cover"
                     style={{ objectPosition: zoomItem.photo.pos || "center" }}
                   />
                 </div>

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { ShoppingBag, X, Plus, Minus, Check, Menu } from "lucide-react";
@@ -33,10 +34,12 @@ export function TerracottaShell({ children }: { children: React.ReactNode }) {
         <div className="mx-auto max-w-7xl px-5 lg:px-8 h-20 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
           {/* Left: brand — logo + name (far left) */}
           <Link href="/" className="flex min-w-0 items-center gap-3 justify-self-start">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
+            <Image
               src="/images/annapurna-logo.png"
               alt="Annapurna Restaurant & Bar"
+              width={64}
+              height={56}
+              priority
               className="h-14 w-auto object-contain shrink-0"
               style={{ filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.45))" }}
             />
@@ -319,17 +322,7 @@ function CartDrawer() {
                   className="flex gap-4 pb-4 last:border-b-0"
                   style={{ borderBottom: "1px solid rgba(201,162,75,0.15)" }}
                 >
-                  <img
-                    src={l.image || "/images/annapurna-logo.png"}
-                    alt=""
-                    className="h-20 w-20 rounded-2xl object-cover shrink-0"
-                    style={{ backgroundColor: "#14100D" }}
-                    onError={(e) => {
-                      if (!e.currentTarget.src.endsWith("/images/annapurna-logo.png")) {
-                        e.currentTarget.src = "/images/annapurna-logo.png";
-                      }
-                    }}
-                  />
+                  <CartLineImage src={l.image} />
                   <div className="flex-1 min-w-0">
                     <div className="flex justify-between gap-3">
                       <h3 className="font-semibold truncate" style={{ color: "#F3E9D6" }}>{l.name}</h3>
@@ -473,5 +466,29 @@ function AddedToast() {
         </button>
       </div>
     </div>
+  );
+}
+
+const CART_LOGO = "/images/annapurna-logo.png";
+
+/**
+ * A cart-line thumbnail. It renders at 80x80, so it goes through the image
+ * optimizer rather than pulling the full-size dish original (some of which are
+ * over 2 MB in Supabase Storage) into the drawer.
+ */
+function CartLineImage({ src }: { src?: string | null }) {
+  const [url, setUrl] = useState(src || CART_LOGO);
+
+  return (
+    <Image
+      src={url}
+      alt=""
+      width={80}
+      height={80}
+      sizes="80px"
+      className="h-20 w-20 rounded-2xl object-cover shrink-0"
+      style={{ backgroundColor: "#14100D" }}
+      onError={() => setUrl(CART_LOGO)}
+    />
   );
 }

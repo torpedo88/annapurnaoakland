@@ -466,6 +466,54 @@ named `doordashFeeCents` for historical reasons — it carries the Uber fee too)
 - The orders board polls every 10s and, on new orders, plays a WebAudio chime,
   a spoken announcement (Web Speech), and **auto-prints a kitchen ticket**.
 
+### Images — always `next/image`
+
+**Never use a raw `<img>` for a photo.** Every dish photo, hero tile, logo and
+background goes through `next/image` so the optimizer resizes it and serves
+AVIF/WebP. A raw `<img>` ships the original: admin-uploaded Supabase dish
+photos are routinely 1–3 MB, and one of them alone was 2.5 MB inside a 308px
+card. Each `next/image` needs a `sizes` (with `fill`) or explicit
+`width`/`height`, matching the **rendered CSS size**, not the source file:
+
+| Surface | File | `sizes` |
+|---|---|---|
+| Hero ring tile + its reflection | `src/components/ui/circular-gallery.tsx` | `(min-width: 640px) 200px, 140px` |
+| Hero zoom dialog | same | `(min-width: 448px) 448px, 100vw` |
+| Popular card | `src/components/home/luxe/popular-grid.tsx` | `(min-width: 1024px) 308px, 50vw` |
+| Dish-of-the-day banner | `src/components/home/luxe/specials-banner.tsx` | `(min-width: 768px) 512px, 100vw` |
+| Cart-drawer thumbnail | `src/components/preview/terracotta/shell.tsx` | `80px` |
+
+Remote hosts must be allow-listed in `next.config.ts` → `images.remotePatterns`
+(Supabase Storage already is). The only intentional raw `<img>` left on public
+pages are the 40px Google reviewer avatars
+(`src/components/ui/testimonials-columns-1.tsx`) — already tiny and lazy, and
+allow-listing `lh3.googleusercontent.com` would buy nothing — and the `/flyer`
+print pages, which are `noindex` and never loaded by visitors.
+
+Source files under `public/images/` are capped at **1280px wide** and stored as
+progressive mozjpeg q76 / quantized PNG. Re-run that pass after adding art; the
+whole folder is ~8.5 MB and should stay there.
+
+### Core Web Vitals
+
+Mobile Lighthouse was **0.46** (LCP 15.7 s, CLS 0.243, 6.86 MB) before the
+2026-09-17 pass. Three rules keep it from regressing:
+
+1. **No raw `<img>`** (above). That 6.86 MB was almost entirely unoptimized
+   originals.
+2. **Above-the-fold sections render on the server.** `Specials`, `Popular` and
+   `Testimonials` each used to render `null` until a client `fetch` resolved,
+   then inject a few hundred px of content. Every section below them jumped —
+   one 0.243 shift, i.e. the page's entire CLS. They are now `async` server
+   components (`revalidate = 300` on the page) with the interactive parts split
+   into `*-grid` / `*-banner` / `*-body` clients. A side benefit: dish names,
+   prices and review text are now in the HTML for crawlers.
+3. **Third-party embeds load on demand**, not on page load — see `DeferredMap`
+   in §17.
+
+The first three hero tiles carry `priority` (they are the LCP candidates); the
+rest lazy-load.
+
 ### Kitchen ticket printing
 
 **Primary: CloudPRNT (Star network printer).** `src/app/api/cloudprnt/route.ts`
@@ -640,6 +688,12 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
     empty catalog and ISR hydrates it at runtime. To get real data on a
     feature-branch preview, widen the Preview env var scope to all branches
     (Vercel → Settings → Environment Variables).
+12. **The homepage is ISR, not static** (`revalidate = 300` in
+    `src/app/page.tsx`). `Specials`, `Popular` and `Testimonials` are `async`
+    server components that hit the DB / Google Places. Same build-phase caveat as
+    `/menu` above: a preview build without `DATABASE_URL` prerenders them empty
+    and ISR fills them in at runtime. Don't turn them back into client fetches —
+    that is what caused the 0.243 CLS (see *Core Web Vitals* in §10).
 
 ---
 
@@ -681,7 +735,11 @@ keywords.
 The **home footer** (`src/components/home/luxe/footer.tsx`) shows the address +
 a keyless Google Maps embed (`output=embed`, no API key) linking to directions,
 plus Instagram / Facebook / Yelp profile links (the `SOCIALS` constant, mirroring
-the schema `sameAs`).
+the schema `sameAs`). The embed is mounted by `DeferredMap`
+(`src/components/home/luxe/deferred-map.tsx`) behind an IntersectionObserver:
+`loading="lazy"` alone still pulled ~300 KiB of `maps-api-v3` JS into every
+mobile page load. The placeholder holds the same height, and the wrapping `<a>`
+to Google Maps is in the HTML regardless, so nothing crawlable is lost.
 
 ---
 

@@ -75,6 +75,23 @@ change.
 
 Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
 
+- [x] **Mobile Core Web Vitals pass (2026-09-17)** — mobile Lighthouse was
+      **0.46**: LCP **15.7 s**, CLS **0.243**, **6.86 MB** transferred. Google
+      indexes mobile-first, so this was suppressing every page. Fixed by
+      (a) routing every photo through `next/image` — raw `<img>` was shipping
+      full-size originals, including one 2.5 MB Supabase dish photo inside a
+      308px card; (b) server-rendering `Specials` / `Popular` / `Testimonials`,
+      which previously rendered `null` until a client fetch resolved and then
+      shoved the page down — that single injection was the whole 0.243 CLS;
+      (c) deferring the footer Google Maps embed behind an IntersectionObserver
+      (~300 KiB of `maps-api-v3` JS off every load); (d) recompressing
+      `public/images/` (18.2 MB → 8.5 MB). First-load payload measured at
+      **~725 KiB** on an emulated phone afterwards. See ARCHITECTURE §10.
+- [x] **Homepage content is now crawlable** — the dish-of-the-day, the four
+      "Popular right now" dishes with prices, and the Google review text used to
+      exist only after hydration. They are in the server HTML now, which is also
+      the visible counterpart to the `aggregateRating` in the Restaurant JSON-LD.
+
 ## ⏳ Your action items (off-site — only the owner can do these)
 
 ### Google Business Profile — business.google.com (highest impact)
@@ -118,3 +135,29 @@ website. This is ~70% of local restaurant SEO.
   static catalog (`src/data/menu.ts`) — keep prices in sync if they diverge.
 - Bigger off-site levers beyond GBP: consistent **citations** (Yelp, etc.) and
   **backlinks**; these move local ranking more than further on-page tweaks.
+
+### The remaining on-site gap: the site is too thin (audited 2026-09-17)
+
+On-page technical SEO scores **100/100** — title, meta, canonical, robots,
+sitemap, Restaurant + FAQPage JSON-LD are all clean, and all five pages are
+indexed. The problem is that **five pages is all there is**, and the homepage is
+~350 words. There is nothing for Google to rank on a non-brand query.
+
+The nearest competitor, `namasteypatio.com` (an Owner.com site 2.9 mi away),
+publishes ~70 `/tags/<dish>` pages and ~20 `/places/<neighborhood>` pages. It
+takes positions 3, 5, 8, 9 and 10 for *"nepalese restaurant oakland"* and
+position 2 for *"momos oakland order online"*; Annapurna appears on neither
+unless the query is effectively branded.
+
+Meanwhile the DB holds **178 dishes** and the dish detail is a **modal, not a
+URL**, so none of that content has a crawlable address. The two highest-value
+builds, in order:
+
+1. **Per-dish pages** — `/menu/<slug>` for every item, each with its photo,
+   description, price, `Menu`/`MenuItem` JSON-LD, and a link back into the
+   ordering flow; add them all to `sitemap.ts`.
+2. **Delivery-area pages** — one per neighborhood served (Old Oakland,
+   Downtown, Chinatown, Jack London, Uptown, Lake Merritt, …), each with genuinely
+   local copy rather than a templated swap.
+
+Neither exists yet. Both are worth more than any further meta-tag work.

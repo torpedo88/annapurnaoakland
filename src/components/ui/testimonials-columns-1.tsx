@@ -39,6 +39,11 @@ export const TestimonialsColumn = (props: {
                   {text}
                 </div>
                 <div className="flex items-center gap-2 mt-5">
+                  {/* Reviewer avatars are 40px Google profile photos. They stay
+                      raw <img> (allow-listing lh3.googleusercontent.com for the
+                      optimizer would buy nothing at this size), but they need
+                      referrerPolicy="no-referrer" — googleusercontent serves a
+                      broken image to cross-site hotlinks that send a Referer. */}
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img
                     width={40}
@@ -46,6 +51,7 @@ export const TestimonialsColumn = (props: {
                     src={image}
                     alt={name}
                     loading="lazy"
+                    referrerPolicy="no-referrer"
                     className="h-10 w-10 rounded-full object-cover"
                   />
                   <div className="flex flex-col">

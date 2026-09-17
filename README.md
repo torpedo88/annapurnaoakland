@@ -12,6 +12,10 @@ Indian & Nepalese kitchen in Oakland, CA.
 - **Delivery** — selectable courier (DoorDash Drive, Uber Direct, or
   self-delivery) via admin settings: quote → dispatch a driver → status
   webhooks → live tracking. See ARCHITECTURE §9.
+- **Performance & SEO** — the homepage's dish, price and review content is
+  server-rendered (crawlable, no layout shift) and every photo goes through
+  `next/image`. See ARCHITECTURE §10 before adding images or above-the-fold
+  sections.
 
 ## Quick start
 
@@ -61,7 +65,8 @@ Postgres · Tailwind · Vercel · DoorDash Drive · Uber Direct.
 - **[docs/KITCHEN-PRINTING.md](./docs/KITCHEN-PRINTING.md)** — auto-printing
   kitchen tickets to the Star TSP100 (kiosk setup + troubleshooting).
 - **[docs/SEO.md](./docs/SEO.md)** — SEO status checklist: what's fixed in code
-  vs. owner action items (Google Business Profile + Search Console).
+  vs. owner action items (Google Business Profile + Search Console), plus the
+  Core Web Vitals pass and the per-dish / delivery-area pages still to build.
 - `docs/superpowers/specs|plans/` — historical design specs and build plans.
 
 ## Deployment
