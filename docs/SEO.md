@@ -92,6 +92,18 @@ Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
       exist only after hydration. They are in the server HTML now, which is also
       the visible counterpart to the `aggregateRating` in the Restaurant JSON-LD.
 
+- [x] **Per-dish pages shipped (2026-09-17)** — ~85 dishes now have their own
+      indexable URL at `/menu/<slug>`, each with the photo, description, price,
+      diet tags, `MenuItem` + `BreadcrumbList` JSON-LD, and a "More from the …
+      menu" rail for internal linking. The sitemap went from **5 URLs to 90**.
+      Catering trays and packaged drinks are excluded on purpose (duplicate and
+      thin respectively) — see ARCHITECTURE §7.
+- [x] **21 empty dish descriptions filled** — every bread, side and drink that
+      shipped with no description now has copy (`scripts/dish-descriptions.json`,
+      applied by `scripts/backfill-dish-descriptions.ts`). Ten are the
+      restaurant's own wording from its Uber Eats storefront; the rest describe a
+      standard preparation and claim nothing specific to this kitchen.
+
 ## ⏳ Your action items (off-site — only the owner can do these)
 
 ### Google Business Profile — business.google.com (highest impact)
@@ -136,7 +148,7 @@ website. This is ~70% of local restaurant SEO.
 - Bigger off-site levers beyond GBP: consistent **citations** (Yelp, etc.) and
   **backlinks**; these move local ranking more than further on-page tweaks.
 
-### The remaining on-site gap: the site is too thin (audited 2026-09-17)
+### The thin-content gap (audited 2026-09-17, dish pages since shipped)
 
 On-page technical SEO scores **100/100** — title, meta, canonical, robots,
 sitemap, Restaurant + FAQPage JSON-LD are all clean, and all five pages are
@@ -160,4 +172,5 @@ builds, in order:
    Downtown, Chinatown, Jack London, Uptown, Lake Merritt, …), each with genuinely
    local copy rather than a templated swap.
 
-Neither exists yet. Both are worth more than any further meta-tag work.
+**Dish pages shipped on 2026-09-17** (item 1). Delivery-area pages (item 2) are
+still open and are now the biggest remaining on-site lever.

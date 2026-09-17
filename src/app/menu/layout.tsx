@@ -1,5 +1,4 @@
 import type { Metadata } from "next";
-import { MenuJsonLd } from "@/components/seo/menu-jsonld";
 
 export const metadata: Metadata = {
   title: "Order Online — Indian & Nepalese Menu",
@@ -13,11 +12,9 @@ export const metadata: Metadata = {
   },
 };
 
+// NOTE: this layout also wraps /menu/[slug]. The full-menu JSON-LD lives in
+// menu/page.tsx rather than here, so a dish page emits only its own MenuItem
+// schema instead of repeating the entire menu 84 times.
 export default function MenuLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <MenuJsonLd />
-      {children}
-    </>
-  );
+  return <>{children}</>;
 }

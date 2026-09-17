@@ -88,6 +88,7 @@ src/
   app/
     page.tsx                 Home (michelin "luxe" landing)
     menu/page.tsx            Public menu (static catalog + DB availability overlay)
+    menu/[slug]/page.tsx     Per-dish page (~85, SSG + ISR) — see §7
     checkout/page.tsx        Cart → contact → delivery quote → place order
     order/[id]/page.tsx      Customer order tracking (+ embedded DoorDash map)
     about/ preview/          Marketing + design previews (not live ordering)
@@ -340,6 +341,37 @@ There are **two parallel menu systems** today. Know which one you're touching.
   `remotePatterns` needed.
 - Re-fetch/re-verify with `scripts/fetch-dish-images.mjs`,
   `scripts/fetch-doordash-images.mjs`, `scripts/check-dish-images.ts`.
+
+### Dish pages (`/menu/<slug>`)
+
+Every orderable dish has its own indexable page. Before this the whole 87-dish
+menu lived behind one URL with the detail in a modal, so there was nothing for
+Google to rank on a dish query — the site was five pages against a competitor's
+~90. `<slug>` is the menu item `id` (=== the DB `slug`).
+
+- `src/lib/menu/dish-page-rules.ts` — `hasDishPage()`, the eligibility rule.
+  **Not** `server-only` on purpose: the client menu grid applies the same rule so
+  it never links a dish that has no page. Excludes catering trays (duplicates of
+  dishes that already have a page) and packaged drinks (soda, bottled water —
+  no search intent, and a page that says "chilled bottled still water" is the
+  thin content this whole exercise exists to avoid). 86'd dishes keep their page.
+- `src/lib/menu/dish-pages.ts` — server data access: `getDishPageItems()`,
+  `getDishBySlug()`, `getRelatedDishes()`. **Reads the catalog through
+  `unstable_cache`**, not `getMenuCatalog()` directly. React `cache()` only
+  dedupes within one render, so prerendering ~85 pages meant ~85 round trips,
+  which saturated the Supabase pooler and tripped Next's 60s per-page build
+  timeout (the build only survived on retries). With the shared cache the whole
+  build reads the menu once: build time went from minutes-with-retries to ~14s.
+- `src/app/menu/[slug]/page.tsx` — `generateStaticParams` prerenders all of them
+  (`revalidate = 30`, matching `/menu`). Emits `MenuItem` + `BreadcrumbList`
+  JSON-LD, a breadcrumb, diet tags, the add-to-cart panel
+  (`src/components/menu/dish-order-panel.tsx`, the only client part), and a
+  "More from the … menu" rail so a crawler can walk sideways across the menu
+  instead of returning to `/menu` for every dish.
+- The `/menu` grid links each dish title with a real `<a href="/menu/<slug>">`
+  whose click handler `preventDefault()`s into the existing modal. Crawlers get
+  the link, visitors keep the modal, cmd-click still opens the page.
+- `src/app/sitemap.ts` is now async and lists all of them (5 static + ~85 dishes).
 
 ### Availability ("86" / sold-out)
 
@@ -719,7 +751,8 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
   before the filesystem and need a build/deploy to take effect.
 
 Other SEO surfaces: `src/app/sitemap.ts` (home, menu, reservations, catering,
-about), `src/app/robots.ts` (disallows `/admin`, `/checkout`, `/order/`, `/api/`,
+about, plus one entry per dish page — it is async and DB-backed now, see §7),
+`src/app/robots.ts` (disallows `/admin`, `/checkout`, `/order/`, `/api/`,
 and `/preview` + `/flyer` — the latter two are non-public / duplicate-design
 content), JSON-LD in `src/components/seo/restaurant-jsonld.tsx` (Restaurant
 schema; hours derived from `src/lib/orders/hours.ts` so they never drift; real

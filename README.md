@@ -4,8 +4,8 @@ Online ordering site, kitchen/admin panel, and courier delivery dispatch
 (DoorDash Drive / Uber Direct / self-delivery) for Annapurna restaurant — an
 Indian & Nepalese kitchen in Oakland, CA.
 
-- **Public site** — menu, cart, checkout, live order tracking, table
-  reservations, and catering requests.
+- **Public site** — menu, per-dish pages (`/menu/<slug>`), cart, checkout, live
+  order tracking, table reservations, and catering requests.
 - **Admin panel** (`/admin`) — live orders board (auto-prints 80mm kitchen
   tickets to a thermal printer), menu/promos/reservations/catering/staff
   management, settings. Role-gated (owner / manager / staff).

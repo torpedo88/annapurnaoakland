@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import { hasDishPage } from "@/lib/menu/dish-page-rules";
 import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/data/menu";
 import { DishDetailModal } from "@/components/menu/dish-detail-modal";
@@ -370,14 +371,35 @@ function MenuCard({ item, unavailable, imageSrc, onDetails }: { item: MenuItem; 
             className="text-base sm:text-xl leading-tight"
             style={{ fontFamily: "var(--font-display)", color: "#F3E9D6" }}
           >
-            <button
-              type="button"
-              onClick={onDetails}
-              className="text-left transition-colors hover:text-[#C9A24B]"
-              style={{ color: "inherit", font: "inherit" }}
-            >
-              {item.name}
-            </button>
+            {/* A real link to the dish page, so crawlers can reach every dish
+                from the menu grid — but a plain click keeps the existing modal
+                instead of navigating, so the ordering flow is unchanged.
+                Cmd/ctrl/middle-click still opens the page in a new tab.
+                Items with no dish page (catering trays, packaged drinks) stay a
+                <button>, otherwise the grid would link straight into a 404. */}
+            {hasDishPage(item) ? (
+              <a
+                href={`/menu/${item.id}`}
+                onClick={(e) => {
+                  if (e.metaKey || e.ctrlKey || e.shiftKey || e.altKey || e.button !== 0) return;
+                  e.preventDefault();
+                  onDetails();
+                }}
+                className="text-left transition-colors hover:text-[#C9A24B]"
+                style={{ color: "inherit", font: "inherit" }}
+              >
+                {item.name}
+              </a>
+            ) : (
+              <button
+                type="button"
+                onClick={onDetails}
+                className="text-left transition-colors hover:text-[#C9A24B]"
+                style={{ color: "inherit", font: "inherit" }}
+              >
+                {item.name}
+              </button>
+            )}
           </h3>
           <span
             className="rounded-full font-bold px-2.5 sm:px-3 py-1 text-xs sm:text-sm whitespace-nowrap shrink-0"

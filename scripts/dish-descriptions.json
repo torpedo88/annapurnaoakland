@@ -1,0 +1,89 @@
+{
+  "_note": "Backfill copy for menu items that shipped with an empty description. Applied by scripts/backfill-dish-descriptions.ts. Descriptions marked source 'uber' are the restaurant's own wording, lifted from its Uber Eats/Postmates storefront and then extended; 'standard' entries describe a standard preparation of a well-known item and claim nothing specific to this kitchen. Review before re-running.",
+  "descriptions": {
+    "breads-plain-naan": {
+      "source": "standard",
+      "text": "Classic leavened white-flour flatbread, hand-stretched and slapped against the wall of the tandoor until it puffs and blisters. The house bread for scooping up curry."
+    },
+    "breads-coconut-naan": {
+      "source": "uber",
+      "text": "Soft, lightly sweetened flatbread infused with coconut, baked fresh in the tandoor. Good against a rich, spiced curry."
+    },
+    "breads-herbal-naan": {
+      "source": "uber",
+      "text": "Freshly baked Indian-style flatbread infused with herbs, finished in the tandoor. Aromatic enough to eat on its own."
+    },
+    "breads-rosemary-naan": {
+      "source": "uber",
+      "text": "Freshly baked naan infused with the aromatic flavor of rosemary — a house twist on the tandoor classic."
+    },
+    "breads-plain-paratha": {
+      "source": "uber",
+      "text": "Soft, unleavened flatbread, layered and griddled with butter until it separates into flaky sheets."
+    },
+    "breads-paneer-paratha": {
+      "source": "uber",
+      "text": "Indian-style flatbread filled with crumbled paneer, griddled until golden and flaky."
+    },
+    "breads-onion-paratha": {
+      "source": "uber",
+      "text": "Traditional Indian flatbread stuffed with spiced onions, griddled until the edges crisp."
+    },
+    "breads-aalo-paratha": {
+      "source": "uber",
+      "text": "Traditional Indian flatbread stuffed with spiced potatoes, griddled until golden — a Himalayan breakfast staple."
+    },
+    "breads-coconut-paratha": {
+      "source": "uber",
+      "text": "Flaky, coconut-infused flatbread — layered, lightly sweet, and griddled to a crisp edge."
+    },
+    "side-order-basmati-rice": {
+      "source": "standard",
+      "text": "Long-grain basmati, steamed loose and fluffy. The default base for any curry on the menu."
+    },
+    "side-order-brown-rice": {
+      "source": "standard",
+      "text": "Steamed whole-grain brown rice — nuttier and chewier than basmati, and a whole-grain swap under any curry."
+    },
+    "side-order-raita": {
+      "source": "standard",
+      "text": "Cooling whipped yogurt with cucumber and gentle spice — the standard foil to anything hot off the tandoor."
+    },
+    "side-order-mango-chutney": {
+      "source": "uber",
+      "text": "Sweet and tangy condiment made with mango. Good alongside curry, or with samosa and pakora."
+    },
+    "side-order-mixed-pickle": {
+      "source": "uber",
+      "text": "A blend of tangy and sweet pickled vegetables in oil and spice — sharp and salty, meant in small spoonfuls."
+    },
+    "beverages-tea-chai": {
+      "source": "standard",
+      "text": "Black tea simmered with milk, cardamom, ginger and warm spice. Served hot."
+    },
+    "beverages-mango-lassi": {
+      "source": "standard",
+      "text": "Alphonso mango blended with yogurt into a thick, cold, gently sweet drink — the classic cooler for a spicy meal."
+    },
+    "beverages-plainsaltsweet-lassi": {
+      "source": "standard",
+      "text": "Churned yogurt served the way you like it: plain, salted, or sweet. Cold, thick, and traditional."
+    },
+    "beverages-iced-tea": {
+      "source": "standard",
+      "text": "Fresh-brewed black tea over ice, unsweetened."
+    },
+    "beverages-soda-coke-diet-coke-sprite": {
+      "source": "standard",
+      "text": "Chilled canned soda. Choice of Coke, Diet Coke, or Sprite."
+    },
+    "beverages-sparkling-water": {
+      "source": "standard",
+      "text": "Chilled sparkling water."
+    },
+    "beverages-regular-water": {
+      "source": "standard",
+      "text": "Chilled bottled still water."
+    }
+  }
+}
