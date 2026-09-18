@@ -6,7 +6,16 @@ import { useCart } from "@/lib/preview-cart";
 import { hasSpiceOptions, DEFAULT_SPICE } from "@/lib/spice";
 import { luxe } from "@/lib/theme";
 import type { MenuItem } from "@/data/menu";
-import { DishDetailModal, type DishModalItem } from "@/components/menu/dish-detail-modal";
+import dynamic from "next/dynamic";
+import type { DishModalItem } from "@/components/menu/dish-detail-modal";
+
+// The modal only exists after a tap, and it pulls in motion/react. Loading it
+// lazily keeps that off the homepage's initial hydration, which is the work
+// that delays the hero's paint on a throttled phone.
+const DishDetailModal = dynamic(
+  () => import("@/components/menu/dish-detail-modal").then((m) => m.DishDetailModal),
+  { ssr: false },
+);
 
 const LOGO = "/images/annapurna-logo.png";
 

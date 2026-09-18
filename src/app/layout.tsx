@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Jost, Inter, Cormorant_Garamond } from "next/font/google";
+import { Jost } from "next/font/google";
 import "./globals.css";
 import { CartProvider } from "@/lib/preview-cart";
 import { TerracottaShell } from "@/components/preview/terracotta/shell";
@@ -12,19 +12,11 @@ const display = Jost({
   variable: "--font-display",
   display: "swap",
 });
-const body = Inter({
-  subsets: ["latin"],
-  weight: ["300", "400", "500"],
-  variable: "--font-body",
-  display: "swap",
-});
-const serifDisplay = Cormorant_Garamond({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600"],
-  style: ["normal", "italic"],
-  variable: "--font-serif-display",
-  display: "swap",
-});
+// Inter (--font-body) and Cormorant Garamond (--font-serif-display) are only
+// used by the /flyer print pages, so they are declared in src/app/flyer/layout.tsx
+// instead of here. Loading them globally cost every mobile visitor ~100 KiB of
+// font downloads that competed with the LCP image for bandwidth, to render text
+// no customer ever sees.
 
 const DESCRIPTION =
   "Family-run Indian & Nepalese kitchen at 948 Clay Street, Oakland, since 2010. Momos, butter chicken, biryani, tandoori. Pickup or delivery. Closed Sundays.";
@@ -79,7 +71,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${display.variable} ${body.variable} ${serifDisplay.variable}`}
+      className={display.variable}
     >
       <body
         style={{

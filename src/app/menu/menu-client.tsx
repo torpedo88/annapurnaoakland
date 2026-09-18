@@ -5,7 +5,14 @@ import Image from "next/image";
 import { hasDishPage } from "@/lib/menu/dish-page-rules";
 import { Search, Leaf, Plus, Minus, Star } from "lucide-react";
 import type { MenuItem, MenuCategory } from "@/data/menu";
-import { DishDetailModal } from "@/components/menu/dish-detail-modal";
+import dynamic from "next/dynamic";
+
+// Loaded on demand — it is only rendered once a dish is tapped, and it carries
+// the motion/react dependency with it.
+const DishDetailModal = dynamic(
+  () => import("@/components/menu/dish-detail-modal").then((m) => m.DishDetailModal),
+  { ssr: false },
+);
 import { useCart } from "@/lib/preview-cart";
 import { hasSpiceOptions, SPICE_LEVELS, DEFAULT_SPICE } from "@/lib/spice";
 import { OrderingStatusBanner } from "@/components/ordering-status-banner";
