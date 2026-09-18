@@ -96,7 +96,6 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
     ref,
   ) => {
     const [rotation, setRotation] = useState(0);
-    const [isMobile, setIsMobile] = useState(false);
     const [mounted, setMounted] = useState(false);
     const [zoomItem, setZoomItem] = useState<GalleryItem | null>(null);
 
@@ -116,16 +115,29 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
 
     zoomRef.current = zoomItem !== null;
 
-    // Resolve responsive geometry.
-    const eff = {
-      radius: isMobile && mobileRadius != null ? mobileRadius : radius,
-      cardWidth:
-        isMobile && mobileCardWidth != null ? mobileCardWidth : cardWidth,
-      cardHeight:
-        isMobile && mobileCardHeight != null ? mobileCardHeight : cardHeight,
-      perspective:
-        isMobile && mobilePerspective != null ? mobilePerspective : perspective,
-    };
+    // Responsive geometry lives in CSS custom properties, NOT React state.
+    //
+    // This used to be `useState(false)` for isMobile, resolved in an effect. The
+    // server therefore rendered the ring at DESKTOP geometry on every device,
+    // and a phone only got its real layout after hydration re-ran the effect.
+    // Lighthouse measured that directly: the LCP tile downloaded in ~290ms but
+    // the page sat at ~1.9s of "element render delay" waiting for JS to move it.
+    // Emitting the numbers as CSS variables with a media query means the first
+    // server-painted frame is already correct, with no JS involved.
+    const rawId = React.useId();
+    const cgClass = `cg-${rawId.replace(/[^a-zA-Z0-9]/g, "")}`;
+    // Values are numeric props, so this can't inject anything; coerced anyway.
+    const px = (n: number) => `${Number(n)}px`;
+    const mobileVars = [
+      mobileCardWidth != null ? `--cg-w:${px(mobileCardWidth)};` : "",
+      mobileCardHeight != null ? `--cg-h:${px(mobileCardHeight)};` : "",
+      mobileRadius != null ? `--cg-r:${px(mobileRadius)};` : "",
+      mobilePerspective != null ? `--cg-p:${px(mobilePerspective)};` : "",
+    ].join("");
+    const geometryCss =
+      `.${cgClass}{--cg-w:${px(cardWidth)};--cg-h:${px(cardHeight)};` +
+      `--cg-r:${px(radius)};--cg-p:${px(perspective)};}` +
+      (mobileVars ? `@media (max-width:${MOBILE_MAX - 1}px){.${cgClass}{${mobileVars}}}` : "");
 
     const anglePerItem = items.length > 0 ? 360 / items.length : 0;
 
@@ -136,13 +148,8 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
       const onMq = () => (reducedRef.current = mq.matches);
       mq.addEventListener("change", onMq);
 
-      const onResize = () => setIsMobile(window.innerWidth < MOBILE_MAX);
-      onResize();
-      window.addEventListener("resize", onResize);
-      return () => {
-        mq.removeEventListener("change", onMq);
-        window.removeEventListener("resize", onResize);
-      };
+      // No resize listener: the ring's geometry is pure CSS now.
+      return () => mq.removeEventListener("change", onMq);
     }, []);
 
     // Single loop: continuous auto-rotate, paused on hover/drag/zoom/reduced.
@@ -259,19 +266,26 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
       }
     });
 
-    const compact = eff.cardWidth < 240;
+    // Derived from the desktop prop so server and client always agree. The
+    // mobile card is never wider than the desktop one, so this only differs for
+    // a config whose desktop card is >=240 and mobile card <240.
+    const compact = cardWidth < 240;
 
     return (
       <>
+        {/* Geometry as CSS custom properties, so the first server-painted frame
+            is already sized for the viewport (see the note above). */}
+        <style dangerouslySetInnerHTML={{ __html: geometryCss }} />
         <div
           ref={ref}
           role="region"
           aria-label="Circular 3D Gallery"
           className={cn(
+            cgClass,
             "relative w-full h-full flex items-center justify-center select-none touch-pan-y",
             className,
           )}
-          style={{ perspective: `${eff.perspective}px` }}
+          style={{ perspective: "var(--cg-p)" }}
           onPointerDown={onPointerDown}
           onPointerMove={onPointerMove}
           onPointerUp={endDrag}
@@ -286,8 +300,8 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
               aria-hidden
               className="pointer-events-none absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2"
               style={{
-                width: eff.cardWidth * 3,
-                height: eff.cardWidth * 3,
+                width: "calc(var(--cg-w) * 3)",
+                height: "calc(var(--cg-w) * 3)",
                 background: `radial-gradient(circle, ${accentColor}33 0%, ${accentColor}14 30%, transparent 68%)`,
                 filter: "blur(24px)",
               }}
@@ -306,12 +320,12 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                 aria-hidden
                 className="pointer-events-none absolute left-1/2 top-1/2 rounded-full"
                 style={{
-                  width: eff.radius * 2,
-                  height: eff.radius * 2,
-                  marginLeft: -eff.radius,
-                  marginTop: -eff.radius,
+                  width: "calc(var(--cg-r) * 2)",
+                  height: "calc(var(--cg-r) * 2)",
+                  marginLeft: "calc(var(--cg-r) * -1)",
+                  marginTop: "calc(var(--cg-r) * -1)",
                   border: `1px solid ${accentColor}40`,
-                  transform: `translateY(${eff.cardHeight / 2}px) rotateX(80deg)`,
+                  transform: "translateY(calc(var(--cg-h) / 2)) rotateX(80deg)",
                   transformStyle: "preserve-3d",
                 }}
               />
@@ -337,13 +351,13 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                   onClick={(e) => handleTileClick(e, item)}
                   className="absolute block p-0 border-0 bg-transparent cursor-pointer"
                   style={{
-                    width: eff.cardWidth,
-                    height: eff.cardHeight,
-                    transform: `rotateY(${itemAngle}deg) translateZ(${eff.radius}px)`,
+                    width: "var(--cg-w)",
+                    height: "var(--cg-h)",
+                    transform: `rotateY(${itemAngle}deg) translateZ(var(--cg-r))`,
                     left: "50%",
                     top: "50%",
-                    marginLeft: -eff.cardWidth / 2,
-                    marginTop: -eff.cardHeight / 2,
+                    marginLeft: "calc(var(--cg-w) / -2)",
+                    marginTop: "calc(var(--cg-h) / -2)",
                     opacity,
                     filter: blur > 0.05 ? `blur(${blur}px)` : undefined,
                     transition: "opacity 0.3s linear, filter 0.3s linear",
@@ -417,7 +431,7 @@ const CircularGallery = React.forwardRef<HTMLDivElement, CircularGalleryProps>(
                       className="pointer-events-none absolute left-0 w-full overflow-hidden block"
                       style={{
                         top: "100%",
-                        height: eff.cardHeight * 0.5,
+                        height: "calc(var(--cg-h) * 0.5)",
                         transform: "scaleY(-1)",
                         transformOrigin: "top",
                         WebkitMaskImage:

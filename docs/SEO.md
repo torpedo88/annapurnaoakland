@@ -104,6 +104,14 @@ Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
       restaurant's own wording from its Uber Eats storefront; the rest describe a
       standard preparation and claim nothing specific to this kitchen.
 
+- [x] **Hero LCP fix (2026-09-18)** — after the Core Web Vitals pass, LCP was
+      still ~6.9s on mobile while everything else was green. Cause was not the
+      image (it downloaded in ~290ms) but ~1.9s of *element render delay*: the
+      hero ring resolved its mobile geometry in a `useEffect`, so the server
+      painted it at desktop size and a phone re-laid it out only after
+      hydration. Geometry moved to CSS custom properties with a media query, so
+      the first painted frame is correct with no JS. See ARCHITECTURE §10.
+
 ## ⏳ Your action items (off-site — only the owner can do these)
 
 ### Google Business Profile — business.google.com (highest impact)

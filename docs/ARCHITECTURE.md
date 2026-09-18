@@ -542,6 +542,16 @@ Mobile Lighthouse was **0.46** (LCP 15.7 s, CLS 0.243, 6.86 MB) before the
    prices and review text are now in the HTML for crawlers.
 3. **Third-party embeds load on demand**, not on page load — see `DeferredMap`
    in §17.
+4. **A client component must server-render at the right size.** `CircularGallery`
+   resolved its responsive geometry from `useState(false)` for `isMobile` plus an
+   effect, so the server painted the hero ring at desktop geometry (490px radius,
+   200x265 tiles) on every device and a phone only got its real layout after
+   hydration. Lighthouse showed it precisely: the LCP tile downloaded in ~290ms,
+   then ~1.9s of *element render delay* waiting for JS. The geometry is now CSS
+   custom properties (`--cg-w/h/r/p`) emitted with a `@media (max-width:639px)`
+   override, so the first server-painted frame is already correct. Reach for a
+   media query before `useState` + `useEffect` for anything that affects layout
+   above the fold.
 
 The first three hero tiles carry `priority` (they are the LCP candidates); the
 rest lazy-load.
