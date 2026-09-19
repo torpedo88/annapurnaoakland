@@ -104,13 +104,19 @@ Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
       restaurant's own wording from its Uber Eats storefront; the rest describe a
       standard preparation and claim nothing specific to this kitchen.
 
-- [x] **Hero LCP fix (2026-09-18)** — after the Core Web Vitals pass, LCP was
-      still ~6.9s on mobile while everything else was green. Cause was not the
-      image (it downloaded in ~290ms) but ~1.9s of *element render delay*: the
-      hero ring resolved its mobile geometry in a `useEffect`, so the server
-      painted it at desktop size and a phone re-laid it out only after
-      hydration. Geometry moved to CSS custom properties with a media query, so
-      the first painted frame is correct with no JS. See ARCHITECTURE §10.
+- [~] **Hero LCP (2026-09-18) — improved, not fixed.** LCP went **6.9s -> 6.0s**
+      (target is 2.5s); TBT 140ms -> 70ms, page weight 1,077 -> 916 KiB. Three
+      changes: the hero ring's responsive geometry moved from a `useEffect` to
+      CSS custom properties so it server-renders at the right size; Inter and
+      Cormorant Garamond were scoped to the `/flyer` pages that actually use
+      them (homepage font files 4 -> 1, ~100 KiB off the critical path); and the
+      dish modal became a lazy import so `motion/react` is no longer in the
+      initial hydration.
+      **What is left:** ~2s of *element render delay* behind ~2.3s of main-thread
+      work — the cost of hydrating the JS-driven 3D hero. Note that on a real
+      unthrottled device LCP measures **368ms**; Lighthouse's number reflects its
+      4x CPU / Slow-4G simulation. Closing the lab gap needs a static first
+      frame with the ring hydrated lazily, or a simpler hero. See ARCHITECTURE §10.
 
 ## ⏳ Your action items (off-site — only the owner can do these)
 

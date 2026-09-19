@@ -546,12 +546,33 @@ Mobile Lighthouse was **0.46** (LCP 15.7 s, CLS 0.243, 6.86 MB) before the
    resolved its responsive geometry from `useState(false)` for `isMobile` plus an
    effect, so the server painted the hero ring at desktop geometry (490px radius,
    200x265 tiles) on every device and a phone only got its real layout after
-   hydration. Lighthouse showed it precisely: the LCP tile downloaded in ~290ms,
-   then ~1.9s of *element render delay* waiting for JS. The geometry is now CSS
-   custom properties (`--cg-w/h/r/p`) emitted with a `@media (max-width:639px)`
-   override, so the first server-painted frame is already correct. Reach for a
-   media query before `useState` + `useEffect` for anything that affects layout
-   above the fold.
+   hydration. The geometry is now CSS custom properties (`--cg-w/h/r/p`) emitted
+   with a `@media (max-width:639px)` override, so the first server-painted frame
+   is already correct. Reach for a media query before `useState` + `useEffect`
+   for anything that affects layout above the fold.
+
+   **This was a real correctness fix but it did not move LCP**, which is worth
+   recording so nobody re-litigates it. Measured with a `PerformanceObserver` on
+   production: unthrottled, LCP is the hero tile at **368ms, equal to FCP, with a
+   single candidate** — the ring paints immediately. Lighthouse's mobile number
+   is gated by its 4x CPU + Slow-4G throttling, where ~2s of *element render
+   delay* is the paint queued behind hydration, not layout.
+5. **Keep the homepage's critical path small.** Two cuts that did move the
+   number (LCP 6.9s -> 6.0s, TBT 140ms -> 70ms, page 1,077 -> 916 KiB):
+   - The root layout loaded three font families. Inter (`--font-body`) and
+     Cormorant Garamond (`--font-serif-display`) are used **only** by the
+     `/flyer` print pages, so they now live in `src/app/flyer/layout.tsx`.
+     Homepage font files went 4 -> 1. Check before adding a font to the root
+     layout: every page pays for it.
+   - `DishDetailModal` only renders after a tap but was imported eagerly by the
+     homepage Popular grid and the menu grid, pulling `motion/react` into the
+     initial hydration. It is a `next/dynamic` import now.
+
+   **Still open: LCP is 6.0s against a 2.5s target**, and ~2s of that is element
+   render delay behind ~2.3s of main-thread work. The remaining cost is
+   hydrating the JS-driven 3D hero itself. Closing it needs either a static
+   first frame with the interactive ring hydrated lazily (in-view or on first
+   interaction), or a simpler hero. Do not expect more from shaving bundles.
 
 The first three hero tiles carry `priority` (they are the LCP candidates); the
 rest lazy-load.
