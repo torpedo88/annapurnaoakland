@@ -786,10 +786,10 @@ about, plus one entry per dish page — it is async and DB-backed now, see §7),
 `src/app/robots.ts` (disallows `/admin`, `/checkout`, `/order/`, `/api/`,
 and `/preview` + `/flyer` — the latter two are non-public / duplicate-design
 content), JSON-LD in `src/components/seo/restaurant-jsonld.tsx` (Restaurant
-schema; hours derived from `src/lib/orders/hours.ts` so they never drift; real
-`aggregateRating` + reviews from the Google Places API via
-`src/lib/reviews/google.ts` — emitted only when real data exists, and the output
-escapes `<` because review text is third-party; `sameAs` links the verified
+schema; hours derived from `src/lib/orders/hours.ts` so they never drift; **no**
+`aggregateRating`/`review` — self-served review markup is against Google's
+guidelines, so the Places API reviews are shown on the page only; the output
+escapes `<`; `sameAs` links the verified
 Google/Yelp/Facebook/Instagram/Grubhub profiles — the `SAME_AS` constant — so
 Google ties the site to the business's listings in the knowledge graph for local
 ranking, kept in sync with the footer's social links) and

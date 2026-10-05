@@ -13,8 +13,11 @@ const nav = [
   { href: "/menu", label: "Menu" },
   { href: "/reservations", label: "Reservations" },
   { href: "/catering", label: "Catering" },
-  { href: "/admin", label: "Kitchen" },
 ];
+// No public link to /admin. A "Kitchen" link on every page made Google list the
+// staff login in search results (~800 impressions a month): robots.txt stops it
+// reading the page, so it never sees the login is private. Staff bookmark
+// /admin directly.
 
 export function TerracottaShell({ children }: { children: React.ReactNode }) {
   const { count, setOpen } = useCart();

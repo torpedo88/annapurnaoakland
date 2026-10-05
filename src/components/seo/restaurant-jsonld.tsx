@@ -3,7 +3,6 @@
 // canonical ordering window (src/lib/orders/hours.ts) so they never drift.
 
 import { openDayNames, OPENS_HHMM, CLOSES_HHMM } from "@/lib/orders/hours";
-import { getGoogleReviews } from "@/lib/reviews/google";
 
 const SITE = "https://annapurnaoakland.com";
 
@@ -19,32 +18,13 @@ const SAME_AS = [
   "https://www.grubhub.com/restaurant/annapurna-restaurant--bar-948-clay-st-oakland/333338",
 ];
 
-export async function RestaurantJsonLd() {
+export function RestaurantJsonLd() {
   const phone = process.env.RESTAURANT_PICKUP_PHONE || undefined;
 
-  // Real aggregate rating + reviews from the Google Places API (cached ~6h),
-  // the same data shown in the on-page reviews section. Only emitted when real
-  // data is present — never fabricated.
-  const g = await getGoogleReviews();
-  const ratingData =
-    g.rating && g.total
-      ? {
-          aggregateRating: {
-            "@type": "AggregateRating",
-            ratingValue: g.rating,
-            reviewCount: g.total,
-            bestRating: 5,
-            worstRating: 1,
-          },
-          review: g.reviews.slice(0, 3).map((r) => ({
-            "@type": "Review",
-            reviewRating: { "@type": "Rating", ratingValue: r.rating, bestRating: 5, worstRating: 1 },
-            author: { "@type": "Person", name: r.name },
-            reviewBody: r.text,
-          })),
-        }
-      : {};
-
+  // No aggregateRating / review here. Google's review-snippet guidelines treat
+  // ratings a business marks up about itself, or copies from Google/Yelp, as
+  // self-serving: not eligible for stars and a manual-action risk. The reviews
+  // stay visible on the page; they just aren't in structured data.
   const data = {
     "@context": "https://schema.org",
     "@type": "Restaurant",
@@ -81,7 +61,6 @@ export async function RestaurantJsonLd() {
         closes: CLOSES_HHMM,
       },
     ],
-    ...ratingData,
     potentialAction: {
       "@type": "OrderAction",
       target: `${SITE}/menu`,
@@ -91,8 +70,7 @@ export async function RestaurantJsonLd() {
   return (
     <script
       type="application/ld+json"
-      // Review text/author come from Google (third-party) — escape `<` so no
-      // value can break out of the <script> tag (XSS-safe).
+      // Escape `<` so no value can break out of the <script> tag (XSS-safe).
       dangerouslySetInnerHTML={{ __html: JSON.stringify(data).replace(/</g, "\\u003c") }}
     />
   );

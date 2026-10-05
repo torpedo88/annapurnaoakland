@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   // Without this, the page inherits the root layout's canonical ("/"), telling
   // Google /about is a duplicate of the homepage.
   alternates: { canonical: "/about" },
+  // Set per page: Next merges metadata shallowly (see catering/page.tsx).
+  openGraph: {
+    url: "https://annapurnaoakland.com/about",
+    title: "Our Story — Annapurna, Oakland",
+    description: "The family behind Annapurna, an Indian & Nepalese restaurant in downtown Oakland since 2010.",
+    images: [{ url: "/images/annapurna-logo.png", width: 1200, height: 1200, alt: "Annapurna Restaurant & Bar" }],
+  },
 };
 
 export default function AboutPage() {
