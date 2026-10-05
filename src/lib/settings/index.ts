@@ -100,12 +100,26 @@ export function mergeSettings(rows: Row[]): Settings {
   return out;
 }
 
+// Same rule as the menu catalog (src/lib/menu/catalog.ts): preview builds have
+// no DATABASE_URL, so a prerender that reads settings crashed the whole build.
+// Only while `next build` runs, fall back to the defaults and let ISR re-render
+// with real settings at runtime; a runtime DB outage still throws.
+const IS_BUILD_PHASE = process.env.NEXT_PHASE === "phase-production-build";
+
 /** Read all settings (per-request memoized). */
 export const getSettings = cache(async (): Promise<Settings> => {
-  const rows = await db
-    .select({ key: restaurantSettings.key, value: restaurantSettings.value })
-    .from(restaurantSettings);
-  return mergeSettings(rows as Row[]);
+  try {
+    const rows = await db
+      .select({ key: restaurantSettings.key, value: restaurantSettings.value })
+      .from(restaurantSettings);
+    return mergeSettings(rows as Row[]);
+  } catch (err) {
+    if (IS_BUILD_PHASE) {
+      console.warn("[settings] DB unreachable during build — prerendering defaults; ISR hydrates at runtime:", (err as Error)?.message);
+      return mergeSettings([]);
+    }
+    throw err;
+  }
 });
 
 /** Upsert a single setting key. Caller is responsible for role-gating. */

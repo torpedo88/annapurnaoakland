@@ -755,7 +755,10 @@ DoorDash has runnable **sandbox** scripts (no unit mocks):
     `src/app/page.tsx`). `Specials`, `Popular` and `Testimonials` are `async`
     server components that hit the DB / Google Places. Same build-phase caveat as
     `/menu` above: a preview build without `DATABASE_URL` prerenders them empty
-    and ISR fills them in at runtime. Don't turn them back into client fetches —
+    and ISR fills them in at runtime. `getSettings()` (`src/lib/settings`) has
+    the same build-phase guard and prerenders the defaults; without it, every
+    feature-branch preview failed on `select "key", "value" from
+    "restaurant_settings"`. Don't turn them back into client fetches —
     that is what caused the 0.243 CLS (see *Core Web Vitals* in §10).
 
 ---
