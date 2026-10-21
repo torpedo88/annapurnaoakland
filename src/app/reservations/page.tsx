@@ -3,10 +3,17 @@ import { MapPin, Clock, Phone } from "lucide-react";
 import { ReservationForm } from "@/components/reservations/reservation-form";
 
 export const metadata: Metadata = {
-  title: "Reservations — Book a Table",
+  title: "Reserve a Table — Indian Restaurant in Downtown Oakland",
   description:
     "Reserve a table at Annapurna, the family-run Indian & Nepalese restaurant at 948 Clay Street in downtown Oakland. Open Mon–Sat. Walk-ins and groups welcome.",
   alternates: { canonical: "/reservations" },
+  // Set per page: Next merges metadata shallowly (see catering/page.tsx).
+  openGraph: {
+    url: "https://annapurnaoakland.com/reservations",
+    title: "Reserve a Table — Annapurna, Oakland",
+    description: "Book a table at Annapurna, the family-run Indian & Nepalese restaurant at 948 Clay Street, Oakland.",
+    images: [{ url: "/images/annapurna-logo.png", width: 1200, height: 1200, alt: "Annapurna Restaurant & Bar" }],
+  },
 };
 
 export default function ReservationsPage() {
