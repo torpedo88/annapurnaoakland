@@ -1016,7 +1016,8 @@ write queries or experiments against the prod DB.**
   `CLOSED_DATES` in `src/lib/orders/hours.ts`. `isOrderingOpen()` then returns
   closed all day (restaurant-local date) — enforced server-side in
   `placeOrder`/`createPendingOrder`, and the `/menu` + `/checkout` banner shows
-  the reason. Staff phone orders still bypass. Needs a deploy; remove the entry
+  the reason. `POST /api/reservations` also rejects that date. Staff phone
+  orders still bypass. Needs a deploy; remove the entry
   once the date has passed. Schema.org opening hours are unaffected.
 - **Holiday popup on the homepage:** pattern is
   `src/components/home/dashain-popup.tsx` (Dashain, 2026-10-21) — a client-only

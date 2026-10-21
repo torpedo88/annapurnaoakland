@@ -2,8 +2,9 @@
 
 import { useCallback, useEffect, useState } from "react";
 
-// Dashain notice: online ordering is closed Wed 2026-10-21 (enforced server-side
-// by CLOSED_DATES in lib/orders/hours.ts). The popup shows from SHOW_FROM through
+// Dashain notice: the restaurant is fully closed Wed 2026-10-21. Online ordering
+// and reservations for that date are blocked server-side by CLOSED_DATES in
+// lib/orders/hours.ts. The popup shows from SHOW_FROM through
 // CLOSED_ON in restaurant time, once per visitor (dismissal remembered locally).
 // Safe to delete this file and its import in app/page.tsx after the date.
 const SHOW_FROM = "2026-10-19";
@@ -90,11 +91,12 @@ export function DashainPopup() {
           </h2>
           <p className="mt-4 text-base leading-relaxed">
             {isToday ? "Today, " : "Tomorrow, "}
-            <strong style={{ color: "#C9A24B" }}>Wednesday, October 21</strong>, we&apos;re pausing{" "}
-            <strong>all online orders</strong> to celebrate Dashain with family.
+            <strong style={{ color: "#C9A24B" }}>Wednesday, October 21</strong>, Annapurna is{" "}
+            <strong>closed</strong> to celebrate Dashain with family. No dine-in, pickup or delivery
+            orders that day.
           </p>
           <p className="mt-2 text-sm" style={{ color: "#B8AE9C" }}>
-            Online ordering returns Thursday, October 22 at 11:00 AM. Thank you for celebrating with us.
+            We reopen Thursday, October 22 at 11:00 AM. Thank you for celebrating with us.
           </p>
           <button
             type="button"

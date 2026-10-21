@@ -10,11 +10,12 @@ const TZ = "America/Los_Angeles";
 
 /**
  * One-off full-day closures (restaurant-local date, YYYY-MM-DD) → customer-facing
- * reason. Online ordering is blocked all day; staff phone orders still bypass.
+ * reason. Online ordering and reservations are blocked for the date; staff phone
+ * orders still bypass.
  * Add a date here for a holiday; remove it once it has passed.
  */
 export const CLOSED_DATES: Record<string, string> = {
-  "2026-10-21": "We're closed for online orders today to celebrate Dashain. Happy Dashain — see you Thursday!",
+  "2026-10-21": "We're closed today to celebrate Dashain. Happy Dashain — see you Thursday!",
 };
 
 // ── Schema.org / SEO helpers (single source of truth for published hours) ──

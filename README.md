@@ -16,7 +16,7 @@ Indian & Nepalese kitchen in Oakland, CA.
   server-rendered (crawlable, no layout shift) and every photo goes through
   `next/image`. See ARCHITECTURE §10 before adding images or above-the-fold
   sections.
-- **Holiday closures** — block online ordering for a whole date via
+- **Holiday closures** — block online ordering and reservations for a whole date via
   `CLOSED_DATES` in `src/lib/orders/hours.ts`, with an optional homepage popup
   (e.g. `src/components/home/dashain-popup.tsx`). See ARCHITECTURE §19.2 (item 7).
 

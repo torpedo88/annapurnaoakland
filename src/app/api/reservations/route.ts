@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { db } from "@/db";
 import { reservations } from "@/db/schema";
+import { CLOSED_DATES } from "@/lib/orders/hours";
 
 export const runtime = "nodejs";
 
@@ -23,6 +24,9 @@ export async function POST(req: Request) {
   if (!customerName) return NextResponse.json({ error: "Please enter your name." }, { status: 400 });
   if (!customerPhone) return NextResponse.json({ error: "Please enter a phone number." }, { status: 400 });
   if (!date) return NextResponse.json({ error: "Please choose a date." }, { status: 400 });
+  if (CLOSED_DATES[date]) {
+    return NextResponse.json({ error: "We're closed that day. Please choose another date." }, { status: 400 });
+  }
 
   const partySizeRaw = Number(body.partySize);
   const partySize = Number.isFinite(partySizeRaw) && partySizeRaw > 0 ? Math.floor(partySizeRaw) : null;
