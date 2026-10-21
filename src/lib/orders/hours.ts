@@ -8,6 +8,15 @@ export const LAST_ORDER_BUFFER_MIN = 10; // stop ordering this many minutes befo
 const CLOSED_DAYS = new Set([0]); // 0 = Sunday
 const TZ = "America/Los_Angeles";
 
+/**
+ * One-off full-day closures (restaurant-local date, YYYY-MM-DD) → customer-facing
+ * reason. Online ordering is blocked all day; staff phone orders still bypass.
+ * Add a date here for a holiday; remove it once it has passed.
+ */
+export const CLOSED_DATES: Record<string, string> = {
+  "2026-10-21": "We're closed for online orders today to celebrate Dashain. Happy Dashain — see you Thursday!",
+};
+
 // ── Schema.org / SEO helpers (single source of truth for published hours) ──
 const SCHEMA_DAY_NAMES = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 const hhmm = (m: number) => `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
@@ -37,6 +46,9 @@ export function isOpenAt(day: number, minutes: number): OrderingWindow {
 export function isOrderingOpen(now: Date = new Date()): OrderingWindow {
   const parts = new Intl.DateTimeFormat("en-US", {
     timeZone: TZ,
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
     weekday: "short",
     hour: "2-digit",
     minute: "2-digit",
@@ -48,5 +60,7 @@ export function isOrderingOpen(now: Date = new Date()): OrderingWindow {
   let hour = parseInt(get("hour"), 10);
   if (hour === 24) hour = 0; // some platforms format midnight as 24
   const minutes = hour * 60 + parseInt(get("minute"), 10);
+  const closedReason = CLOSED_DATES[`${get("year")}-${get("month")}-${get("day")}`];
+  if (closedReason) return { open: false, reason: closedReason };
   return isOpenAt(day, minutes);
 }

@@ -1012,6 +1012,17 @@ write queries or experiments against the prod DB.**
 - Admin **Settings**: toggle `ordering_paused` (kills all online ordering) or
   `delivery_enabled` / `pickup_enabled` individually. Takes effect immediately,
   no deploy. `placeOrder` enforces these server-side.
+- **Planned holiday closure (a known date):** add `"YYYY-MM-DD": "<reason>"` to
+  `CLOSED_DATES` in `src/lib/orders/hours.ts`. `isOrderingOpen()` then returns
+  closed all day (restaurant-local date) — enforced server-side in
+  `placeOrder`/`createPendingOrder`, and the `/menu` + `/checkout` banner shows
+  the reason. Staff phone orders still bypass. Needs a deploy; remove the entry
+  once the date has passed. Schema.org opening hours are unaffected.
+- **Holiday popup on the homepage:** pattern is
+  `src/components/home/dashain-popup.tsx` (Dashain, 2026-10-21) — a client-only
+  modal with date window, once-per-visitor dismissal in `localStorage`, inline
+  SVG art (no extra network/LCP cost). Copy it for the next holiday, or delete
+  it and its import in `src/app/page.tsx` after the date.
 
 **8. Refund a customer.**
 - Admin order card → **Refund** (online-paid orders). Backed by

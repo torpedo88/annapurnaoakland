@@ -5,6 +5,7 @@ import { Testimonials } from "@/components/home/luxe/testimonials";
 import { Visit } from "@/components/home/luxe/visit";
 import { Faq } from "@/components/home/faq";
 import { LuxeFooter } from "@/components/home/luxe/footer";
+import { DashainPopup } from "@/components/home/dashain-popup";
 
 // Specials, Popular and Testimonials read the DB / Google reviews on the server
 // so their content is in the HTML (crawlable, and no post-load layout shift).
@@ -22,6 +23,7 @@ export default function HomePage() {
       <Visit />
       <Faq />
       <LuxeFooter />
+      <DashainPopup />
     </>
   );
 }

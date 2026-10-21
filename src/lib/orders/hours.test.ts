@@ -26,4 +26,12 @@ describe("isOrderingOpen", () => {
     expect(r.open).toBe(false);
     expect(r.reason).toMatch(/Sunday/);
   });
+  it("is closed all day on a listed holiday (Dashain, 2026-10-21)", () => {
+    const r = isOrderingOpen(new Date("2026-10-21T21:00:00Z")); // Wed 14:00 PDT
+    expect(r.open).toBe(false);
+    expect(r.reason).toMatch(/Dashain/);
+  });
+  it("reopens the day after a holiday", () => {
+    expect(isOrderingOpen(new Date("2026-10-22T21:00:00Z")).open).toBe(true); // Thu 14:00 PDT
+  });
 });
