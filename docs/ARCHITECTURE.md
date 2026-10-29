@@ -218,9 +218,11 @@ not the migration journal. So `drizzle/migrations/*` and the DB's
 
 ## 6. Ordering pipeline
 
-The staff "manual/phone order" form (`POST /api/admin/orders`) is the only caller
-of the shared function `placeOrder` (`src/lib/orders/place-order.ts`). This
-guarantees identical validation, pricing, dispatch, and persistence.
+The staff "manual/phone order" form (`POST /api/admin/orders`) is the only
+production caller of the shared function `placeOrder`
+(`src/lib/orders/place-order.ts`); the dev-only script `scripts/doordash-e2e.ts`
+also calls it. This guarantees identical validation, pricing, dispatch, and
+persistence.
 
 The public `POST /api/orders` route was **removed** (security: it let anyone
 create unpaid orders and dispatch real couriers with no payment). Online orders
@@ -297,8 +299,9 @@ Refunds: `src/lib/orders/refund.ts` (+ `/api/admin/orders/[id]/refund`).
 
 ### Two entry paths
 
-- **Immediate** (`placeOrder`) — manual/phone orders and pay-on-handoff:
-  validate → price → dispatch courier → persist as `received`.
+- **Immediate** (`placeOrder`) — manual/phone orders and pay-on-handoff. Only
+  reachable through the staff-gated manual order form (`POST /api/admin/orders`),
+  not a public path: validate → price → dispatch courier → persist as `received`.
 - **Online prepay** (`createPendingOrder` → Stripe → `dispatchPaidOrder`) —
   public card checkout: persist as `pending_payment` with **no** dispatch, then
   the Stripe webhook flips it to paid + `received` and dispatches the courier.
