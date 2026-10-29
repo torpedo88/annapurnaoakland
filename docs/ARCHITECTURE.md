@@ -218,15 +218,19 @@ not the migration journal. So `drizzle/migrations/*` and the DB's
 
 ## 6. Ordering pipeline
 
-Both the public checkout and the admin "manual/phone order" form funnel into one
-shared function, `placeOrder` (`src/lib/orders/place-order.ts`). This guarantees
-identical validation, pricing, dispatch, and persistence.
+The staff "manual/phone order" form (`POST /api/admin/orders`) is the only caller
+of the shared function `placeOrder` (`src/lib/orders/place-order.ts`). This
+guarantees identical validation, pricing, dispatch, and persistence.
+
+The public `POST /api/orders` route was **removed** (security: it let anyone
+create unpaid orders and dispatch real couriers with no payment). Online orders
+go through `POST /api/checkout/session` (Stripe, see "Two entry paths" below).
 
 ```mermaid
 sequenceDiagram
-  participant C as Checkout / Manual form
+  participant C as Staff manual form
   participant Q as POST /api/delivery/quote
-  participant O as POST /api/orders (or /api/admin/orders)
+  participant O as POST /api/admin/orders (staff-gated)
   participant P as placeOrder()
   participant DD as DoorDash Drive
   participant DB as Postgres
