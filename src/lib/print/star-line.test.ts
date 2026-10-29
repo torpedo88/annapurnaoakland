@@ -7,6 +7,7 @@ const base: PrintOrder = {
   orderNumber: 1042,
   orderType: "pickup",
   createdAt: "2026-06-27T19:01:00.000Z",
+  kitchenReceivedAt: null,
   customerName: "Test Customer",
   customerPhone: "510-555-0000",
   deliveryAddress: null,
@@ -76,5 +77,29 @@ describe("buildStarLineTicket", () => {
     });
     expect(delivery).toContain("948 Clay St, Oakland, CA");
     expect(delivery).toContain("DELIVERY");
+  });
+
+  it("prints received time and kitchen time with the gap since the order", () => {
+    const t = buildStarLineTicket(base, new Date("2026-06-27T19:13:30.000Z"));
+    expect(t).toContain("RECEIVED Sat, Jun 27, 12:01 PM");
+    expect(t).toContain("KITCHEN 12:13 PM (+12 min)");
+    expect(t).not.toContain("REPRINT");
+  });
+
+  it("keeps the original kitchen time on a reprint and marks it", () => {
+    const t = buildStarLineTicket(
+      { ...base, kitchenReceivedAt: "2026-06-27T19:05:00.000Z" },
+      new Date("2026-06-27T19:40:00.000Z"),
+    );
+    expect(t).toContain("KITCHEN 12:05 PM (+4 min)");
+    expect(t).toContain("REPRINT 12:40 PM");
+  });
+
+  it("keeps every boxed line inside the 42-column frame", () => {
+    const t = buildStarLineTicket(base, new Date("2026-06-27T21:13:30.000Z"));
+    const plain = t.replace(/\x1b[EF]/g, "");
+    for (const line of plain.split("\n").filter((l) => l.startsWith("|"))) {
+      expect(line.length).toBe(42);
+    }
   });
 });

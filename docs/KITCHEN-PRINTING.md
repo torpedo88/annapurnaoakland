@@ -43,6 +43,15 @@ been printed (`kitchen_printed_at IS NULL`). New orders chime on the board
 ticket. A manual reprint clears `kitchen_printed_at` (`/api/admin/print-requeue`),
 so the printer pulls it again on its next poll.
 
+**Ticket times.** The order box prints `RECEIVED <order time>` and
+`KITCHEN <time> (+N min)` — when the ticket first reached the kitchen and how
+long after the order that was. The first print stamps
+`orders.kitchen_received_at`; a reprint doesn't clear it, so a reprinted ticket
+keeps the original kitchen time and adds `REPRINT <time>`. The admin board shows
+the same times on each card with a live **In kitchen** timer (amber at 15 min,
+red at 25). The column comes from `scripts/add-kitchen-received-at.ts` — run it
+against each DB before deploying.
+
 Auth is HTTP **Basic** — the printer config has username/password fields. The
 username is ignored; the password must equal `CLOUDPRNT_TOKEN`.
 
@@ -152,7 +161,8 @@ repo; the native app lives in a separate project (see the spec).
   (`kitchen_printed_at IS NULL`), oldest first, capped at 50. Auth: bearer
   `PRINT_BRIDGE_TOKEN`.
 - `POST /api/print/ack` — body `{ "orderId": "…", "error"?: "…" }`. Success (no
-  `error`) stamps `kitchen_printed_at` once (idempotent — a re-ack is a no-op).
+  `error`) stamps `kitchen_printed_at` once (idempotent — a re-ack is a no-op),
+  and `kitchen_received_at` if it isn't set yet.
   With `error`, it records the message + bumps `kitchen_print_attempts` and leaves
   the order in the queue for retry.
 - `POST /api/admin/print-requeue` — **staff-authed**. Tapping **Print** on an

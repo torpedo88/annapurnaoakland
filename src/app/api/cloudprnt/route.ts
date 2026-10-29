@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { and, asc, eq, isNull } from "drizzle-orm";
+import { and, asc, eq, isNull, sql } from "drizzle-orm";
 import { timingSafeEqual } from "node:crypto";
 import { db } from "@/db";
 import { orders, orderItems } from "@/db/schema";
@@ -86,7 +86,7 @@ export async function GET(req: Request) {
   // makes the next POST poll return jobReady:false. DELETE stays as a backup.
   await db
     .update(orders)
-    .set({ kitchenPrintedAt: new Date() })
+    .set({ kitchenPrintedAt: new Date(), kitchenReceivedAt: sql`coalesce(${orders.kitchenReceivedAt}, now())` })
     .where(and(eq(orders.id, id), isNull(orders.kitchenPrintedAt)));
 
   return new NextResponse(Buffer.from(ticket, "utf8"), {
@@ -102,7 +102,7 @@ export async function DELETE(req: Request) {
   if (token) {
     await db
       .update(orders)
-      .set({ kitchenPrintedAt: new Date() })
+      .set({ kitchenPrintedAt: new Date(), kitchenReceivedAt: sql`coalesce(${orders.kitchenReceivedAt}, now())` })
       .where(and(eq(orders.id, token), isNull(orders.kitchenPrintedAt)));
   }
   return new NextResponse("", { status: 200 });

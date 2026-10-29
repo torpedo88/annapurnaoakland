@@ -23,6 +23,9 @@ export type PrintOrder = {
   orderNumber: number | null;
   orderType: "pickup" | "delivery";
   createdAt: string;
+  // First time the ticket reached the kitchen; null until the first print.
+  // A non-null value at print time means this ticket is a reprint.
+  kitchenReceivedAt: string | null;
   customerName: string | null;
   customerPhone: string | null;
   deliveryAddress: string | null;
@@ -41,12 +44,14 @@ const num = (v: string | null | undefined): number => (v == null ? 0 : Number(v)
 
 export function serializePrintOrder(order: OrderRow, items: ItemRow[]): PrintOrder {
   const orderType = order.orderType === "delivery" ? "delivery" : "pickup";
-  const created = order.createdAt instanceof Date ? order.createdAt : new Date(order.createdAt as unknown as string);
+  const toDate = (v: Date | string) => (v instanceof Date ? v : new Date(v));
+  const created = toDate(order.createdAt);
   return {
     id: order.id,
     orderNumber: order.orderNumber,
     orderType,
     createdAt: created.toISOString(),
+    kitchenReceivedAt: order.kitchenReceivedAt ? toDate(order.kitchenReceivedAt).toISOString() : null,
     customerName: order.customerName,
     customerPhone: order.customerPhone,
     // Pickup tickets don't need an address.

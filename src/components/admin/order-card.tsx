@@ -1,6 +1,7 @@
 "use client";
 
 import { nextStatuses, type Fulfillment } from "@/lib/orders/status";
+import { fmtClock, fmtElapsed, kitchenUrgency, minutesBetween, type KitchenUrgency } from "@/lib/orders/kitchen-time";
 
 export type AdminOrder = {
   id: string;
@@ -20,6 +21,7 @@ export type AdminOrder = {
   refundedTotal: string | null;
   deliveryAddress: string | null;
   createdAt: string;
+  kitchenReceivedAt: string | null;
   items: { id: string; itemName: string | null; itemPrice: string | null; quantity: number | null; spiceLevel?: string | null }[];
   delivery: { trackingUrl: string | null; status: string | null } | null;
   selfDelivery?: boolean;
@@ -32,10 +34,44 @@ const LABEL: Record<string, string> = {
   completed: "Completed", delivered: "Delivered", cancelled: "Cancelled",
 };
 
+const URGENCY: Record<KitchenUrgency, React.CSSProperties> = {
+  ok: { background: "rgba(201,162,75,0.15)", color: "#C9A24B" },
+  warn: { background: "rgba(245,158,11,0.2)", color: "#FBBF24" },
+  late: { background: "rgba(220,38,38,0.25)", color: "#FCA5A5" },
+};
+
+// Received / kitchen times, plus a live timer while the order is waiting to be
+// accepted ("Waiting", from the order time) or being cooked ("In kitchen", from
+// when the ticket first reached the kitchen). Orders printed by the browser
+// board never get a kitchen stamp, so their timer falls back to the order time.
+function KitchenTimes({ order, now }: { order: AdminOrder; now: number }) {
+  const created = Date.parse(order.createdAt);
+  const kitchen = order.kitchenReceivedAt ? Date.parse(order.kitchenReceivedAt) : null;
+  const timer =
+    order.status === "received" ? { label: "Waiting", from: created }
+    : order.status === "preparing" ? { label: "In kitchen", from: kitchen ?? created }
+    : null;
+  return (
+    <div className="flex items-center justify-between gap-2 mb-2 text-xs" style={{ color: "#8A8276" }}>
+      <span>
+        Received {fmtClock(order.createdAt)}
+        {kitchen != null && <> · Kitchen {fmtClock(order.kitchenReceivedAt!)} (+{minutesBetween(created, kitchen)} min)</>}
+      </span>
+      {timer && (
+        <span className="px-2 py-1 rounded-full font-semibold tabular-nums whitespace-nowrap"
+          style={URGENCY[kitchenUrgency(minutesBetween(timer.from, now))]}>
+          ⏱ {timer.label} {fmtElapsed(timer.from, now)}
+        </span>
+      )}
+    </div>
+  );
+}
+
 export function OrderCard({
-  order, busy, onStatus, onPayment, onRefund, onPrint,
+  order, now, busy, onStatus, onPayment, onRefund, onPrint,
 }: {
   order: AdminOrder;
+  now: number;
   busy: boolean;
   onStatus: (id: string, to: string) => void;
   onPayment: (id: string, patch: { payment_status?: string; payment_method?: string }) => void;
@@ -61,6 +97,7 @@ export function OrderCard({
           {LABEL[order.status] ?? order.status}
         </span>
       </div>
+      <KitchenTimes order={order} now={now} />
       <div className="text-sm" style={{ color: "#F3E9D6" }}>{order.customerName} · {order.customerPhone}</div>
       {order.deliveryAddress && <div className="text-xs" style={{ color: "#8A8276" }}>{order.deliveryAddress}</div>}
       <ul className="my-2 text-sm" style={{ color: "#C9C2B5" }}>

@@ -43,7 +43,12 @@ export async function POST(req: Request) {
 
   const updated = await db
     .update(orders)
-    .set({ kitchenPrintedAt: new Date(), kitchenPrintError: null, updatedAt: new Date() })
+    .set({
+      kitchenPrintedAt: new Date(),
+      kitchenReceivedAt: sql`coalesce(${orders.kitchenReceivedAt}, now())`,
+      kitchenPrintError: null,
+      updatedAt: new Date(),
+    })
     .where(and(eq(orders.id, orderId), isNull(orders.kitchenPrintedAt)))
     .returning({ id: orders.id });
 

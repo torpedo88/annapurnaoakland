@@ -39,6 +39,7 @@ describe("serializePrintOrder", () => {
     expect(p.total).toBe(29.79);
     expect(p.tip).toBe(3);
     expect(p.createdAt).toBe("2026-06-27T19:00:00.000Z");
+    expect(p.kitchenReceivedAt).toBeNull();
     expect(p.items).toHaveLength(2);
     expect(p.items[0]).toMatchObject({ name: "Chicken Momo", qty: 2, spiceLevel: "medium", specialInstructions: "no onion" });
   });
@@ -54,5 +55,13 @@ describe("serializePrintOrder", () => {
   it("omits the delivery address on pickup orders", () => {
     const p = serializePrintOrder({ ...baseOrder, orderType: "pickup" } as unknown as OrderRow, []);
     expect(p.deliveryAddress).toBeNull();
+  });
+
+  it("passes through the first kitchen time as ISO", () => {
+    const p = serializePrintOrder(
+      { ...baseOrder, kitchenReceivedAt: new Date("2026-06-27T19:07:00.000Z") } as unknown as OrderRow,
+      [],
+    );
+    expect(p.kitchenReceivedAt).toBe("2026-06-27T19:07:00.000Z");
   });
 });

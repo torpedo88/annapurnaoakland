@@ -1,4 +1,5 @@
 import type { PrintOrder } from "./serialize";
+import { fmtClock, minutesBetween } from "@/lib/orders/kitchen-time";
 
 // Renders a kitchen ticket as Star Line Mode command bytes for a Star network
 // printer (TSP650II etc.), served over CloudPRNT as `application/vnd.star.line`.
@@ -71,17 +72,30 @@ function fmtTime(iso: string): string {
   }
 }
 
-export function buildStarLineTicket(o: PrintOrder): string {
+// Received + kitchen times for the order box. The kitchen time is when the
+// ticket first reached the kitchen (this print, unless it's a reprint), with
+// how long after the order that was. A reprint keeps the original kitchen time
+// and adds its own print time.
+function kitchenLines(o: PrintOrder, now: Date): string {
+  const created = Date.parse(o.createdAt);
+  const kitchen = o.kitchenReceivedAt ? Date.parse(o.kitchenReceivedAt) : now.getTime();
+  let s = boxCenter(`RECEIVED ${fmtTime(o.createdAt)}`);
+  s += boxCenter(`KITCHEN ${fmtClock(new Date(kitchen))} (+${minutesBetween(created, kitchen)} min)`, true);
+  if (o.kitchenReceivedAt) s += boxCenter(`REPRINT ${fmtClock(now)}`, true);
+  return s;
+}
+
+export function buildStarLineTicket(o: PrintOrder, now: Date = new Date()): string {
   let s = "";
 
   // ── Brand header: big, centered ──────────────────────────────────────────────
   s += CENTER + BIG + "ANNAPURNA\n" + NORMAL + LEFT;
 
-  // ── Boxed order block: type + number + time (bold, framed) ────────────────────
+  // ── Boxed order block: type + number + times (bold, framed) ───────────────────
   s += boxTop;
   s += boxCenter(o.orderType.toUpperCase(), true);
   s += boxCenter(`ORDER #${o.orderNumber ?? "?"}`, true);
-  s += boxCenter(fmtTime(o.createdAt));
+  s += kitchenLines(o, now);
   s += boxTop;
 
   // ── Customer ────────────────────────────────────────────────────────────────

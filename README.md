@@ -7,8 +7,9 @@ Indian & Nepalese kitchen in Oakland, CA.
 - **Public site** — menu, per-dish pages (`/menu/<slug>`), cart, checkout, live
   order tracking, table reservations, and catering requests.
 - **Admin panel** (`/admin`) — live orders board (auto-prints 80mm kitchen
-  tickets to a thermal printer), menu/promos/reservations/catering/staff
-  management, settings. Role-gated (owner / manager / staff).
+  tickets to a thermal printer; each card shows when the order came in and a
+  live kitchen timer that turns amber at 15 min and red at 25), menu/promos/
+  reservations/catering/staff management, settings. Role-gated (owner / manager / staff).
 - **Delivery** — selectable courier (DoorDash Drive, Uber Direct, or
   self-delivery) via admin settings: quote → dispatch a driver → status
   webhooks → live tracking. See ARCHITECTURE §9.

@@ -80,6 +80,8 @@ export function OrdersBoard() {
   const seenRef = useRef<Set<string>>(new Set());
   const printedRef = useRef<Set<string>>(new Set());
   const firstLoadRef = useRef(true);
+  // Clock for the per-card kitchen timers; ticks only on the Active lane.
+  const [now, setNow] = useState(() => Date.now());
 
   // Mark an order as printed and persist (bounded) so reloads don't reprint it.
   const rememberPrinted = useCallback((ids: string[]) => {
@@ -155,6 +157,12 @@ export function OrdersBoard() {
     window.addEventListener("focus", onFocus);
     return () => { clearInterval(t); window.removeEventListener("focus", onFocus); };
   }, [lane, load]);
+
+  useEffect(() => {
+    if (lane !== "active") return;
+    const t = setInterval(() => setNow(Date.now()), 1_000);
+    return () => clearInterval(t);
+  }, [lane]);
 
   // Process the print queue one ticket at a time. The head ticket renders into
   // #kitchen-receipt (below); once printed we drop it so the next one renders.
@@ -288,7 +296,7 @@ export function OrdersBoard() {
       )}
       {orders.length === 0 && <p style={{ color: "#8A8276" }}>No orders in this lane.</p>}
       {orders.map((o) => (
-        <OrderCard key={o.id} order={o} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={openRefund} onPrint={reprint} />
+        <OrderCard key={o.id} order={o} now={now} busy={busyId === o.id} onStatus={patchStatus} onPayment={patchPayment} onRefund={openRefund} onPrint={reprint} />
       ))}
       {refunding && (
         <RefundModal order={refunding} onClose={() => setRefunding(null)} onDone={() => load(lane)} />

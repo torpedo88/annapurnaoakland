@@ -116,6 +116,10 @@ export const orders = pgTable("orders", {
   // (null = not yet printed). Drives /api/print/pending and makes acks
   // idempotent so a ticket prints exactly once.
   kitchenPrintedAt: timestamp("kitchen_printed_at", { withTimezone: true }),
+  // When the ticket FIRST reached the kitchen (first print). Unlike
+  // kitchen_printed_at, a reprint never clears it, so the kitchen timer on the
+  // board and the printed tickets keep the original start time.
+  kitchenReceivedAt: timestamp("kitchen_received_at", { withTimezone: true }),
   kitchenPrintAttempts: integer("kitchen_print_attempts").notNull().default(0),
   kitchenPrintError: text("kitchen_print_error"),
   createdAt: timestamp("created_at", { withTimezone: true }).notNull().default(now()),

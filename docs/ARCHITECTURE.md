@@ -111,7 +111,8 @@ src/
                              catering, staff, settings
   lib/
     auth/                    password (scrypt), session (signed HMAC cookie)
-    orders/                  pricing, status machines, place-order, delivery-pricing
+    orders/                  pricing, status machines, place-order, delivery-pricing,
+                             kitchen-time (ticket clock + 15/25-min timer urgency)
     doordash/                jwt, client, webhook, types
     uber/                    Uber Direct: client (quote/dispatch/cancel), webhook
     settings/                typed settings folded over DB key/value rows
@@ -121,7 +122,7 @@ src/
   db/
     index.ts schema.ts seed.ts seed-staff.ts
   components/
-    admin/orders-board.tsx   Polling orders board: chime + voice + auto-print
+    admin/orders-board.tsx   Polling orders board: chime + voice + auto-print + kitchen timers
     admin/kitchen-receipt.tsx 80mm thermal kitchen ticket (print-only; see §10)
     home/luxe/footer.tsx     Site footer (incl. embedded location map)
   proxy.ts                   Next 16 route guard for /admin + /api/admin
@@ -497,6 +498,12 @@ named `doordashFeeCents` for historical reasons — it carries the Uber fee too)
   existing card/input/button styles when adding pages.
 - The orders board polls every 10s and, on new orders, plays a WebAudio chime,
   a spoken announcement (Web Speech), and **auto-prints a kitchen ticket**.
+- Each card shows **Received** (order time) and **Kitchen** (first print, with
+  the gap since the order), plus a live timer ticking once a second on the
+  Active lane: **Waiting** from the order time while `received`, **In kitchen**
+  from `kitchen_received_at` while `preparing` (falls back to the order time when
+  the ticket was printed by the browser board, which doesn't stamp). Amber at
+  15 min, red at 25 (`src/lib/orders/kitchen-time.ts`).
 
 ### Images — always `next/image`
 
@@ -591,6 +598,14 @@ Vercel — no on-site computer, tablet, or Bluetooth. Auth is HTTP Basic
 (`orders-board.tsx`) that repeats every ~3s until accepted. Full setup:
 [`docs/KITCHEN-PRINTING.md`](./KITCHEN-PRINTING.md).
 
+The first print also stamps `orders.kitchen_received_at` (`coalesce`, never
+cleared — a reprint clears only `kitchen_printed_at`), so the kitchen time
+survives reprints. The ticket prints `RECEIVED <order time>` and
+`KITCHEN <time> (+N min)`; a reprint keeps the original kitchen time and adds
+`REPRINT <time>`. Column added by targeted DDL:
+`scripts/add-kitchen-received-at.ts` (idempotent, backfills from
+`kitchen_printed_at`) — apply it to a DB **before** deploying code that reads it.
+
 **Fallback: browser board auto-print (window.print).**
 `src/components/admin/kitchen-receipt.tsx` renders an 80mm thermal ticket into a
 hidden `#kitchen-receipt` element; `globals.css` `@media print` isolates it and
@@ -602,6 +617,8 @@ order and prints it via `window.print()`, one at a time (`afterprint`-driven).
   poll after load seeds existing orders as "printed" so the backlog isn't dumped.
 - Auto-print is **off by default**, toggled per device (so staff phones don't
   pop print dialogs). Each card also has a manual **Print** (reprint) button.
+- The browser ticket prints `Received <order time>` and `Kitchen <print time>
+  (+N min)`; this path doesn't stamp `kitchen_received_at`.
 - Silent printing needs Chrome `--kiosk-printing` on the on-site machine with
   the Star TSP100 as the default printer. Full setup + troubleshooting:
   [`docs/KITCHEN-PRINTING.md`](./KITCHEN-PRINTING.md).

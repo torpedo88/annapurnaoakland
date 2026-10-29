@@ -1,6 +1,7 @@
 "use client";
 
 import type { AdminOrder } from "./order-card";
+import { fmtClock, minutesBetween } from "@/lib/orders/kitchen-time";
 
 // 80mm thermal kitchen ticket. Rendered into #kitchen-receipt, which globals.css
 // reveals (and isolates) only during printing. Monospace + high contrast so it
@@ -12,6 +13,9 @@ const num = (v: string | null) => Number(v ?? 0);
 
 export function KitchenReceipt({ order }: { order: AdminOrder }) {
   const isDelivery = order.orderType === "delivery";
+  // Printed when the board picks the order up, so "now" is when the ticket
+  // reached the kitchen.
+  const printedAt = new Date();
   const time = new Date(order.createdAt).toLocaleString("en-US", {
     month: "short", day: "numeric", hour: "numeric", minute: "2-digit",
     timeZone: "America/Los_Angeles",
@@ -31,7 +35,10 @@ export function KitchenReceipt({ order }: { order: AdminOrder }) {
       <div style={{ textAlign: "center", fontWeight: 700, fontSize: 18, letterSpacing: 2 }}>
         {isDelivery ? "DELIVERY" : "PICKUP"}{order.source === "phone" ? " · PHONE" : ""}
       </div>
-      <div style={{ textAlign: "center", fontSize: 11 }}>{time}</div>
+      <div style={{ textAlign: "center", fontSize: 11 }}>Received {time}</div>
+      <div style={{ textAlign: "center", fontSize: 12, fontWeight: 700 }}>
+        Kitchen {fmtClock(printedAt)} (+{minutesBetween(Date.parse(order.createdAt), printedAt.getTime())} min)
+      </div>
       <Hr />
       <div style={{ fontWeight: 700 }}>{order.customerName ?? "—"}</div>
       {order.customerPhone && <div>{order.customerPhone}</div>}
