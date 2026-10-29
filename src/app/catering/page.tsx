@@ -3,10 +3,18 @@ import { Users, Utensils, Phone } from "lucide-react";
 import { CateringForm } from "@/components/catering/catering-form";
 
 export const metadata: Metadata = {
-  title: "Catering — Indian & Nepalese in Oakland",
+  title: "Indian Catering in Oakland — Parties, Offices & Events",
   description:
-    "Indian & Nepalese catering in Oakland & the East Bay from Annapurna. Momos, butter chicken, biryani, and tandoori for parties, offices, and events. Request a quote.",
+    "Indian & Nepalese catering in Oakland and the East Bay from Annapurna, 948 Clay Street. Momos, butter chicken, biryani and tandoori for office lunches, parties and events. Tell us the date and headcount for a quote.",
   alternates: { canonical: "/catering" },
+  // Set per page: Next merges metadata shallowly, so without this the page
+  // inherits the root's og:url and tells social and search crawlers it is the homepage.
+  openGraph: {
+    url: "https://annapurnaoakland.com/catering",
+    title: "Indian Catering in Oakland — Annapurna",
+    description: "Indian & Nepalese catering for office lunches, parties and events in Oakland and the East Bay.",
+    images: [{ url: "/images/annapurna-logo.png", width: 1200, height: 1200, alt: "Annapurna Restaurant & Bar" }],
+  },
 };
 
 export default function CateringPage() {

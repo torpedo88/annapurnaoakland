@@ -44,11 +44,28 @@ change.
       200); `/about` now sets its own canonical (it had inherited the homepage's);
       non-production deployments (`dev.*`, `*.vercel.app`) now return
       `Disallow: /` in robots so staging can't be indexed as a duplicate.
-- [x] **Review rich-result markup** — real `aggregateRating` + reviews from the
-      Google Places API on the home Restaurant schema. Only emitted when real
-      data is present; review text is escaped (XSS-safe). *Note: Google may
-      still prefer its own rating for the star display ("self-serving" markup),
-      but this is real, on-page data — no penalty risk.*
+- [x] **Review markup removed (2026-10-05)** — the Restaurant schema used to
+      carry `aggregateRating` + reviews copied from the Google Places API. Google's
+      review-snippet guidelines call ratings a business marks up about itself, or
+      imports from Google/Yelp, self-serving: never eligible for stars and a
+      manual-action risk. The reviews stay visible on the homepage; they are no
+      longer in JSON-LD.
+- [x] **Search Console findings fixed (2026-10-05)** — from the first monthly
+      report (data from 2026-06-10):
+      - the public "Kitchen" nav link to `/admin` is gone; Google had listed the
+        staff login about 800 times a month because robots.txt blocks it from
+        seeing the page is private;
+      - `/catering`, `/reservations` and `/about` set their own `og:url` (they
+        inherited the homepage's through Next's shallow metadata merge);
+      - `/catering` and `/reservations` titles now name the search
+        ("Indian Catering in Oakland…", "Reserve a Table — Indian Restaurant in
+        Downtown Oakland"): each had ~1,000 impressions a month and 2 clicks in
+        four months.
+- [ ] **Google Business Profile website field** — Search Console credits 41% of
+      clicks to `http://www.annapurnaoakland.com/`. The site redirects it, but a
+      prominent link still uses it; set the GBP website to
+      `https://annapurnaoakland.com/`. (`http://www` → `https://www` → apex is two
+      hops; the http→https hop is Vercel's and happens before the app runs.)
 
 - [x] **Hero performance (Core Web Vitals)** — the animated hero shipped with an
       8MB PNG poster + 3.3MB autoplay video → **mobile LCP was 47.7s** (Perf 48/D).
@@ -90,7 +107,7 @@ Where these live: see **ARCHITECTURE.md §17 (Redirects & SEO)**.
 - [x] **Homepage content is now crawlable** — the dish-of-the-day, the four
       "Popular right now" dishes with prices, and the Google review text used to
       exist only after hydration. They are in the server HTML now, which is also
-      the visible counterpart to the `aggregateRating` in the Restaurant JSON-LD.
+      what Google reads as the restaurant's reviews (no longer marked up in JSON-LD).
 
 - [x] **Per-dish pages shipped (2026-09-17)** — ~85 dishes now have their own
       indexable URL at `/menu/<slug>`, each with the photo, description, price,
